@@ -1,6 +1,6 @@
-# putitoutthere config — one published package: the Python SDK on PyPI.
-# The workspace under packages/frontend is internal tooling (the viewer's
-# frontend source and build) and is never published.
+# putitoutthere config — two published packages: the Python SDK on PyPI and
+# the web component on npm. The workspace under packages/frontend is internal
+# tooling (the viewer's frontend source and build) and is never published.
 
 [putitoutthere]
 version = 1
@@ -18,5 +18,22 @@ build = "hatch"
 globs = [
   "packages/python/!(testing-conventions.toml)",
   "packages/python/!(changelog.d|migrations.d|e2e-attestations)/**",
+  "LICENSE",
+]
+
+[[package]]
+name = "telelux-npm"
+kind = "npm"
+npm = "telelux"
+path = "packages/component"
+tag_format = "telelux-v{version}"
+# Keep bookkeeping paths out of release cascades. The root pattern covers
+# package files, while the subtree pattern excludes fragment and attestation
+# directories. A leading `!` is not a substitute: minimatch makes it match
+# everything outside the subtree, so it would cascade LICENSE on every commit.
+globs = [
+  "packages/component/!(testing-conventions.toml)",
+  "packages/component/!(changelog.d|migrations.d|e2e-attestations)/**",
+  "packages/component/pnpm-lock.yaml",
   "LICENSE",
 ]
