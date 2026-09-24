@@ -10,6 +10,12 @@ wins for anything under `packages/node/telelux/`.
 - **Unit** — colocated with their subject as `src/foo.ts` ↔ `src/foo.test.ts`.
   Run by Vitest in Node (`pnpm test_unit`), configured by `vitest.config.ts`.
 
+Vitest is pinned to 3.x, not the 5.x its siblings use: under vitest 5 the
+testing-conventions mutation gate reports every mutant as survived even when the
+suite kills it by hand, so the gate would be theatre. Verified on this package
+with both versions; the siblings' `rules = ["mutation"]` exemptions are the
+same symptom.
+
 `src/vitest.config.ts` re-exports the root `vitest.config.ts` for the same
 reason `packages/node/telelux-element` does: the coverage gate runs vitest with
 `src/` as its cwd, the mutation gate runs it from the package root, and vitest
