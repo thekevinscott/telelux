@@ -85,8 +85,11 @@ shortening it.
 - Every PR that changes a public API adds a **changelog fragment**: one
   timestamped file under `packages/<pkg>/changelog.d/` (plus one under
   `packages/<pkg>/migrations.d/` for breaking changes), named
-  `YYYY-MM-DD-<slug>.md` by UTC merge date. The folders are the permanent,
-  append-only record;
+  `YYYY-MM-DD-<slug>.md` by UTC merge date. A changelog fragment is a
+  snippet, one to three lines: a bold Keep a Changelog category, then the
+  entry text. A migrations fragment keeps all five headings, with `_None._`
+  under those that do not apply. Each folder's README shows one. The folders
+  are the permanent, append-only record;
   `packages/<pkg>/CHANGELOG.md` / `MIGRATIONS.md` are pointer stubs — never
   append entries to them. For version attribution ("which release shipped X"),
   map fragment dates against tags via `git log --tags`. Bypass with a
@@ -161,6 +164,26 @@ Before the first `Release` run on a fresh scaffold:
    the `release.yml` workflow filename, and the project name
    (`telelux`) before the first release. No long-lived
    tokens are needed at any point — PyPI is the only registry.
+
+## Session handoff doc
+
+Maintain one ongoing handoff doc per session and deliver it to Kevin as a
+downloadable markdown file at every stopping point: after each major unit of
+work lands (a push, a green CI run, a finished investigation, a merged PR) or
+when blocked on his input. A stopping point marks a checkpoint, not the end:
+send the doc, then keep working.
+
+- **Keep it in the session scratchpad or `/tmp`** (e.g. `<scratchpad>/handoff.md`).
+  It is conversation-scoped: never commit it, stage it, or place it anywhere
+  in the repo tree.
+- **Update the same doc in place and re-send it at each checkpoint** (in
+  hosted sessions, attach it via the file-delivery tool; locally, print its
+  path), so the freshest copy sits near the bottom of the conversation.
+- **Write it standalone**, so a brand-new session with zero context can resume
+  from it alone: task and status (done / in progress / next), branches, PRs
+  and issues with numbers and CI state, key decisions and discovered
+  constraints with one-line reasons, exact next commands to run, anything
+  waiting on Kevin.
 
 ## Out of scope
 
