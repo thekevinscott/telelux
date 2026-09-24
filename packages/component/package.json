@@ -1,0 +1,57 @@
+{
+  "name": "telelux",
+  "version": "0.0.0",
+  "description": "Web component that renders an agent transcript.",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/thekevinscott/telelux.git",
+    "directory": "packages/component"
+  },
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "sideEffects": [
+    "./dist/index.js"
+  ],
+  "packageManager": "pnpm@10.33.0",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "build_demo": "vite build --config vite.demo.config.ts",
+    "preview": "vite preview --config vite.demo.config.ts",
+    "lint": "eslint src tests demo",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test_unit": "vitest run",
+    "test_integration": "playwright test"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.63.0",
+    "@stylistic/eslint-plugin": "^5.10.0",
+    "@types/node": "^22.9.0",
+    "@typescript-eslint/eslint-plugin": "^8.61.0",
+    "@typescript-eslint/parser": "^8.61.0",
+    "@vitest/coverage-v8": "^5.0.1",
+    "eslint": "^10.4.1",
+    "jsdom": "^30.0.1",
+    "typescript": "^5.6.3",
+    "vite": "^8.3.0",
+    "vite-plugin-dts": "^5.1.1",
+    "vitest": "^5.0.1"
+  },
+  "dependencies": {
+    "lit": "^3.3.3"
+  }
+}

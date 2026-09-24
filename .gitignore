@@ -39,3 +39,6 @@ stryker-setup-*.js
 # Playwright
 packages/frontend/test-results/
 packages/frontend/playwright-report/
+packages/component/test-results/
+packages/component/playwright-report/
+packages/component/dist-demo/

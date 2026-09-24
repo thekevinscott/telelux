@@ -20,16 +20,16 @@ def describe_Telelux():
         def test_it_accepts_a_transcript():
             transcript = "foo.jsonl"
             viewer = Telelux(transcript)
-            assert viewer.__transcript__ == transcript
+            assert viewer.transcript == transcript
 
         def test_it_accepts_a_transcript_path():
             transcript = Path("foo.jsonl")
             viewer = Telelux(transcript)
-            assert viewer.__transcript__ == transcript
+            assert viewer.transcript == transcript
 
         def test_it_accepts_no_transcript():
             viewer = Telelux()
-            assert viewer.__transcript__ == None
+            assert viewer.transcript is None
 
     def describe_loading_transcripts():
         def test_it_calls_load_data_if_transcript_is_provided(mock_load_data):
@@ -37,7 +37,7 @@ def describe_Telelux():
             assert mock_load_data.call_count == 0
             transcript = "foo.jsonl"
             viewer = Telelux(transcript)
-            assert viewer.__transcript__ == transcript
+            assert viewer.transcript == transcript
             assert mock_load_data.call_count == 1
             assert viewer.__data__ == "foo"
 
