@@ -1,4 +1,4 @@
-name: Node telelux
+name: node/telelux
 
 on:
   pull_request:
@@ -14,7 +14,7 @@ permissions:
 
 jobs:
   lint:
-    name: Lint
+    name: 'node/telelux: lint'
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -31,7 +31,7 @@ jobs:
       - run: pnpm run lint
 
   typecheck:
-    name: Typecheck
+    name: 'node/telelux: typecheck'
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -48,7 +48,7 @@ jobs:
       - run: pnpm run typecheck
 
   test-unit:
-    name: Unit
+    name: 'node/telelux: unit'
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -65,7 +65,7 @@ jobs:
       - run: pnpm run test_unit
 
   build:
-    name: Build
+    name: 'node/telelux: build'
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -82,7 +82,7 @@ jobs:
       - run: pnpm run build
 
   conventions:
-    name: TypeScript (telelux)
+    name: node/telelux
     uses: thekevinscott/testing-conventions/.github/workflows/testing-conventions.yml@v0
     with:
       languages: '["typescript"]'
