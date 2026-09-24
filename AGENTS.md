@@ -185,12 +185,6 @@ send the doc, then keep working.
   constraints with one-line reasons, exact next commands to run, anything
   waiting on Kevin.
 
-Purpose: the prompt cache survives at most an hour of inactivity, so resuming
-a long conversation after hours away reprocesses the entire history at full
-cost. A current handoff doc near the end of the transcript lets Kevin scroll
-up, grab it, and start a cheap fresh session from the doc instead of resuming
-the stale one.
-
 ## Out of scope
 
 - Don't add unsolicited refactors or hypothetical-future abstractions.
