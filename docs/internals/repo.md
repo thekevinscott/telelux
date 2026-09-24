@@ -59,7 +59,7 @@ every other repo with the same problem.
 
 Every workflow under `.github/workflows/` carries a `paths:` filter, except
 `pr-monitor.yml`, which gates the aggregate check set on every PR. Each
-package lane (`python.yml`, `component.yml`, `frontend.yml`) triggers on its
+package lane (`python-telelux.yml`, `node-telelux-element.yml`, `node-telelux-web.yml`) triggers on its
 own subtree minus `changelog.d/`, `migrations.d/`, and `README.md`, and holds
 both that package's tests and its testing-conventions gates. `build-check.yml`
 mirrors the `putitoutthere.toml` globs; `check.yml` fires only when that config

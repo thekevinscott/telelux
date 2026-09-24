@@ -1,4 +1,4 @@
-name: Python
+name: python/telelux
 
 # Fragments and the README feed no job here. Attestation receipts stay in
 # scope: the conventions job's e2e-verify gate walks them.
@@ -9,14 +9,14 @@ on:
       - '!packages/python/telelux/changelog.d/**'
       - '!packages/python/telelux/migrations.d/**'
       - '!packages/python/telelux/README.md'
-      - '.github/workflows/python.yml'
+      - '.github/workflows/python-telelux.yml'
 
 permissions:
   contents: read
 
 jobs:
   conventions:
-    name: Python
+    name: python/telelux
     uses: thekevinscott/testing-conventions/.github/workflows/testing-conventions.yml@v0
     with:
       languages: '["python"]'
@@ -24,7 +24,7 @@ jobs:
       base: ${{ github.event.pull_request.base.sha || 'origin/main' }}
 
   test:
-    name: Unit
+    name: 'python/telelux: unit'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -34,7 +34,7 @@ jobs:
         working-directory: packages/python/telelux
 
   test-integration:
-    name: Integration
+    name: 'python/telelux: integration'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -44,7 +44,7 @@ jobs:
         working-directory: packages/python/telelux
 
   build:
-    name: Build wheel + smoke
+    name: 'python/telelux: build wheel + smoke'
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false

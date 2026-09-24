@@ -1,4 +1,4 @@
-name: Docs
+name: docs
 
 on:
   push:
@@ -23,7 +23,7 @@ concurrency:
 
 jobs:
   build:
-    name: Build
+    name: 'docs: build'
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -43,7 +43,7 @@ jobs:
           path: docs/.vitepress/dist
 
   deploy:
-    name: Deploy
+    name: 'docs: deploy'
     needs: build
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
