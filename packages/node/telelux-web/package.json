@@ -1,35 +1,20 @@
 {
-  "name": "telelux",
+  "name": "telelux-web",
   "version": "0.0.0",
-  "description": "Web component that renders an agent transcript.",
+  "private": true,
+  "description": "Internal frontend workspace for the telelux static HTML viewer. Never published; the built artifact ships inside the Python wheel.",
   "license": "MIT",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/thekevinscott/telelux.git",
-    "directory": "packages/component"
-  },
+  "repository": "https://github.com/thekevinscott/telelux",
   "type": "module",
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
-  "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js"
-    }
-  },
   "files": [
     "dist"
-  ],
-  "sideEffects": [
-    "./dist/index.js"
   ],
   "packageManager": "pnpm@10.33.0",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "build_demo": "vite build --config vite.demo.config.ts",
-    "preview": "vite preview --config vite.demo.config.ts",
-    "lint": "eslint src tests demo",
+    "preview": "vite preview",
+    "lint": "eslint src tests",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test_unit": "vitest run",
     "test_integration": "playwright test"
@@ -40,18 +25,23 @@
   "devDependencies": {
     "@playwright/test": "^1.63.0",
     "@stylistic/eslint-plugin": "^5.10.0",
+    "@testing-library/jest-dom": "^7.0.1",
+    "@testing-library/react": "^16.3.3",
     "@types/node": "^22.9.0",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
     "@typescript-eslint/eslint-plugin": "^8.61.0",
     "@typescript-eslint/parser": "^8.61.0",
+    "@vitejs/plugin-react": "^6.1.1",
     "@vitest/coverage-v8": "^5.0.1",
     "eslint": "^10.4.1",
     "jsdom": "^30.0.1",
     "typescript": "^5.6.3",
     "vite": "^8.3.0",
-    "vite-plugin-dts": "^5.1.1",
     "vitest": "^5.0.1"
   },
   "dependencies": {
-    "lit": "^3.3.3"
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0"
   }
 }

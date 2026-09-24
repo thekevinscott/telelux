@@ -13,7 +13,11 @@ Conventions, supervision rules, and per-language style live under
 
 ## Layout
 
-- **`packages/`** holds public-facing packages — what gets published.
+- **`packages/`** holds public-facing packages — what gets published. It is
+  language-first, matching testing-conventions: `packages/python/<pkg>` and
+  `packages/node/<pkg>`, each folder named after the package it publishes
+  (`packages/python/telelux`, `packages/node/telelux-element`,
+  `packages/node/telelux-web`).
 - **`internals/`** holds internal-only packages — built and tested to the same
   standard, never published.
 
@@ -56,7 +60,7 @@ shortening it.
 ## Workflow
 
 - Use `just` for local tasks. Each package owns its justfile and you run it
-  from that package's root — `packages/python/justfile` is the Python one
+  from that package's root — `packages/python/telelux/justfile` is the Python one
   (`just lint`, `just typecheck`, `just test_unit`). There is no repo-root
   justfile; recipe names use underscores.
 - **Each test tier has its own recipe, and there is no aggregate.**
@@ -83,14 +87,14 @@ shortening it.
   seems to need for itself is a missing feature upstream — file it there rather
   than writing a bespoke checker here.
 - Every PR that changes a public API adds a **changelog fragment**: one
-  timestamped file under `packages/<pkg>/changelog.d/` (plus one under
-  `packages/<pkg>/migrations.d/` for breaking changes), named
+  timestamped file under `packages/<lang>/<pkg>/changelog.d/` (plus one under
+  `packages/<lang>/<pkg>/migrations.d/` for breaking changes), named
   `YYYY-MM-DD-<slug>.md` by UTC merge date. A changelog fragment is a
   snippet, one to three lines: a bold Keep a Changelog category, then the
   entry text. A migrations fragment keeps all five headings, with `_None._`
   under those that do not apply. Each folder's README shows one. The folders
   are the permanent, append-only record;
-  `packages/<pkg>/CHANGELOG.md` / `MIGRATIONS.md` are pointer stubs — never
+  `packages/<lang>/<pkg>/CHANGELOG.md` / `MIGRATIONS.md` are pointer stubs — never
   append entries to them. For version attribution ("which release shipped X"),
   map fragment dates against tags via `git log --tags`. Bypass with a
   `skip-changelog:` git trailer for genuinely internal refactors. Not gated in

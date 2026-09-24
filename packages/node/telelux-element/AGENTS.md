@@ -1,7 +1,7 @@
 # Component agent contract
 
 Layers on top of the repo-root `AGENTS.md`. Where the two differ, this file
-wins for anything under `packages/component/`.
+wins for anything under `packages/node/telelux-element/`.
 
 ## Test tiers
 
@@ -14,7 +14,7 @@ wins for anything under `packages/component/`.
   `playwright.config.ts`.
 
 `src/vitest.config.ts` re-exports the root `vitest.config.ts` for the same
-reason `packages/frontend` does: the coverage gate runs vitest with `src/` as
+reason `packages/node/telelux-web` does: the coverage gate runs vitest with `src/` as
 its cwd, the mutation gate runs it from the package root, and vitest only
 reads the config sitting in its own cwd.
 
@@ -31,5 +31,5 @@ Vite owns the bundle, `tsc --noEmit` owns type checking.
 ## Publishing
 
 This package **is published to npm** through `putitoutthere`, unlike its
-`packages/frontend` sibling. See the root `putitoutthere.toml` for the release
+`packages/node/telelux-web` sibling. See the root `putitoutthere.toml` for the release
 entry.

@@ -17,7 +17,7 @@ This repo was scaffolded from
 conventions: colocated unit tests, changelog fragments, `putitoutthere` for
 releases, `just` for contributor commands.
 
-- `cd packages/python && just lint typecheck test_unit build` — the Python
+- `cd packages/python/telelux && just lint typecheck test_unit build` — the Python
   gate suite. Each package owns its justfile; there is no repo-root one.
 - [ARCHITECTURE.md](ARCHITECTURE.md) — package layout and release flow.
 - `docs/internals/` — contributor/agent conventions (not published).

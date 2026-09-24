@@ -1,5 +1,5 @@
 # putitoutthere config — two published packages: the Python SDK on PyPI and
-# the web component on npm. The workspace under packages/frontend is internal
+# the web component on npm. The workspace under packages/node/telelux-web is internal
 # tooling (the viewer's frontend source and build) and is never published.
 
 [putitoutthere]
@@ -9,31 +9,31 @@ version = 1
 name = "telelux-pypi"
 kind = "pypi"
 pypi = "telelux"
-path = "packages/python"
+path = "packages/python/telelux"
 build = "hatch"
 # Keep bookkeeping paths out of release cascades. The root pattern covers
 # package files, while the subtree pattern excludes fragment and attestation
 # directories. A leading `!` is not a substitute: minimatch makes it match
 # everything outside the subtree, so it would cascade LICENSE on every commit.
 globs = [
-  "packages/python/!(testing-conventions.toml)",
-  "packages/python/!(changelog.d|migrations.d|e2e-attestations)/**",
+  "packages/python/telelux/!(testing-conventions.toml)",
+  "packages/python/telelux/!(changelog.d|migrations.d|e2e-attestations)/**",
   "LICENSE",
 ]
 
 [[package]]
-name = "telelux-npm"
+name = "telelux-element-npm"
 kind = "npm"
-npm = "telelux"
-path = "packages/component"
-tag_format = "telelux-v{version}"
+npm = "telelux-element"
+path = "packages/node/telelux-element"
+tag_format = "telelux-element-v{version}"
 # Keep bookkeeping paths out of release cascades. The root pattern covers
 # package files, while the subtree pattern excludes fragment and attestation
 # directories. A leading `!` is not a substitute: minimatch makes it match
 # everything outside the subtree, so it would cascade LICENSE on every commit.
 globs = [
-  "packages/component/!(testing-conventions.toml)",
-  "packages/component/!(changelog.d|migrations.d|e2e-attestations)/**",
-  "packages/component/pnpm-lock.yaml",
+  "packages/node/telelux-element/!(testing-conventions.toml)",
+  "packages/node/telelux-element/!(changelog.d|migrations.d|e2e-attestations)/**",
+  "packages/node/telelux-element/pnpm-lock.yaml",
   "LICENSE",
 ]

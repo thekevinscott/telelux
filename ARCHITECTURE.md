@@ -8,8 +8,11 @@ is bundled into the Python wheel at build time and never touches npm.
 
 ```
 packages/
-  python/    hatchling-built wheel — the SDK (and later the thin CLI).
-  frontend/  internal viewer workspace (Vitest + tsc). Never published.
+  python/
+    telelux/          hatchling-built wheel — the SDK and CLI. PyPI `telelux`.
+  node/
+    telelux-element/  the `<telelux-transcript>` web component. npm `telelux-element`.
+    telelux-web/      internal viewer workspace (Vitest + tsc). Never published.
 docs/        VitePress site (published to GitHub Pages).
   internals/ contributor + agent conventions (not published).
 ```
@@ -40,7 +43,7 @@ context so Trusted Publishing claims line up (see the comments in that file).
   (no test files in the built artifact). `e2e verify` is wired but inert —
   it wants committed receipts under `e2e-attestations/` and there are none,
   because e2e does not run in CI. Narrow a rule through a `reason`-carrying
-  exemption in `packages/<pkg>/testing-conventions.toml`, never by adding a
+  exemption in `packages/<lang>/<pkg>/testing-conventions.toml`, never by adding a
   `gates:` allowlist: an exemption is scoped and goes stale loudly, an
   allowlist is silent forever.
 - `check.yml` / `build-check.yml` validate `putitoutthere.toml` and the release build on every PR.
@@ -51,5 +54,5 @@ context so Trusted Publishing claims line up (see the comments in that file).
 
 Defined in `docs/internals/repo.md`: every exported value/type, every CLI
 flag, every config key, every observable artifact. Changes to that surface
-require a fragment under `packages/<pkg>/changelog.d/` (plus the package's
+require a fragment under `packages/<lang>/<pkg>/changelog.d/` (plus the package's
 `migrations.d/` when breaking).

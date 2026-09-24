@@ -4,7 +4,7 @@
 build_command = "pnpm build"
 
 # Paths below are relative to the scan root, which the conventions workflow
-# sets to packages/frontend/src — not to this file's directory.
+# sets to packages/node/telelux-web/src — not to this file's directory.
 
 [[typescript.exempt]]
 path = "main.tsx"

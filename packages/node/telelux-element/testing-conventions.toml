@@ -1,0 +1,23 @@
+[typescript]
+# npm runs `prepare`/`prepack` on `pack` but can't guess the build script's
+# name, so the packaging gate needs it stated to get a dist/ to scan.
+build_command = "pnpm build"
+
+# Paths below are relative to the scan root, which the conventions workflow
+# sets to packages/node/telelux-element/src — not to this file's directory.
+
+[[typescript.exempt]]
+path = "index.ts"
+rules = ["colocated-test", "co-change"]
+reason = "barrel: re-exports only, holds no logic of its own to test"
+
+[[typescript.exempt]]
+path = "vitest.config.ts"
+rules = ["colocated-test", "co-change"]
+reason = "vitest configuration, not shipped source; it has to live in src/ because the coverage and mutation gates run vitest from there"
+
+[[typescript.exempt]]
+path = "telelux-transcript.ts"
+lines = [4, 5, 9]
+rules = ["mutation"]
+reason = "render() runs from Lit's own update scheduler on a microtask queued by requestUpdate, outside the synchronous call stack stryker's per-test coverage instrumentation tracks, and customElements.define runs once at module load before that instrumentation activates. Applied by hand, each of these three mutants (an empty render body, an empty template literal, an empty tag name) fails the shadow-root assertion in telelux-transcript.test.ts — the suite does kill them, the runner just cannot attribute it. Same class of false negative as packages/node/telelux-web/testing-conventions.toml's TranscriptBox.tsx exemption"

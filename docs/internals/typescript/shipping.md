@@ -1,6 +1,6 @@
 # TypeScript — shipping
 
-> This repo's TypeScript workspace (`packages/frontend`) is **internal tooling**
+> This repo's TypeScript workspace (`packages/node/telelux-web`) is **internal tooling**
 > and is never published to npm — the built viewer ships inside the Python
 > wheel. The sections below cover the conventions that still apply (CI shape,
 > lint, docs, API design). Registry publishing, trusted-publisher setup, and

@@ -1,7 +1,7 @@
 # Frontend agent contract
 
 Layers on top of the repo-root `AGENTS.md`. Where the two differ, this file
-wins for anything under `packages/frontend/`.
+wins for anything under `packages/node/telelux-web/`.
 
 ## Test tiers
 
@@ -29,7 +29,7 @@ absolute or cwd-agnostic.
 frontend's outermost meaningful boundary is a browser loading the built page,
 and that is exactly what the Playwright integration tier already exercises. An
 e2e tier on top would re-run the same assertions through a second runner for no
-added coverage. E2e belongs to `packages/python`, where a real process boundary
+added coverage. E2e belongs to `packages/python/telelux`, where a real process boundary
 (the installed wheel, the CLI) exists to cross.
 
 Both tiers run in CI (`.github/workflows/frontend.yml`). That is deliberate and
@@ -44,5 +44,5 @@ nobody asked for. Vite owns the bundle; `tsc --noEmit` owns type checking.
 ## Publishing
 
 This package is **never published**. The built `dist/` is bundled into the
-Python wheel at `packages/python` build time. `private: true` in `package.json`
+Python wheel at `packages/python/telelux` build time. `private: true` in `package.json`
 records that, but the directory's role is what states it.

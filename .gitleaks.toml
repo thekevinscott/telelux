@@ -11,7 +11,7 @@ description = "Repo-wide allowlists"
 paths = [
   '''(?i)^docs/.vitepress/cache/''',
   '''(?i)^packages/rust/target/''',
-  '''(?i)^packages/frontend/dist/''',
-  '''(?i)^packages/python/dist/''',
+  '''(?i)^packages/node/telelux-web/dist/''',
+  '''(?i)^packages/python/telelux/dist/''',
   '''(?i)\.lock$''',
 ]
