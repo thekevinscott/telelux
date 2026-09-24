@@ -1,0 +1,17 @@
+[typescript]
+# npm runs `prepare`/`prepack` on `pack` but can't guess the build script's
+# name, so the packaging gate needs it stated to get a dist/ to scan.
+build_command = "pnpm build"
+
+# Paths below are relative to the scan root, which the conventions workflow
+# sets to packages/node/telelux/src — not to this file's directory.
+
+[[typescript.exempt]]
+path = "index.ts"
+rules = ["co-change"]
+reason = "barrel: re-exports only; its test exists to load it for the coverage gate, not to track every re-export"
+
+[[typescript.exempt]]
+path = "vitest.config.ts"
+rules = ["colocated-test", "co-change"]
+reason = "vitest configuration, not shipped source; it has to live in src/ because the coverage and mutation gates run vitest from there"

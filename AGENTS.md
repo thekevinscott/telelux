@@ -16,8 +16,10 @@ Conventions, supervision rules, and per-language style live under
 - **`packages/`** holds public-facing packages — what gets published. It is
   language-first, matching testing-conventions: `packages/python/<pkg>` and
   `packages/node/<pkg>`, each folder named after the package it publishes
-  (`packages/python/telelux`, `packages/node/telelux-element`,
-  `packages/node/telelux-web`).
+  (`packages/python/telelux`, `packages/node/telelux`,
+  `packages/node/telelux-element`, `packages/node/telelux-web`). npm `telelux`
+  and PyPI `telelux` will expose the same tooling; which wraps which is
+  undecided.
 - **`internals/`** holds internal-only packages — built and tested to the same
   standard, never published.
 
