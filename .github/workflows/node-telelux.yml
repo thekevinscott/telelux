@@ -1,0 +1,90 @@
+name: Node telelux
+
+on:
+  pull_request:
+    paths:
+      - 'packages/node/telelux/**'
+      - '!packages/node/telelux/changelog.d/**'
+      - '!packages/node/telelux/migrations.d/**'
+      - '!packages/node/telelux/README.md'
+      - '.github/workflows/node-telelux.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: packages/node/telelux
+    steps:
+      - uses: actions/checkout@v6
+      - uses: pnpm/action-setup@v5
+        with:
+          version: 10.33.0
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+      - run: pnpm install --no-frozen-lockfile
+      - run: pnpm run lint
+
+  typecheck:
+    name: Typecheck
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: packages/node/telelux
+    steps:
+      - uses: actions/checkout@v6
+      - uses: pnpm/action-setup@v5
+        with:
+          version: 10.33.0
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+      - run: pnpm install --no-frozen-lockfile
+      - run: pnpm run typecheck
+
+  test-unit:
+    name: Unit
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: packages/node/telelux
+    steps:
+      - uses: actions/checkout@v6
+      - uses: pnpm/action-setup@v5
+        with:
+          version: 10.33.0
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+      - run: pnpm install --no-frozen-lockfile
+      - run: pnpm run test_unit
+
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: packages/node/telelux
+    steps:
+      - uses: actions/checkout@v6
+      - uses: pnpm/action-setup@v5
+        with:
+          version: 10.33.0
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+      - run: pnpm install --no-frozen-lockfile
+      - run: pnpm run build
+
+  conventions:
+    name: TypeScript (telelux)
+    uses: thekevinscott/testing-conventions/.github/workflows/testing-conventions.yml@v0
+    with:
+      languages: '["typescript"]'
+      source: packages/node/telelux/src
+      base: ${{ github.event.pull_request.base.sha || 'origin/main' }}

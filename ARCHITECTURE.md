@@ -11,6 +11,7 @@ packages/
   python/
     telelux/          hatchling-built wheel — the SDK and CLI. PyPI `telelux`.
   node/
+    telelux/          Node tooling; a placeholder until it wraps (or is wrapped by) the Python package. npm `telelux`.
     telelux-element/  the `<telelux-transcript>` web component. npm `telelux-element`.
     telelux-web/      internal viewer workspace (Vitest + tsc). Never published.
 docs/        VitePress site (published to GitHub Pages).

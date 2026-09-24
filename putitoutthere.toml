@@ -1,5 +1,5 @@
-# putitoutthere config — two published packages: the Python SDK on PyPI and
-# the web component on npm. The workspace under packages/node/telelux-web is internal
+# putitoutthere config — three published packages: the Python SDK on PyPI, the
+# Node tooling on npm, and the web component on npm. The workspace under packages/node/telelux-web is internal
 # tooling (the viewer's frontend source and build) and is never published.
 
 [putitoutthere]
@@ -35,5 +35,18 @@ globs = [
   "packages/node/telelux-element/!(testing-conventions.toml)",
   "packages/node/telelux-element/!(changelog.d|migrations.d|e2e-attestations)/**",
   "packages/node/telelux-element/pnpm-lock.yaml",
+  "LICENSE",
+]
+
+[[package]]
+name = "telelux-npm"
+kind = "npm"
+npm = "telelux"
+path = "packages/node/telelux"
+tag_format = "telelux-v{version}"
+globs = [
+  "packages/node/telelux/!(testing-conventions.toml)",
+  "packages/node/telelux/!(changelog.d|migrations.d|e2e-attestations)/**",
+  "packages/node/telelux/pnpm-lock.yaml",
   "LICENSE",
 ]
