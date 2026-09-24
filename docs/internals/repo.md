@@ -54,3 +54,14 @@ A gate this repo appears to need for itself is a missing feature in one of
 those three. File it upstream. A bespoke checker living here duplicates
 someone else's support matrix, drifts from it silently, and is invisible to
 every other repo with the same problem.
+
+## CI lanes fire only on the paths that feed them
+
+Every workflow under `.github/workflows/` carries a `paths:` filter, except
+`pr-monitor.yml`, which gates the aggregate check set on every PR. Each
+package lane (`python.yml`, `component.yml`, `frontend.yml`) triggers on its
+own subtree minus `changelog.d/`, `migrations.d/`, and `README.md`, and holds
+both that package's tests and its testing-conventions gates. `build-check.yml`
+mirrors the `putitoutthere.toml` globs; `check.yml` fires only when that config
+or a putitoutthere workflow changes. A fragment-only or docs-only PR runs
+nothing but the gate.

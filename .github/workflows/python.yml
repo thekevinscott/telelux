@@ -1,15 +1,28 @@
 name: Python
 
+# Fragments and the README feed no job here. Attestation receipts stay in
+# scope: the conventions job's e2e-verify gate walks them.
 on:
   pull_request:
     paths:
       - 'packages/python/telelux/**'
+      - '!packages/python/telelux/changelog.d/**'
+      - '!packages/python/telelux/migrations.d/**'
+      - '!packages/python/telelux/README.md'
       - '.github/workflows/python.yml'
 
 permissions:
   contents: read
 
 jobs:
+  conventions:
+    name: Python
+    uses: thekevinscott/testing-conventions/.github/workflows/testing-conventions.yml@v0
+    with:
+      languages: '["python"]'
+      source: packages/python/telelux
+      base: ${{ github.event.pull_request.base.sha || 'origin/main' }}
+
   test:
     name: Unit
     runs-on: ubuntu-latest

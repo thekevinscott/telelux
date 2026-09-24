@@ -1,15 +1,28 @@
 name: Frontend
 
+# Fragments and the README feed no job here. Attestation receipts stay in
+# scope: the conventions job's e2e-verify gate walks them.
 on:
   pull_request:
     paths:
       - 'packages/node/telelux-web/**'
+      - '!packages/node/telelux-web/changelog.d/**'
+      - '!packages/node/telelux-web/migrations.d/**'
+      - '!packages/node/telelux-web/README.md'
       - '.github/workflows/frontend.yml'
 
 permissions:
   contents: read
 
 jobs:
+  conventions:
+    name: TypeScript
+    uses: thekevinscott/testing-conventions/.github/workflows/testing-conventions.yml@v0
+    with:
+      languages: '["typescript"]'
+      source: packages/node/telelux-web/src
+      base: ${{ github.event.pull_request.base.sha || 'origin/main' }}
+
   lint:
     name: Lint
     runs-on: ubuntu-latest
