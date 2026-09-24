@@ -1,59 +1,90 @@
 # Docs — agent contract
 
-The docs site is organized by [Diataxis](https://diataxis.fr): every page is
-exactly one of four kinds, and that kind is **declared, not implied**. Skim the
-[compass](https://diataxis.fr/compass/) before adding or moving a page.
+One VitePress site documents all three packages: the web component
+(`packages/node/telelux-element`), the app shell, and the Python CLI/SDK
+(`packages/python/telelux`). Netlify hosts it from `docs/.vitepress/dist`, built by
+the root `netlify.toml`; `.github/workflows/docs.yml` runs the same build as a
+PR check and deploys nothing. GitHub Pages belongs to the app shell alone.
+
+## Package-first layout
+
+The nav and sidebar are organized by package, not by quadrant. A reader wants
+one package's docs, not one quadrant across all three.
+
+| Tree | Package | Entry page |
+| --- | --- | --- |
+| `component/` | web component | `/component/` — hosts the live `<telelux-transcript>` demo |
+| `app/` | app shell | `/app/` |
+| `python/` | Python CLI/SDK | `/python/` |
+
+Inside each tree the four [Diataxis](https://diataxis.fr) groups repeat:
+`index.md` is the tutorial, then `guide/`, `reference/`, `explanation/`.
+`migrations.md` at the root is reference shared by every package. A
+`contributing/` tree holds repo-wide how-tos that belong to no package.
+
+`.vitepress/config.ts` declares one global sidebar keyed on `/` with a
+top-level group per package. Do not add path-scoped sidebars: they swap the
+whole tree out and hide the other packages.
+
+## Package READMEs are the reference source
+
+Each package's `README.md` is the source of truth for its surface, and the
+package's `reference/index.md` includes it rather than copying it:
+
+```md
+<!--@include: ../../../packages/node/telelux-element/README.md-->
+```
+
+Edit the README, never the docs copy. Treat the Python README the same way
+when that tree gains content.
+
+## The live demo
+
+`/component/` renders the element built from this branch's source, not from
+npm. The root `pnpm-workspace.yaml` links `docs` to `packages/node/telelux-element`
+through `telelux-element: workspace:*`, so the component must be built before the
+docs (`pnpm --filter telelux-element build`, then `pnpm --filter docs build`).
+`config.ts` registers `telelux-transcript` as a custom element for the Vue compiler,
+and `.vitepress/theme/TranscriptDemo.vue` imports `telelux-element` inside
+`onMounted` because Lit touches `window` at import time. Fixtures live in
+`public/fixtures/`.
 
 ## The four quadrants
 
-| Quadrant | Lives in | Orientation | A page here is… | …and is **not** |
-| --- | --- | --- | --- | --- |
-| **Tutorial** | `getting-started.md` | learning | a lesson that walks a beginner through a guaranteed-to-succeed first run | a menu of options, an API dump, or the "why" |
-| **How-to** | `guide/` | tasks | a recipe that solves one real problem for someone who knows the basics | a teaching exercise or a complete reference |
-| **Reference** | `reference/`, `migrations.md` | information | a dry, complete description of the API / config / CLI surface | a tutorial, an opinion, or task framing |
-| **Explanation** | `explanation/` | understanding | discursive background: why it works this way, trade-offs, alternatives | step-by-step instructions or exhaustive parameter tables |
+Every page is exactly one of four kinds, and that kind is **declared, not
+implied**. Skim the [compass](https://diataxis.fr/compass/) before adding or
+moving a page.
 
-Add a `tutorials/` directory once the tutorial outgrows a single page.
+| Quadrant | Orientation | A page here is… | …and is **not** |
+| --- | --- | --- | --- |
+| **Tutorial** | learning | a lesson that walks a beginner through a guaranteed-to-succeed first run | a menu of options, an API dump, or the "why" |
+| **How-to** | tasks | a recipe that solves one real problem for someone who knows the basics | a teaching exercise or a complete reference |
+| **Reference** | information | a dry, complete description of the API / config / CLI surface | a tutorial, an opinion, or task framing |
+| **Explanation** | understanding | discursive background: why it works this way, trade-offs, alternatives | step-by-step instructions or exhaustive parameter tables |
 
 Not everything under `docs/` is a quadrant: `internals/` is contributor/agent-
 facing material excluded from the build via `srcExclude` in
-`.vitepress/config.ts`, deliberately outside the four quadrants. Package-local
-changelog and migration folders are outside the docs site entirely.
+`.vitepress/config.ts`. Package-local changelog and migration folders are
+outside the docs site entirely.
 
 The cardinal rule: **one mode per page.** When a how-to sprouts an
-"understanding" tangent, that paragraph belongs in `explanation/` behind a link
-— not inline.
+"understanding" tangent, that paragraph belongs in `explanation/` behind a
+link, not inline.
 
 ## Local rules
 
 1. **Answer _why_ first.** Open every page by telling the reader why they're
-   here — what they'll be able to do or understand when they finish. If a page
-   can't justify itself in a sentence, merge or cut it.
-2. **Build toward resolution.** No dead ends: every page ends by pointing to the
-   next step (the next lesson, the how-to that applies a concept, the reference
-   for the details). The set should carry a reader from first run to unblocked.
-3. **Declare the quadrant in frontmatter** — every content page carries
+   here. If a page can't justify itself in a sentence, merge or cut it.
+2. **Build toward resolution.** Every page ends by pointing to the next step.
+3. **Declare the quadrant in frontmatter.** Every content page carries
    `diataxis: tutorial | how-to | reference | explanation`. The home page
-   (`layout: home`) is exempt. Frontmatter is the machine-checkable source of
-   truth; the directory layout and sidebar groups mirror it for humans.
-4. **One mode per page** (see the cardinal rule above).
-5. **Register the page** under its quadrant's group in `.vitepress/config.ts`.
-   The top nav and homepage hero are the entry points into the quadrants
-   (mirroring the [testing-conventions](https://thekevinscott.github.io/testing-conventions/)
-   docs) — keep them pointing there.
-
-## This is a template
-
-These pages are deliberately thin stubs. A library cloning this repo **replaces
-the content and keeps the structure** — the four quadrants, the frontmatter
-rule, and this file are what's worth inheriting. Keep stubs short: they show the
-shape, they aren't meant to be read.
+   (`index.md`, a plain page with one link) is exempt.
+4. **One mode per page.**
+5. **Register the page** under its package's group in `.vitepress/config.ts`,
+   inside the right quadrant entry.
 
 ## Enforcement (optional)
 
-Structure over prose, like everything else here. The `diataxis:` key makes a
-[`changelog.yml`](../.github/workflows/changelog.yml)-style gate a few lines of
-bash — assert every `docs/**/*.md` except the home page declares a valid
-quadrant — but it's intentionally **not wired in**; add it if you want a hard
-gate. LLM-based docs auditors that grade pages against Diataxis exist too; they
-need a key and add cost, so they stay opt-in and never a template default.
+The `diataxis:` key makes a gate a few lines of bash: assert every
+`docs/**/*.md` except the home page and `internals/` declares a valid quadrant.
+It is deliberately not wired in.
