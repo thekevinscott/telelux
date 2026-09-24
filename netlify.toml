@@ -1,0 +1,7 @@
+[build]
+  base = "."
+  command = "pnpm --filter telelux build && pnpm --filter docs build"
+  publish = "docs/.vitepress/dist"
+
+[build.environment]
+  NODE_VERSION = "24"
