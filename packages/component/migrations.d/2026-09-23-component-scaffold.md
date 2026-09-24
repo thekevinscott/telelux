@@ -1,34 +1,21 @@
-# Summary
+### The `telelux` npm package is scaffolded
 
-Added `telelux` on npm, a new `packages/component` workspace scaffolding the
-`<tele-lux>` web component from #49. This is the package's first published
-surface, so there is nothing prior for consumers to migrate from.
+**Summary**
 
-# Required changes
+`packages/component` publishes `telelux` on npm, a net-new package with no prior release to migrate from.
 
-None — net-new package, no prior release to migrate from.
+**Required changes**
 
-# Deprecations removed
+_None._
 
-None.
+**Deprecations removed**
 
-# Behavior changes without code changes
+_None._
 
-None.
+**Behavior changes without code changes**
 
-# Verification
+_None._
 
-```sh
-npm install telelux lit
-```
+**Verification**
 
-```html
-<script type="module">
-  import 'telelux';
-</script>
-
-<tele-lux></tele-lux>
-```
-
-Renders the placeholder text `hello world` in the element's shadow root. See
-the package README for the no-bundler (import map) route.
+Import `telelux` and mount `<tele-lux></tele-lux>`; its shadow root renders `hello world`.

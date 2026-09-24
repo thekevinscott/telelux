@@ -85,8 +85,11 @@ shortening it.
 - Every PR that changes a public API adds a **changelog fragment**: one
   timestamped file under `packages/<pkg>/changelog.d/` (plus one under
   `packages/<pkg>/migrations.d/` for breaking changes), named
-  `YYYY-MM-DD-<slug>.md` by UTC merge date. The folders are the permanent,
-  append-only record;
+  `YYYY-MM-DD-<slug>.md` by UTC merge date. A changelog fragment is a
+  snippet, one to three lines: a bold Keep a Changelog category, then the
+  entry text. A migrations fragment keeps all five headings, with `_None._`
+  under those that do not apply. Each folder's README shows one. The folders
+  are the permanent, append-only record;
   `packages/<pkg>/CHANGELOG.md` / `MIGRATIONS.md` are pointer stubs — never
   append entries to them. For version attribution ("which release shipped X"),
   map fragment dates against tags via `git log --tags`. Bypass with a

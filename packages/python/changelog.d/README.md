@@ -9,10 +9,17 @@ accumulate as the permanent record.
   date; authored timestamps interleave wrongly across long-lived branches)
   and a short lowercase slug. Plain `ls` sorts chronologically; newest =
   highest sort order.
-- **Body:** a few sentences. Lead with the Keep a Changelog category
-  (**Added** / **Changed** / **Deprecated** / **Removed** / **Fixed**);
-  breaking changes carry a **BREAKING** marker and link to their
+- **Body:** one to three lines, a snippet rather than a document. Open with
+  the bold Keep a Changelog category (**Added** / **Changed** /
+  **Deprecated** / **Removed** / **Fixed**), then the entry text as it would
+  read in a changelog, with an issue number where useful. Breaking changes
+  carry a **BREAKING** marker and link to their
   [`../migrations.d/`](../migrations.d/) fragment.
+
+  ```markdown
+  **Fixed** Dogfood runs `unit lint` against the Node package source and the package's TypeScript mocks satisfy the typed mock rule.
+  ```
+
 - **Version attribution:** fragments carry dates, not versions. To answer
   "which release shipped X", map the fragment's date against tags:
   `git log --tags --simplify-by-decoration --format='%cI %d'`.
