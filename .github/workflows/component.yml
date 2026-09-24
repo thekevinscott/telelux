@@ -3,7 +3,7 @@ name: Component
 on:
   pull_request:
     paths:
-      - 'packages/component/**'
+      - 'packages/node/telelux-element/**'
       - '.github/workflows/component.yml'
 
 permissions:
@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: packages/component
+        working-directory: packages/node/telelux-element
     steps:
       - uses: actions/checkout@v6
       - uses: pnpm/action-setup@v5
@@ -32,7 +32,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: packages/component
+        working-directory: packages/node/telelux-element
     steps:
       - uses: actions/checkout@v6
       - uses: pnpm/action-setup@v5
@@ -49,7 +49,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: packages/component
+        working-directory: packages/node/telelux-element
     steps:
       - uses: actions/checkout@v6
       - uses: pnpm/action-setup@v5
@@ -66,7 +66,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: packages/component
+        working-directory: packages/node/telelux-element
     steps:
       - uses: actions/checkout@v6
       - uses: pnpm/action-setup@v5
@@ -85,7 +85,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: packages/component
+        working-directory: packages/node/telelux-element
     steps:
       - uses: actions/checkout@v6
       - uses: pnpm/action-setup@v5

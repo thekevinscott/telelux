@@ -19,9 +19,9 @@ repos:
     hooks:
       - id: ruff
         args: [--fix]
-        files: ^packages/python/
+        files: ^packages/python/telelux/
       - id: ruff-format
-        files: ^packages/python/
+        files: ^packages/python/telelux/
 
   - repo: local
     hooks:

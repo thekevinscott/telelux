@@ -1,0 +1,1 @@
+**Changed** **BREAKING** The npm package is `telelux-element` and its tag is `<telelux-transcript>`; `telelux` on PyPI is the Python package. See [`../migrations.d/2026-09-24-rename-telelux-element.md`](../migrations.d/2026-09-24-rename-telelux-element.md).

@@ -42,6 +42,6 @@ Run the location check locally:
 
 ```sh
 cargo install testing-conventions
-testing-conventions unit location --language typescript packages/frontend/src
-testing-conventions unit location --language python packages/python
+testing-conventions unit location --language typescript packages/node/telelux-web/src
+testing-conventions unit location --language python packages/python/telelux
 ```

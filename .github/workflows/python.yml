@@ -3,7 +3,7 @@ name: Python
 on:
   pull_request:
     paths:
-      - 'packages/python/**'
+      - 'packages/python/telelux/**'
       - '.github/workflows/python.yml'
 
 permissions:
@@ -18,7 +18,7 @@ jobs:
       - uses: astral-sh/setup-uv@v7
       - uses: extractions/setup-just@v3
       - run: just test_unit
-        working-directory: packages/python
+        working-directory: packages/python/telelux
 
   test-integration:
     name: Integration
@@ -28,7 +28,7 @@ jobs:
       - uses: astral-sh/setup-uv@v7
       - uses: extractions/setup-just@v3
       - run: just test_integration
-        working-directory: packages/python
+        working-directory: packages/python/telelux
 
   build:
     name: Build wheel + smoke
@@ -48,9 +48,9 @@ jobs:
       - run: pip install uv
       - name: Build wheel
         run: uv build
-        working-directory: packages/python
+        working-directory: packages/python/telelux
       - name: Install wheel + smoke (import)
         run: |
           python -m venv .venv
-          .venv/bin/pip install packages/python/dist/*.whl
+          .venv/bin/pip install packages/python/telelux/dist/*.whl
           .venv/bin/python -c "import telelux; print(telelux.__version__)"

@@ -37,8 +37,8 @@ stryker-setup-*.js
 .worktrees
 
 # Playwright
-packages/frontend/test-results/
-packages/frontend/playwright-report/
-packages/component/test-results/
-packages/component/playwright-report/
-packages/component/dist-demo/
+packages/node/telelux-web/test-results/
+packages/node/telelux-web/playwright-report/
+packages/node/telelux-element/test-results/
+packages/node/telelux-element/playwright-report/
+packages/node/telelux-element/dist-demo/

@@ -1,19 +1,19 @@
-# telelux
+# telelux-element
 
 Web component that renders an agent transcript.
 
 ## Install
 
 ```sh
-pnpm add telelux
+pnpm add telelux-element
 ```
 
 ```html
 <script type="module">
-  import 'telelux';
+  import 'telelux-element';
 </script>
 
-<tele-lux></tele-lux>
+<telelux-transcript></telelux-transcript>
 ```
 
 `lit` is a regular dependency, resolved by the host's package manager rather
@@ -30,19 +30,19 @@ Transcript rendering lands in later work under
   {
     "imports": {
       "lit": "https://esm.sh/lit@3",
-      "telelux": "https://esm.sh/telelux@0"
+      "telelux-element": "https://esm.sh/telelux-element@0"
     }
   }
 </script>
 <script type="module">
-  import 'telelux';
+  import 'telelux-element';
 </script>
 
-<tele-lux></tele-lux>
+<telelux-transcript></telelux-transcript>
 ```
 
 The import map must appear in the host page before any module script that
-imports `lit` or `telelux`. No build step is involved — the browser resolves
+imports `lit` or `telelux-element`. No build step is involved — the browser resolves
 both bare specifiers straight from esm.sh.
 
 ## Testing

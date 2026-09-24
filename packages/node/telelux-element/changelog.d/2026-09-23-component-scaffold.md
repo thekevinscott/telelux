@@ -1,0 +1,1 @@
+**Added** `telelux-element` on npm: the `packages/node/telelux-element` workspace scaffolding the `<telelux-transcript>` web component (#49). It renders the placeholder text "hello world" until later sub-issues land transcript rendering.

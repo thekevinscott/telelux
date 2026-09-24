@@ -4,15 +4,15 @@ Cross-cutting rules that apply across all language packages. Language-specific g
 
 ## Changelog + migration fragments
 
-The changelog and migration record are **append-only fragment folders** inside each package: `packages/<pkg>/changelog.d/` and `packages/<pkg>/migrations.d/`. The folders *are* the record — no rendered CHANGELOG is assembled at release time, nothing commits back to `main` per release, and fragments are never deleted, rewritten, or "flushed". One fragment per PR, added in that PR, keeps concurrent PRs structurally conflict-free (a shared changelog file makes every pair of in-flight PRs merge-conflict by construction). The philosophy is global — every package follows it.
+The changelog and migration record are **append-only fragment folders** inside each package: `packages/<lang>/<pkg>/changelog.d/` and `packages/<lang>/<pkg>/migrations.d/`. The folders *are* the record — no rendered CHANGELOG is assembled at release time, nothing commits back to `main` per release, and fragments are never deleted, rewritten, or "flushed". One fragment per PR, added in that PR, keeps concurrent PRs structurally conflict-free (a shared changelog file makes every pair of in-flight PRs merge-conflict by construction). The philosophy is global — every package follows it.
 
 Every PR that changes public API adds at least one fragment naming each touched package. Enforced in CI by [`changelog.yml`](../../.github/workflows/changelog.yml); a `skip-changelog:` trailer bypasses the check for genuinely internal refactors.
 
 **Filenames** — `YYYY-MM-DD-<slug>.md`, where the date is the UTC *merge* date, not the author date (authored timestamps interleave wrongly across long-lived branches). Plain `ls` sorts chronologically; newest = highest sort order. For version attribution ("which release shipped X"), map fragment dates against tags via `git log --tags --simplify-by-decoration --format='%cI %d'`.
 
-**Changelog fragments** (`packages/<pkg>/changelog.d/`) — a few sentences per fragment. Lead with the Keep a Changelog category (`Added` / `Changed` / `Deprecated` / `Removed` / `Fixed`); breaking changes carry a `**BREAKING**` marker and link to their sibling `migrations.d/` fragment.
+**Changelog fragments** (`packages/<lang>/<pkg>/changelog.d/`) — a few sentences per fragment. Lead with the Keep a Changelog category (`Added` / `Changed` / `Deprecated` / `Removed` / `Fixed`); breaking changes carry a `**BREAKING**` marker and link to their sibling `migrations.d/` fragment.
 
-**Migration fragments** (`packages/<pkg>/migrations.d/`) — one per breaking change. Each has five sections, in order:
+**Migration fragments** (`packages/<lang>/<pkg>/migrations.d/`) — one per breaking change. Each has five sections, in order:
 
 1. **Summary** — one paragraph: what changed and why.
 2. **Required changes** — before/after for config, CLI flags, function/method arguments, action inputs. "None" if purely additive.
@@ -20,7 +20,7 @@ Every PR that changes public API adds at least one fragment naming each touched 
 4. **Behavior changes without code changes** — same API, different runtime behavior (tag format, exit codes, defaults).
 5. **Verification** — commands the consumer runs to confirm the upgrade worked, with the expected output.
 
-**Stubs at the conventional paths** — `packages/<pkg>/CHANGELOG.md`, `packages/<pkg>/MIGRATIONS.md`, and `docs/migrations.md` are short pointers into the folders, so anyone fetching the conventional filename gets one hop instead of a 404. Never append entries to the stubs.
+**Stubs at the conventional paths** — `packages/<lang>/<pkg>/CHANGELOG.md`, `packages/<lang>/<pkg>/MIGRATIONS.md`, and `docs/migrations.md` are short pointers into the folders, so anyone fetching the conventional filename gets one hop instead of a 404. Never append entries to the stubs.
 
 **Ship the folders in artifacts where the toolchain allows** — today the single published artifact is the Python wheel, and hatchling cannot include files outside the package root, so wheel consumers take the stub → folder hop on GitHub instead.
 
@@ -36,7 +36,7 @@ wrapper + npm-published Node shim) and pruned to its actual shape:
   Python package builds with `hatchling`.
 - **One published package: PyPI.** `putitoutthere.toml` declares exactly
   one `[[package]]` (kind `pypi`, name `telelux`).
-- **`packages/frontend` is internal tooling.** It builds the static viewer
+- **`packages/node/telelux-web` is internal tooling.** It builds the static viewer
   frontend whose output is bundled into the wheel; its `package.json` is
   `"private": true` and carries no `bin` / `optionalDependencies` /
   publish config. npm publishing machinery (`bootstrap-npm.yml`,
