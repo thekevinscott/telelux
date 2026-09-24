@@ -75,7 +75,7 @@ shortening it.
   plugin installed, a `describe_` block collects **zero** tests and pytest
   reports success — a missing plugin looks exactly like a passing suite.
 - The [testing-conventions](https://github.com/thekevinscott/testing-conventions)
-  standard applies **in full**, run by `.github/workflows/conventions.yml`.
+  standard applies **in full**, run by the `conventions` job of each package lane under `.github/workflows/`.
   Colocated unit tests (`foo.py` ↔ `foo_test.py`, `foo.ts` ↔ `foo.test.ts`)
   are its most visible rule, not its only one — coverage, diff-scoped
   mutation, mocking hygiene, one-function-per-file, integration-test layout,

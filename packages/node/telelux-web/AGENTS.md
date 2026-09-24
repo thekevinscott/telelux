@@ -32,7 +32,7 @@ e2e tier on top would re-run the same assertions through a second runner for no
 added coverage. E2e belongs to `packages/python/telelux`, where a real process boundary
 (the installed wheel, the CLI) exists to cross.
 
-Both tiers run in CI (`.github/workflows/frontend.yml`). That is deliberate and
+Both tiers run in CI (`.github/workflows/node-telelux-web.yml`). That is deliberate and
 distinguishes them from Python's e2e tier, which never runs in CI.
 
 ## Build

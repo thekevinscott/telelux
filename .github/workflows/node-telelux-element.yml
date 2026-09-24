@@ -1,34 +1,34 @@
-name: Frontend
+name: node/telelux-element
 
 # Fragments and the README feed no job here. Attestation receipts stay in
 # scope: the conventions job's e2e-verify gate walks them.
 on:
   pull_request:
     paths:
-      - 'packages/node/telelux-web/**'
-      - '!packages/node/telelux-web/changelog.d/**'
-      - '!packages/node/telelux-web/migrations.d/**'
-      - '!packages/node/telelux-web/README.md'
-      - '.github/workflows/frontend.yml'
+      - 'packages/node/telelux-element/**'
+      - '!packages/node/telelux-element/changelog.d/**'
+      - '!packages/node/telelux-element/migrations.d/**'
+      - '!packages/node/telelux-element/README.md'
+      - '.github/workflows/node-telelux-element.yml'
 
 permissions:
   contents: read
 
 jobs:
   conventions:
-    name: TypeScript
+    name: node/telelux-element
     uses: thekevinscott/testing-conventions/.github/workflows/testing-conventions.yml@v0
     with:
       languages: '["typescript"]'
-      source: packages/node/telelux-web/src
+      source: packages/node/telelux-element/src
       base: ${{ github.event.pull_request.base.sha || 'origin/main' }}
 
   lint:
-    name: Lint
+    name: 'node/telelux-element: lint'
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: packages/node/telelux-web
+        working-directory: packages/node/telelux-element
     steps:
       - uses: actions/checkout@v6
       - uses: pnpm/action-setup@v5
@@ -41,11 +41,11 @@ jobs:
       - run: pnpm run lint
 
   typecheck:
-    name: Typecheck
+    name: 'node/telelux-element: typecheck'
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: packages/node/telelux-web
+        working-directory: packages/node/telelux-element
     steps:
       - uses: actions/checkout@v6
       - uses: pnpm/action-setup@v5
@@ -58,11 +58,11 @@ jobs:
       - run: pnpm run typecheck
 
   test-unit:
-    name: Unit
+    name: 'node/telelux-element: unit'
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: packages/node/telelux-web
+        working-directory: packages/node/telelux-element
     steps:
       - uses: actions/checkout@v6
       - uses: pnpm/action-setup@v5
@@ -75,11 +75,11 @@ jobs:
       - run: pnpm run test_unit
 
   test-integration:
-    name: Integration
+    name: 'node/telelux-element: integration'
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: packages/node/telelux-web
+        working-directory: packages/node/telelux-element
     steps:
       - uses: actions/checkout@v6
       - uses: pnpm/action-setup@v5
@@ -90,15 +90,15 @@ jobs:
           node-version: 24
       - run: pnpm install --no-frozen-lockfile
       - run: pnpm exec playwright install --with-deps chromium
-      - run: pnpm run build
+      - run: pnpm run build_demo
       - run: pnpm run test_integration
 
   build:
-    name: Build
+    name: 'node/telelux-element: build'
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: packages/node/telelux-web
+        working-directory: packages/node/telelux-element
     steps:
       - uses: actions/checkout@v6
       - uses: pnpm/action-setup@v5

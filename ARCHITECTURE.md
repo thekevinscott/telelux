@@ -33,10 +33,10 @@ context so Trusted Publishing claims line up (see the comments in that file).
 
 ## CI gates
 
-- Per-language workflows (`python.yml`, `frontend.yml`) run lint + typecheck + test + build with path filters.
-- `conventions.yml` runs the
+- Per-package lanes (`python-telelux.yml`, `node-telelux-element.yml`, `node-telelux-web.yml`) run lint + typecheck + test + build with path filters.
+- Each lane's `conventions` job runs the
   [testing-conventions](https://github.com/thekevinscott/testing-conventions)
-  standard on both packages, once per language. It names no `gates:`, which
+  standard on that package. It names no `gates:`, which
   means the full default set: colocated tests and their co-change rule,
   one-function-per-file, unit-test mocking hygiene, integration-test layout,
   whole-tree and changed-line coverage, diff-scoped mutation, and packaging

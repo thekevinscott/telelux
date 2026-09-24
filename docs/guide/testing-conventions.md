@@ -28,8 +28,8 @@ declaration files `*.d.ts` are exempt.)
 
 ## How it's enforced
 
-`.github/workflows/conventions.yml` calls the upstream reusable workflow on every
-pull request, once per language. It names no `gates:`, so every applicable rule
+Each package lane under `.github/workflows/` calls the upstream reusable workflow
+in its `conventions` job on every pull request that touches that package. It names no `gates:`, so every applicable rule
 runs; the location check is one job among them, failing the build — with the
 offending files in the log — on any source file missing its colocated test.
 
