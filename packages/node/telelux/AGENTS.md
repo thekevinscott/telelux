@@ -15,8 +15,8 @@ testing-conventions mutation gate reports every mutant as survived even when the
 suite kills it by hand, so the gate would be theatre. Verified on this package
 with both versions; the siblings' `rules = ["mutation"]` exemptions are the
 same symptom. One consequence: the coverage gate forces vitest's `coverage.all`
-on, and under vitest 3 that reports an unloaded barrel as 0%, so tests import
-through `./index` rather than the module directly.
+on, and under vitest 3 that reports an unloaded barrel as 0%, so `index.ts`
+carries a colocated test that loads it.
 
 `src/vitest.config.ts` re-exports the root `vitest.config.ts` for the same
 reason `packages/node/telelux-element` does: the coverage gate runs vitest with

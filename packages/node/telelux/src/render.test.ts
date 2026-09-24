@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { render } from './index';
+import { render } from './render';
 
 describe('render', () => {
   it('throws until the wrap direction with the Python package is decided', () => {

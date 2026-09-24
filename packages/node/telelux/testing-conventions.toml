@@ -8,8 +8,8 @@ build_command = "pnpm build"
 
 [[typescript.exempt]]
 path = "index.ts"
-rules = ["colocated-test", "co-change"]
-reason = "barrel: re-exports only, holds no logic of its own to test"
+rules = ["co-change"]
+reason = "barrel: re-exports only; its test exists to load it for the coverage gate, not to track every re-export"
 
 [[typescript.exempt]]
 path = "vitest.config.ts"
