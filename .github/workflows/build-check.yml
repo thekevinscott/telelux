@@ -9,11 +9,22 @@ name: Build Check
 
 on:
   pull_request:
-    # Scoped to build inputs — the union of the putitoutthere.toml globs
-    # (packages/**, LICENSE) plus the config and this workflow. Docs-only
-    # and internals-only PRs skip the heavy per-target matrix.
+    # Mirrors the putitoutthere.toml globs: each published package's
+    # subtree minus what never ships (fragments, attestation receipts,
+    # the gate config), plus the config, LICENSE, and this workflow. The
+    # exclusions must stay a subset of what the globs carve out, or a
+    # merge releases what this never built.
     paths:
-      - 'packages/**'
+      - 'packages/python/telelux/**'
+      - '!packages/python/telelux/changelog.d/**'
+      - '!packages/python/telelux/migrations.d/**'
+      - '!packages/python/telelux/e2e-attestations/**'
+      - '!packages/python/telelux/testing-conventions.toml'
+      - 'packages/node/telelux-element/**'
+      - '!packages/node/telelux-element/changelog.d/**'
+      - '!packages/node/telelux-element/migrations.d/**'
+      - '!packages/node/telelux-element/e2e-attestations/**'
+      - '!packages/node/telelux-element/testing-conventions.toml'
       - 'putitoutthere.toml'
       - 'LICENSE'
       - '.github/workflows/build-check.yml'
