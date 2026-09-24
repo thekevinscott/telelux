@@ -13,15 +13,15 @@ importers:
       lit:
         specifier: ^3.3.3
         version: 3.3.3
-      telelux:
+      telelux-element:
         specifier: workspace:*
-        version: link:../packages/component
+        version: link:../packages/node/telelux-element
     devDependencies:
       vitepress:
         specifier: ^1.5.0
         version: 1.6.4(@algolia/client-search@5.59.0)(@types/node@22.20.4)(lightningcss@1.33.0)(postcss@8.5.28)(search-insights@2.17.3)(typescript@5.9.3)
 
-  packages/component:
+  packages/node/telelux-element:
     dependencies:
       lit:
         specifier: ^3.3.3
@@ -64,7 +64,7 @@ importers:
         specifier: ^5.0.1
         version: 5.0.1(@types/node@22.20.4)(@vitest/coverage-v8@5.0.1)(jsdom@30.1.1)(vite@8.3.0(@types/node@22.20.4))
 
-  packages/frontend:
+  packages/node/telelux-web:
     dependencies:
       react:
         specifier: ^19.3.0

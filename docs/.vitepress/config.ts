@@ -9,7 +9,7 @@ export default defineConfig({
   vue: {
     template: {
       compilerOptions: {
-        isCustomElement: (tag) => tag === 'tele-lux',
+        isCustomElement: (tag) => tag === 'telelux-transcript',
       },
     },
   },

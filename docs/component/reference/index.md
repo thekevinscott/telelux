@@ -2,4 +2,4 @@
 diataxis: reference
 ---
 
-<!--@include: ../../../packages/component/README.md-->
+<!--@include: ../../../packages/node/telelux-element/README.md-->

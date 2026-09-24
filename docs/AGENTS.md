@@ -1,8 +1,8 @@
 # Docs — agent contract
 
 One VitePress site documents all three packages: the web component
-(`packages/component`), the app shell, and the Python CLI/SDK
-(`packages/python`). Netlify hosts it from `docs/.vitepress/dist`, built by
+(`packages/node/telelux-element`), the app shell, and the Python CLI/SDK
+(`packages/python/telelux`). Netlify hosts it from `docs/.vitepress/dist`, built by
 the root `netlify.toml`; `.github/workflows/docs.yml` runs the same build as a
 PR check and deploys nothing. GitHub Pages belongs to the app shell alone.
 
@@ -13,7 +13,7 @@ one package's docs, not one quadrant across all three.
 
 | Tree | Package | Entry page |
 | --- | --- | --- |
-| `component/` | web component | `/component/` — hosts the live `<tele-lux>` demo |
+| `component/` | web component | `/component/` — hosts the live `<telelux-transcript>` demo |
 | `app/` | app shell | `/app/` |
 | `python/` | Python CLI/SDK | `/python/` |
 
@@ -32,7 +32,7 @@ Each package's `README.md` is the source of truth for its surface, and the
 package's `reference/index.md` includes it rather than copying it:
 
 ```md
-<!--@include: ../../../packages/component/README.md-->
+<!--@include: ../../../packages/node/telelux-element/README.md-->
 ```
 
 Edit the README, never the docs copy. Treat the Python README the same way
@@ -41,11 +41,11 @@ when that tree gains content.
 ## The live demo
 
 `/component/` renders the element built from this branch's source, not from
-npm. The root `pnpm-workspace.yaml` links `docs` to `packages/component`
-through `telelux: workspace:*`, so the component must be built before the
-docs (`pnpm --filter telelux build`, then `pnpm --filter docs build`).
-`config.ts` registers `tele-lux` as a custom element for the Vue compiler,
-and `.vitepress/theme/TranscriptDemo.vue` imports `telelux` inside
+npm. The root `pnpm-workspace.yaml` links `docs` to `packages/node/telelux-element`
+through `telelux-element: workspace:*`, so the component must be built before the
+docs (`pnpm --filter telelux-element build`, then `pnpm --filter docs build`).
+`config.ts` registers `telelux-transcript` as a custom element for the Vue compiler,
+and `.vitepress/theme/TranscriptDemo.vue` imports `telelux-element` inside
 `onMounted` because Lit touches `window` at import time. Fixtures live in
 `public/fixtures/`.
 

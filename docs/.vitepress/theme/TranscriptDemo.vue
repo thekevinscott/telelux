@@ -17,7 +17,7 @@ async function load(file: string) {
 
 onMounted(async () => {
   // Lit touches window at import time, so the element loads client-side only.
-  await import('telelux')
+  await import('telelux-element')
   await load(selected.value)
 })
 
@@ -35,7 +35,7 @@ watch(selected, load)
       </select>
     </label>
     <textarea v-model="transcript" spellcheck="false" rows="8"></textarea>
-    <tele-lux :transcript.prop="transcript"></tele-lux>
+    <telelux-transcript :transcript.prop="transcript"></telelux-transcript>
   </div>
 </template>
 
@@ -56,7 +56,7 @@ textarea {
   background: var(--vp-c-bg-soft);
 }
 
-tele-lux {
+telelux-transcript {
   display: block;
   padding: 1rem;
   border: 1px solid var(--vp-c-divider);

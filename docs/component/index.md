@@ -4,7 +4,7 @@ diataxis: tutorial
 
 # Web component
 
-`<tele-lux>` renders an agent transcript in the browser. This page runs the
+`<telelux-transcript>` renders an agent transcript in the browser. This page runs the
 element built from this repository's source, so what you see here is the
 current state of the component, not the last npm release.
 
@@ -17,15 +17,15 @@ Pick a transcript, or edit the text, and the element re-renders below.
 ## Install
 
 ```sh
-pnpm add telelux
+pnpm add telelux-element
 ```
 
 ```html
 <script type="module">
-  import 'telelux';
+  import 'telelux-element';
 </script>
 
-<tele-lux></tele-lux>
+<telelux-transcript></telelux-transcript>
 ```
 
 ## Next steps
