@@ -8,6 +8,10 @@
     "build": "vitepress build",
     "preview": "vitepress preview"
   },
+  "dependencies": {
+    "lit": "^3.3.3",
+    "telelux-element": "workspace:*"
+  },
   "devDependencies": {
     "vitepress": "^1.5.0"
   }
