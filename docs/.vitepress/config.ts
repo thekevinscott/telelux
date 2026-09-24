@@ -1,52 +1,78 @@
 import { defineConfig } from 'vitepress'
 
 export default defineConfig({
-  title: '',
-  description: '',
-  base: '/telelux/',
+  title: 'Telelux',
+  description: 'Agent transcripts, rendered.',
+  base: '/',
   cleanUrls: true,
-  // AGENTS.md is an agent-facing contract, not site content — keep it out of
-  // the build. internals/ is contributor/agent-facing material, also excluded.
   srcExclude: ['**/AGENTS.md', 'internals/**'],
+  vue: {
+    template: {
+      compilerOptions: {
+        isCustomElement: (tag) => tag === 'tele-lux',
+      },
+    },
+  },
   themeConfig: {
-    // Top-level nav is the four Diataxis quadrants, mirroring the
-    // testing-conventions docs site. See docs/AGENTS.md.
     nav: [
-      { text: 'Getting Started', link: '/getting-started' },
-      { text: 'How-to Guides', link: '/guide/' },
-      { text: 'Reference', link: '/reference/' },
-      { text: 'Explanation', link: '/explanation/' },
+      { text: 'Web component', link: '/component/' },
+      { text: 'App', link: '/app/' },
+      { text: 'Python', link: '/python/' },
     ],
+    // One sidebar for the whole site: a path-scoped sidebar would swap the
+    // tree out per package and hide the other two.
     sidebar: {
       '/': [
         {
-          text: 'Tutorial',
+          text: 'Web component',
           items: [
-            { text: 'Getting Started', link: '/getting-started' },
+            { text: 'Getting started', link: '/component/' },
+            { text: 'How-to guides', link: '/component/guide/' },
+            {
+              text: 'Reference',
+              items: [
+                { text: 'Package', link: '/component/reference/' },
+                { text: 'Migrations', link: '/migrations' },
+              ],
+            },
+            { text: 'Explanation', link: '/component/explanation/' },
           ],
         },
         {
-          text: 'How-to Guides',
+          text: 'App',
           items: [
-            { text: 'Overview', link: '/guide/' },
-            { text: 'Testing conventions', link: '/guide/testing-conventions' },
+            { text: 'Getting started', link: '/app/' },
+            { text: 'How-to guides', link: '/app/guide/' },
+            { text: 'Reference', link: '/app/reference/' },
+            { text: 'Explanation', link: '/app/explanation/' },
           ],
         },
         {
-          text: 'Reference',
+          text: 'Python',
           items: [
-            { text: 'API', link: '/reference/' },
-            { text: 'Migrations', link: '/migrations' },
+            { text: 'Getting started', link: '/python/' },
+            { text: 'How-to guides', link: '/python/guide/' },
+            {
+              text: 'Reference',
+              items: [
+                { text: 'API', link: '/python/reference/' },
+                { text: 'Migrations', link: '/migrations' },
+              ],
+            },
+            { text: 'Explanation', link: '/python/explanation/' },
           ],
         },
         {
-          text: 'Explanation',
+          text: 'Contributing',
           items: [
-            { text: 'Overview', link: '/explanation/' },
+            { text: 'Testing conventions', link: '/contributing/testing-conventions' },
           ],
         },
       ],
     },
+    socialLinks: [
+      { icon: 'github', link: 'https://github.com/thekevinscott/telelux' },
+    ],
     search: { provider: 'local' },
     outline: [2, 3],
   },

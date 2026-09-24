@@ -2,7 +2,7 @@
 diataxis: tutorial
 ---
 
-# Getting Started
+# Python
 
 Telelux turns an agent transcript into a single interactive
 HTML file. Install the Python package, point it at a transcript, and open the
