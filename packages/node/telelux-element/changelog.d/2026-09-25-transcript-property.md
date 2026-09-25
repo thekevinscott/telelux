@@ -1,0 +1,1 @@
+**Added** `<telelux-transcript>` accepts a transcript in docent's shape through its `transcript` property, validates it at runtime, and renders an empty or error state instead of throwing. `Transcript`, `ChatMessage`, `ToolCall`, `Content`, and `Metadata` are exported as types. An `annotations` property is accepted and stored for #40. (#53)
