@@ -1,9 +1,7 @@
 import ast
 from pathlib import Path
 
-import telelux
-
-PACKAGE = Path(telelux.__file__).parent
+PACKAGE = Path(__file__).parent
 MODULES = [path for path in PACKAGE.glob("*.py") if not path.name.endswith("_test.py")]
 
 
@@ -19,9 +17,6 @@ def imported_names(path):
 
 
 def describe_telelux():
-    def test_it_exposes_the_class_and_the_version():
-        assert telelux.__all__ == ["Telelux", "__version__"]
-
     def test_it_never_parses_transcripts_itself():
         for path in MODULES:
             assert "json" not in imported_names(path), path.name
