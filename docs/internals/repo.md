@@ -20,7 +20,7 @@ Every PR that changes public API adds at least one fragment naming each touched 
 4. **Behavior changes without code changes** — same API, different runtime behavior (tag format, exit codes, defaults).
 5. **Verification** — commands the consumer runs to confirm the upgrade worked, with the expected output.
 
-**Stubs at the conventional paths** — `packages/<lang>/<pkg>/CHANGELOG.md`, `packages/<lang>/<pkg>/MIGRATIONS.md`, and `docs/migrations.md` are short pointers into the folders, so anyone fetching the conventional filename gets one hop instead of a 404. Never append entries to the stubs.
+**Stubs at the conventional paths** — `packages/<lang>/<pkg>/CHANGELOG.md` and `packages/<lang>/<pkg>/MIGRATIONS.md` are short pointers into the folders, so anyone fetching the conventional filename gets one hop instead of a 404. Never append entries to the stubs.
 
 **Ship the folders in artifacts where the toolchain allows** — today the single published artifact is the Python wheel, and hatchling cannot include files outside the package root, so wheel consumers take the stub → folder hop on GitHub instead.
 
