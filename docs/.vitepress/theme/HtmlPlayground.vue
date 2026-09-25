@@ -9,6 +9,21 @@ const initial = [
   '',
   '<telelux-transcript></telelux-transcript>',
   '',
+  '<script type="module">',
+  "  document.querySelector('telelux-transcript').transcript = {",
+  "    id: 'demo',",
+  '    metadata: {},',
+  '    messages: [',
+  "      { role: 'user', content: 'What time is it in Tokyo?' },",
+  "      { role: 'assistant', content: 'Let me check.', tool_calls: [",
+  "        { id: 'call_1', function: 'clock', type: 'function', arguments: { zone: 'Asia/Tokyo' } },",
+  '      ] },',
+  "      { role: 'tool', content: '2026-09-25T16:00:00+09:00', tool_call_id: 'call_1', function: 'clock' },",
+  "      { role: 'assistant', content: 'It is 4 pm in Tokyo.' },",
+  '    ],',
+  '  };',
+  '<\/script>',
+  '',
 ].join('\n')
 
 const { isDark } = useData()
