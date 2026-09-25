@@ -1,0 +1,1 @@
+**Added** `<telelux-transcript>` reads a raw transcript from its default slot, parses it with the browser-side parser, and re-parses when the slotted nodes change. A `format` attribute names the parser; unset, it sniffs. The `transcript` property wins over the slot, and a slot that fails to parse renders the error state. (#59)

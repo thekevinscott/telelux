@@ -89,6 +89,34 @@ untouched.
 Setting the property again re-renders. All transcript text lands in the DOM
 through Lit templates, so nothing in a transcript is interpreted as HTML.
 
+### Slotted raw input
+
+The default slot takes a transcript in the raw format the agent wrote it in.
+The element parses it with the parser below, so a static page needs no script
+beyond the element import:
+
+```html
+<telelux-transcript format="claude-code">
+  <script type="text/plain">{"type":"user","message":{"content":"hi"},"uuid":"u1"}
+{"type":"assistant","message":{"id":"m1","content":"hello"},"uuid":"a1"}</script>
+</telelux-transcript>
+```
+
+Wrap the text in a `<script>` with a non-executable type. The browser then
+keeps it verbatim: no entity decoding, no whitespace collapsing, no element
+parsing. Bare text works too, but the HTML parser gets to it first, so
+`&amp;` becomes `&` and a stray `<` can swallow the rest of a line.
+
+- `format` names the parser (`claude-code` today). Unset, the parser sniffs
+  the first line.
+- The slot is read when the element connects and again whenever its assigned
+  nodes change. Replacing the child re-parses; editing text inside the
+  existing child does not.
+- The `transcript` property wins when both are set, and clearing it falls
+  back to the slot.
+- A slot that fails to parse renders the error state with the parser's
+  message. Lines the parser tolerates show up as raw `system` messages.
+
 ### Annotations
 
 `annotations` is a second property, accepted and stored but not rendered yet.
