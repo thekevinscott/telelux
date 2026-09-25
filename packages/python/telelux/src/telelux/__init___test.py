@@ -5,8 +5,7 @@ PACKAGE = Path(__file__).parent
 MODULES = [path for path in PACKAGE.glob("*.py") if not path.name.endswith("_test.py")]
 
 
-def imported_names(path):
-    tree = ast.parse(path.read_text(encoding="utf-8"))
+def imported_names(tree):
     names = set()
     for node in ast.walk(tree):
         if isinstance(node, ast.Import):
@@ -16,7 +15,13 @@ def imported_names(path):
     return names
 
 
+def called_attributes(tree):
+    return {node.attr for node in ast.walk(tree) if isinstance(node, ast.Attribute)}
+
+
 def describe_telelux():
     def test_it_never_parses_transcripts_itself():
         for path in MODULES:
-            assert "json" not in imported_names(path), path.name
+            tree = ast.parse(path.read_text(encoding="utf-8"))
+            assert "json" not in imported_names(tree), path.name
+            assert "splitlines" not in called_attributes(tree), path.name
