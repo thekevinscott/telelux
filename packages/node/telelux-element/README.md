@@ -95,6 +95,52 @@ through Lit templates, so nothing in a transcript is interpreted as HTML.
 It reserves room for the annotation sidecar in
 [#40](https://github.com/thekevinscott/telelux/issues/40).
 
+## Parsing raw transcripts
+
+The package also parses an agent's own transcript file into that shape, in
+the browser, with no server round trip. `parseRawTranscript` takes the file's
+text and returns a `ParseResult`: `{ ok: true, transcript }` or
+`{ ok: false, error }`. It never throws.
+
+```ts
+import { parseRawTranscript } from 'telelux-element/parse';
+
+const result = parseRawTranscript(await file.text());
+if (result.ok) element.transcript = result.transcript;
+```
+
+The `telelux-element/parse` entry pulls in no Lit and registers no element,
+so a page can parse without rendering. The main entry re-exports the same
+function.
+
+The only format today is `claude-code`: Claude Code's session JSONL. The
+format is sniffed from the first line; pass `{ format: 'claude-code' }` to
+skip the sniff. An unknown or undetectable format is an error naming the
+known formats. `Format` is exported as the union of known names and
+`ParseRawOptions` as the options type.
+
+What the parser does with a Claude Code session:
+
+- One `ChatMessage` per record, in file order. User prompts and queued
+  prompts become `user` messages; each `tool_result` block becomes its own
+  `tool` message with `tool_call_id`, `function` (resolved from the earlier
+  `tool_use`), and `error` when the result was an error; everything else
+  (attachments, system events, the final `result`, titles, unknown record
+  types) becomes a `system` message with a one-line summary.
+- Assistant records that share a `message.id` and sit next to each other
+  merge into one `assistant` message: `thinking` blocks become `reasoning`
+  items, `tool_use` blocks become `tool_calls`, and the usage counts once.
+- Every record's `type`, `uuid`, and `timestamp` land in the message
+  `metadata`; the transcript `metadata` carries `format`, `sessionId`,
+  `cwd`, `version`, `gitBranch`, the record count, and the summed usage.
+- A line that is not a JSON object is kept verbatim as a `system` message
+  with `metadata.raw: true`. Blank lines are skipped. Nothing is dropped.
+- Text over 50 MiB or more than 100,000 records is an error rather than a
+  truncated transcript.
+
+The reference corpus lives at `fixtures/claude-code/` in the repo:
+`sample.jsonl` and the `sample.transcript.json` it parses to.
+
 ### Without a bundler
 
 ```html

@@ -14,9 +14,12 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     lib: {
-      entry: fileURLToPath(new URL('./src/index.ts', import.meta.url)),
+      entry: {
+        index: fileURLToPath(new URL('./src/index.ts', import.meta.url)),
+        parse: fileURLToPath(new URL('./src/parse.ts', import.meta.url)),
+      },
       formats: ['es'],
-      fileName: () => 'index.js',
+      fileName: (_format, name) => `${name}.js`,
     },
     rollupOptions: {
       external: [/^lit(\/|$)/, /^@lit\//],
