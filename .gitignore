@@ -28,6 +28,7 @@ build/
 .beads/
 docs/.vitepress/cache
 docs/.vitepress/dist
+docs/public/playground/
 docs/node_modules/
 
 # Stryker scratch files, written by the mutation gate

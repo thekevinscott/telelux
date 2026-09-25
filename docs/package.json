@@ -4,15 +4,21 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vitepress dev",
-    "build": "vitepress build",
+    "bundle_element": "vite build -c playground/vite.config.ts",
+    "dev": "pnpm bundle_element && vitepress dev",
+    "build": "pnpm bundle_element && vitepress build",
     "preview": "vitepress preview"
   },
   "dependencies": {
+    "@codemirror/lang-html": "^6.4.12",
+    "@codemirror/state": "^6.7.6",
+    "@codemirror/theme-one-dark": "^6.1.3",
+    "codemirror": "^6.0.2",
     "lit": "^3.3.3",
     "telelux-element": "workspace:*"
   },
   "devDependencies": {
+    "vite": "^8.3.0",
     "vitepress": "^1.5.0"
   }
 }

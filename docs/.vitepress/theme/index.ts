@@ -1,11 +1,11 @@
 import type { Theme } from 'vitepress'
 import DefaultTheme from 'vitepress/theme'
 
-import TranscriptDemo from './TranscriptDemo.vue'
+import HtmlPlayground from './HtmlPlayground.vue'
 
 export default {
   extends: DefaultTheme,
   enhanceApp({ app }) {
-    app.component('TranscriptDemo', TranscriptDemo)
+    app.component('HtmlPlayground', HtmlPlayground)
   },
 } satisfies Theme

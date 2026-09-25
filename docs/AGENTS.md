@@ -29,14 +29,16 @@ not copy or include them.
 
 ## The live demo
 
-`/component/demo` renders the element built from this branch's source, not from
-npm. The root `pnpm-workspace.yaml` links `docs` to `packages/node/telelux-element`
-through `telelux-element: workspace:*`, so the component must be built before the
-docs (`pnpm --filter telelux-element build`, then `pnpm --filter docs build`).
-`config.ts` registers `telelux-transcript` as a custom element for the Vue compiler,
-and `.vitepress/theme/TranscriptDemo.vue` imports `telelux-element` inside
-`onMounted` because Lit touches `window` at import time. Fixtures live in
-`public/fixtures/`.
+`/component/demo` is an editable HTML playground: a CodeMirror editor and a
+sandboxed `<iframe>` whose `srcdoc` is the edited HTML. The iframe loads
+`/playground/telelux-element.js`, a self-contained bundle of the element (Lit
+included) that `pnpm bundle_element` builds from this branch's source into
+`public/playground/` (gitignored). The `dev` and `build` scripts run it first,
+so the root `pnpm-workspace.yaml` link to `packages/node/telelux-element` must be
+built beforehand (`pnpm --filter telelux-element build`). Nothing loads from a
+CDN. `config.ts` registers `telelux-transcript` as a custom element for the
+Vue compiler, and `.vitepress/theme/HtmlPlayground.vue` imports CodeMirror
+inside `onMounted` because it needs the DOM.
 
 ## Diataxis
 
