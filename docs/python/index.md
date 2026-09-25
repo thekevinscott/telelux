@@ -25,9 +25,3 @@ from telelux import Telelux
 viewer = Telelux(transcript="path/to/transcript.jsonl")
 viewer.write("transcript.html")
 ```
-
-## Next steps
-
-- [How-to Guides](./guide/) — task-oriented recipes.
-- [Reference](./reference/) — the full API surface.
-- [Explanation](./explanation/) — the concepts and "why" behind the design.
