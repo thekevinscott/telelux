@@ -14,7 +14,7 @@ describe('contentItems', () => {
   });
 
   it('omits the signature when the block has none', () => {
-    expect(contentItems([{ type: 'thinking', thinking: 'hmm' }])).toEqual([{ type: 'reasoning', reasoning: 'hmm' }]);
+    expect(contentItems([{ type: 'thinking', thinking: 'hmm' }])).toStrictEqual([{ type: 'reasoning', reasoning: 'hmm' }]);
   });
 
   it('maps redacted thinking to redacted reasoning', () => {

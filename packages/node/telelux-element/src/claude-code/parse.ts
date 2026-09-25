@@ -4,6 +4,7 @@ import type { ChatMessage, ParseResult } from '../transcript';
 import { continuesAssistant } from './continues-assistant';
 import { lineMessages } from './line-messages';
 import { mergeAssistant } from './merge-assistant';
+import { isRecord } from './records';
 import { transcriptHeader } from './transcript-header';
 import { usageTotals } from './usage-totals';
 
@@ -16,15 +17,15 @@ export function parseClaudeCode(text: string): ParseResult {
   const messages: ChatMessage[] = [];
   for (const line of lines) {
     for (const message of lineMessages(line, toolNames)) {
-      const previous = messages.at(-1);
-      if (continuesAssistant(previous, message) && message.role === 'assistant') {
-        messages[messages.length - 1] = mergeAssistant(previous, message);
+      const pair: [ChatMessage | undefined, ChatMessage] = [messages.at(-1), message];
+      if (continuesAssistant(pair)) {
+        messages[messages.length - 1] = mergeAssistant(...pair);
       } else {
         messages.push(message);
       }
     }
   }
-  const header = transcriptHeader(lines.flatMap((line) => (line.record === undefined ? [] : [line.record])));
+  const header = transcriptHeader(lines.map((line) => line.record).filter(isRecord));
   const metadata = { ...header.metadata, records: lines.length, usage: usageTotals(messages) };
   return { ok: true, transcript: { ...header, messages, metadata } };
 }

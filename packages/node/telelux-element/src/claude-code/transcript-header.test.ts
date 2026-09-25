@@ -26,6 +26,6 @@ describe('transcriptHeader', () => {
   });
 
   it('falls back to the format name as id and omits absent fields', () => {
-    expect(transcriptHeader([{ type: 'user', sessionId: 3 }])).toEqual({ id: 'claude-code', metadata: { format: 'claude-code' } });
+    expect(transcriptHeader([{ type: 'user', sessionId: 3 }])).toStrictEqual({ id: 'claude-code', metadata: { format: 'claude-code' } });
   });
 });

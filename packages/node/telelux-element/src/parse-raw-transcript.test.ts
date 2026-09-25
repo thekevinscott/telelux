@@ -21,6 +21,7 @@ vi.mock('./formats', async () => {
   const actual = await vi.importActual<typeof import('./formats')>('./formats');
   const formats = {
     'claude-code': { sniff: () => true, parse: (text: string) => ({ ok: true as const, transcript: { ...parsed, name: text } }) },
+    other: { sniff: () => false, parse: () => ({ ok: false as const, error: 'unused' }) },
   };
   return { ...actual, formats };
 });
@@ -44,7 +45,7 @@ describe('parseRawTranscript', () => {
     const result = parseRawTranscript('alpha', { format: 'nope' });
     expect(result.ok).toBe(false);
     expect(!result.ok && result.error).toContain('"nope"');
-    expect(!result.ok && result.error).toContain('claude-code');
+    expect(!result.ok && result.error).toContain('Known formats: claude-code, other.');
   });
 
   it('fails on text over the size limit without parsing it', () => {

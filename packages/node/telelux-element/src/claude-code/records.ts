@@ -1,10 +1,17 @@
 export type Block = Record<string, unknown>;
 
-export const isRecord = (value: unknown): value is Block =>
-  typeof value === 'object' && value !== null && !Array.isArray(value);
+export function isRecord(value: unknown): value is Block {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
 
-export const asRecord = (value: unknown): Block => (isRecord(value) ? value : {});
+export function asRecord(value: unknown): Block {
+  return isRecord(value) ? value : {};
+}
 
-export const asBlocks = (value: unknown): Block[] => (Array.isArray(value) ? value.filter(isRecord) : []);
+export function asBlocks(value: unknown): Block[] {
+  return Array.isArray(value) ? value.filter(isRecord) : [];
+}
 
-export const str = (value: unknown): string => (typeof value === 'string' ? value : '');
+export function str(value: unknown): string {
+  return typeof value === 'string' ? value : '';
+}

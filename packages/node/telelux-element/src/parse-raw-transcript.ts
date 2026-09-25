@@ -5,7 +5,9 @@ import type { ParseResult } from './transcript';
 
 export type ParseRawOptions = { format?: string };
 
-const mib = (length: number): string => (length / (1024 * 1024)).toFixed(1);
+function mib(length: number): string {
+  return (length / (1024 * 1024)).toFixed(1);
+}
 
 export function parseRawTranscript(text: string, options: ParseRawOptions = {}): ParseResult {
   if (text.length > MAX_TEXT_LENGTH) {

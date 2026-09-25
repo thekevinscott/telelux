@@ -47,12 +47,12 @@ describe('assistantMessage', () => {
 
   it('keeps string content as is and omits tool_calls when there are none', () => {
     const message = assistantMessage({ type: 'assistant', message: { content: 'plain' } }, new Map());
-    expect(message).toEqual({ role: 'assistant', content: 'plain', metadata: { type: 'assistant' } });
+    expect(message).toStrictEqual({ role: 'assistant', content: 'plain', metadata: { type: 'assistant' } });
     expect(message).not.toHaveProperty('tool_calls');
   });
 
   it('omits messageId, model, and usage when the message lacks them', () => {
-    expect(assistantMessage({ type: 'assistant', message: { content: [] } }, new Map()).metadata).toEqual({ type: 'assistant' });
+    expect(assistantMessage({ type: 'assistant', message: { content: [] } }, new Map()).metadata).toStrictEqual({ type: 'assistant' });
   });
 
   it('treats a missing message as empty content', () => {

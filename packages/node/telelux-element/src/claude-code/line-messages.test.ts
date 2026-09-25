@@ -37,8 +37,8 @@ describe('lineMessages', () => {
   });
 
   it('maps a system record', () => {
-    expect(lineMessages(line({ type: 'system', subtype: 'turn_duration' }), toolNames)).toEqual([
-      { role: 'system', content: 'turn_duration', metadata: { type: 'system', subtype: 'turn_duration' } },
+    expect(lineMessages(line({ type: 'system', subtype: 'local_command', content: 'ok', level: 'info' }), toolNames)).toEqual([
+      { role: 'system', content: 'ok', metadata: { type: 'system', subtype: 'local_command', level: 'info' } },
     ]);
   });
 

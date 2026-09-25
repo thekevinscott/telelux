@@ -12,6 +12,10 @@ describe('sniffClaudeCode', () => {
     expect(sniffClaudeCode(line)).toBe(true);
   });
 
+  it('reads only the first line', () => {
+    expect(sniffClaudeCode('{"type":"user","uuid":"u"}\nnot json')).toBe(true);
+  });
+
   it('skips leading blank lines', () => {
     expect(sniffClaudeCode('\n  \r\n{"type":"user","uuid":"u"}')).toBe(true);
   });

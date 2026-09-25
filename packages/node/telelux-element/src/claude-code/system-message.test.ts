@@ -20,6 +20,6 @@ describe('systemMessage', () => {
   });
 
   it('omits subtype and level when absent', () => {
-    expect(systemMessage({ type: 'system' })).toEqual({ role: 'system', content: '', metadata: { type: 'system' } });
+    expect(systemMessage({ type: 'system' })).toStrictEqual({ role: 'system', content: '', metadata: { type: 'system' } });
   });
 });
