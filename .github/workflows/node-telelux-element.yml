@@ -10,6 +10,7 @@ on:
       - '!packages/node/telelux-element/migrations.d/**'
       - '!packages/node/telelux-element/README.md'
       - '.github/workflows/node-telelux-element.yml'
+      - 'fixtures/**'
 
 permissions:
   contents: read

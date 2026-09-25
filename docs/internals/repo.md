@@ -65,3 +65,37 @@ both that package's tests and its testing-conventions gates. `build-check.yml`
 mirrors the `putitoutthere.toml` globs; `check.yml` fires only when that config
 or a putitoutthere workflow changes. A fragment-only or docs-only PR runs
 nothing but the gate.
+
+## Transcripts are parsed in the browser, into docent's shape
+
+Two decisions, made together in
+[#4](https://github.com/thekevinscott/telelux/issues/4):
+
+- **Parsing runs in the browser.** One TypeScript parser turns an agent's
+  raw transcript file into the shape the element renders. The Python package
+  never parses: it reads the file and hands the bytes over. A structural test
+  in `packages/python/telelux/src/telelux/__init___test.py` keeps `json` out
+  of the package so the rule cannot erode one helper at a time.
+- **The shape is docent's `Transcript`.** Anything an agent's format carries
+  beyond it goes in `metadata`, never in new roles or content types, so a
+  docent transcript is always valid input and the element's input contract
+  has one definition.
+
+**Where the parser lives.** It is a module inside `telelux-element`, exposed
+Lit-free through the `telelux-element/parse` subpath export and re-exported
+from the main entry. It was not put in `packages/node/telelux` (that package
+would have to build before the element and own the schema the element
+validates against) and not given a package of its own (a putitoutthere
+entry, a CI lane, and path globs for one module). Move it out when a second
+consumer needs it without the element.
+
+**The corpus is shared.** `fixtures/claude-code/sample.jsonl` at the repo
+root is the one sample every package tests against, with the reference
+output in `sample.transcript.json` beside it. Both package lanes list
+`fixtures/**` in their `paths:` filter. Regenerate the reference from a
+rebuilt `dist/parse.js` when parser semantics change, and review the diff by
+hand; it is the record of what the parser means.
+
+**Limits.** 50 MiB of text and 100,000 records. Past either the parser
+returns an error, never a truncated transcript. Malformed lines are kept
+verbatim as `system` messages flagged `raw`.

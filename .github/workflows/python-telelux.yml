@@ -10,6 +10,7 @@ on:
       - '!packages/python/telelux/migrations.d/**'
       - '!packages/python/telelux/README.md'
       - '.github/workflows/python-telelux.yml'
+      - 'fixtures/**'
 
 permissions:
   contents: read
