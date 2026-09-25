@@ -1,4 +1,4 @@
-import { html, LitElement, type PropertyValues } from 'lit';
+import { html, LitElement } from 'lit';
 
 import { messageText } from './message-text';
 import { parseTranscript, type ParseResult, type Transcript } from './transcript';
@@ -14,10 +14,8 @@ export class TeleluxTranscript extends LitElement {
 
   #parsed: ParseResult | undefined;
 
-  protected override willUpdate(changed: PropertyValues<this>) {
-    if (changed.has('transcript')) {
-      this.#parsed = this.transcript == null ? undefined : parseTranscript(this.transcript);
-    }
+  protected override willUpdate() {
+    this.#parsed = this.transcript == null ? undefined : parseTranscript(this.transcript);
   }
 
   override render() {

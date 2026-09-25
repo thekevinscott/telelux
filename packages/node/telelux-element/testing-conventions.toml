@@ -18,6 +18,12 @@ reason = "vitest configuration, not shipped source; it has to live in src/ becau
 
 [[typescript.exempt]]
 path = "telelux-transcript.ts"
-lines = [4, 5, 9]
+lines = [7, 8, 9]
 rules = ["mutation"]
-reason = "render() runs from Lit's own update scheduler on a microtask queued by requestUpdate, outside the synchronous call stack stryker's per-test coverage instrumentation tracks, and customElements.define runs once at module load before that instrumentation activates. Applied by hand, each of these three mutants (an empty render body, an empty template literal, an empty tag name) fails the shadow-root assertion in telelux-transcript.test.ts — the suite does kill them, the runner just cannot attribute it. Same class of false negative as packages/node/telelux-web/testing-conventions.toml's TranscriptBox.tsx exemption"
+reason = "static mutants: the reactive property table is read once when Lit registers the class at module load, before stryker's per-test instrumentation activates, so no test is recorded as covering it. Applied by hand, emptying the table fails every property-driven test in telelux-transcript.test.ts, and flipping attribute to true fails 'ignores a transcript attribute' — the suite kills them, the runner just cannot attribute it"
+
+[[typescript.exempt]]
+path = "transcript.ts"
+lines = [3, 4, 7, 10, 11, 19, 24, 27, 28, 32, 33, 34, 35, 36, 37, 41, 45]
+rules = ["mutation"]
+reason = "static mutants: the zod schemas are built once at module load, before stryker's per-test instrumentation activates, so no test is recorded as covering them. Applied by hand (an empty role literal, an empty metadata union, an empty content-type enum), each fails the parseTranscript accept/reject cases in transcript.test.ts — the suite kills them, the runner just cannot attribute it. parseTranscript's own lines are not exempt"

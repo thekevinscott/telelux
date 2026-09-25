@@ -54,6 +54,14 @@ describe('TeleluxTranscript', () => {
       const el = await mount();
       expect(el.shadowRoot?.querySelector('.empty')?.textContent).toBe('No transcript.');
     });
+
+    it('ignores a transcript attribute', async () => {
+      const el = await mount();
+      el.setAttribute('transcript', JSON.stringify(transcript));
+      await el.updateComplete;
+      expect(el.transcript).toBeUndefined();
+      expect(el.shadowRoot?.querySelector('.empty')?.textContent).toBe('No transcript.');
+    });
   });
 
   describe('when transcript is set', () => {
