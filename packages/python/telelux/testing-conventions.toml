@@ -3,8 +3,3 @@
 # branch gate hard-fails when a report measures zero branches. Restore the
 # default (`branch = true`) as soon as real code lands.
 coverage = { branch = false }
-
-[[python.exempt]]
-path = "src/telelux/__init__.py"
-rules = ["colocated-test", "co-change"]
-reason = "re-export barrel; every name it re-exports is tested in the module that defines it"
