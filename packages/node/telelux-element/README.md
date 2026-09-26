@@ -38,15 +38,13 @@ Assign a transcript to the element's `transcript` property:
 </script>
 ```
 
-Rendering is a placeholder list of messages for now. Block rendering with
-docent parity lands in later work under
+Rendering is a placeholder list of messages for now. Block rendering lands
+in later work under
 [#49](https://github.com/thekevinscott/telelux/issues/49).
 
 ## Input
 
-`transcript` is a property, not an attribute. It takes a transcript in
-[docent](https://github.com/TransluceAI/docent)'s shape, as its
-`transcriptTypes.ts` defines it:
+`transcript` is a property, not an attribute. It takes a `Transcript`:
 
 ```ts
 interface Transcript {
@@ -74,9 +72,8 @@ The package exports `Transcript`, `ChatMessage`, `ToolCall`, `Content`, and
 import type { Transcript } from 'telelux-element';
 ```
 
-Anything beyond docent's shape lives in `metadata`, so a docent transcript is
-always valid input and keys the element does not know about pass through
-untouched.
+Anything beyond this shape lives in `metadata`, and keys the element does not
+know about pass through untouched.
 
 ### States
 

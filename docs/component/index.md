@@ -31,7 +31,7 @@ pnpm add telelux-element
 </script>
 ```
 
-The `transcript` property takes docent's transcript shape. The package README
+The `transcript` property takes a `Transcript` object. The package README
 documents the input in full.
 
 See it running on the [demo](./demo) page.

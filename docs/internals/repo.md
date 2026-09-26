@@ -66,7 +66,7 @@ mirrors the `putitoutthere.toml` globs; `check.yml` fires only when that config
 or a putitoutthere workflow changes. A fragment-only or docs-only PR runs
 nothing but the gate.
 
-## Transcripts are parsed in the browser, into docent's shape
+## Transcripts are parsed in the browser, into one shape
 
 Two decisions, made together in
 [#4](https://github.com/thekevinscott/telelux/issues/4):
@@ -76,10 +76,9 @@ Two decisions, made together in
   never parses: it reads the file and hands the bytes over. A structural test
   in `packages/python/telelux/src/telelux/__init___test.py` keeps `json` out
   of the package so the rule cannot erode one helper at a time.
-- **The shape is docent's `Transcript`.** Anything an agent's format carries
-  beyond it goes in `metadata`, never in new roles or content types, so a
-  docent transcript is always valid input and the element's input contract
-  has one definition.
+- **The shape is the element's `Transcript`.** Anything an agent's format
+  carries beyond it goes in `metadata`, never in new roles or content types,
+  so the element's input contract has one definition.
 
 **Where the parser lives.** It is a module inside `telelux-element`, exposed
 Lit-free through the `telelux-element/parse` subpath export and re-exported

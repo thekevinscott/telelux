@@ -5,7 +5,7 @@ import { parseTranscript, type Transcript } from './transcript';
 const minimal: Transcript = { id: 't1', messages: [], metadata: {} };
 
 describe('parseTranscript', () => {
-  describe('a transcript in docent shape', () => {
+  describe('a transcript in the expected shape', () => {
     it('accepts the minimal shape and returns the same object', () => {
       const result = parseTranscript(minimal);
       expect(result).toEqual({ ok: true, transcript: minimal });
