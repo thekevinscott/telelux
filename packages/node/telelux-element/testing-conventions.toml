@@ -18,7 +18,7 @@ reason = "vitest configuration, not shipped source; it has to live in src/ becau
 
 [[typescript.exempt]]
 path = "telelux-transcript.ts"
-lines = [7, 8, 9]
+lines = [9, 10, 11, 12]
 rules = ["mutation"]
 reason = "static mutants: the reactive property table is read once when Lit registers the class at module load, before stryker's per-test instrumentation activates, so no test is recorded as covering it. Applied by hand, emptying the table fails every property-driven test in telelux-transcript.test.ts, and flipping attribute to true fails 'ignores a transcript attribute' — the suite kills them, the runner just cannot attribute it"
 
