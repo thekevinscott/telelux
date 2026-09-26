@@ -1,6 +1,10 @@
+from pathlib import Path
+
 import pytest
 
 from .load_data import load_data
+
+FIXTURE = Path(__file__).parents[5] / "fixtures" / "claude-code" / "sample.jsonl"
 
 
 @pytest.fixture
@@ -20,3 +24,12 @@ def describe_load_data():
     def test_it_raises_when_the_file_is_missing(tmp_path):
         with pytest.raises(FileNotFoundError):
             load_data(tmp_path / "nope.jsonl")
+
+    def describe_with_the_shared_claude_code_corpus():
+        def test_it_passes_the_text_through_byte_for_byte():
+            assert load_data(FIXTURE) == FIXTURE.read_text(encoding="utf-8")
+
+        def test_it_keeps_the_malformed_and_blank_lines():
+            lines = load_data(FIXTURE).split("\n")
+            assert "not valid json on purpose" in lines
+            assert "" in lines[:-1]

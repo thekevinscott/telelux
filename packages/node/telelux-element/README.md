@@ -38,15 +38,13 @@ Assign a transcript to the element's `transcript` property:
 </script>
 ```
 
-Rendering is a placeholder list of messages for now. Block rendering with
-docent parity lands in later work under
+Rendering is a placeholder list of messages for now. Block rendering lands
+in later work under
 [#49](https://github.com/thekevinscott/telelux/issues/49).
 
 ## Input
 
-`transcript` is a property, not an attribute. It takes a transcript in
-[docent](https://github.com/TransluceAI/docent)'s shape, as its
-`transcriptTypes.ts` defines it:
+`transcript` is a property, not an attribute. It takes a `Transcript`:
 
 ```ts
 interface Transcript {
@@ -74,9 +72,8 @@ The package exports `Transcript`, `ChatMessage`, `ToolCall`, `Content`, and
 import type { Transcript } from 'telelux-element';
 ```
 
-Anything beyond docent's shape lives in `metadata`, so a docent transcript is
-always valid input and keys the element does not know about pass through
-untouched.
+Anything beyond this shape lives in `metadata`, and keys the element does not
+know about pass through untouched.
 
 ### States
 
@@ -89,11 +86,85 @@ untouched.
 Setting the property again re-renders. All transcript text lands in the DOM
 through Lit templates, so nothing in a transcript is interpreted as HTML.
 
+### Slotted raw input
+
+The default slot takes a transcript in the raw format the agent wrote it in.
+The element parses it with the parser below, so a static page needs no script
+beyond the element import:
+
+```html
+<telelux-transcript format="claude-code">
+  <script type="text/plain">{"type":"user","message":{"content":"hi"},"uuid":"u1"}
+{"type":"assistant","message":{"id":"m1","content":"hello"},"uuid":"a1"}</script>
+</telelux-transcript>
+```
+
+Wrap the text in a `<script>` with a non-executable type. The browser then
+keeps it verbatim: no entity decoding, no whitespace collapsing, no element
+parsing. Bare text works too, but the HTML parser gets to it first, so
+`&amp;` becomes `&` and a stray `<` can swallow the rest of a line.
+
+- `format` names the parser (`claude-code` today). Unset, the parser sniffs
+  the first line.
+- The slot is read when the element connects and again whenever its assigned
+  nodes change. Replacing the child re-parses; editing text inside the
+  existing child does not.
+- The `transcript` property wins when both are set, and clearing it falls
+  back to the slot.
+- A slot that fails to parse renders the error state with the parser's
+  message. Lines the parser tolerates show up as raw `system` messages.
+
 ### Annotations
 
 `annotations` is a second property, accepted and stored but not rendered yet.
 It reserves room for the annotation sidecar in
 [#40](https://github.com/thekevinscott/telelux/issues/40).
+
+## Parsing raw transcripts
+
+The package also parses an agent's own transcript file into that shape, in
+the browser, with no server round trip. `parseRawTranscript` takes the file's
+text and returns a `ParseResult`: `{ ok: true, transcript }` or
+`{ ok: false, error }`. It never throws.
+
+```ts
+import { parseRawTranscript } from 'telelux-element/parse';
+
+const result = parseRawTranscript(await file.text());
+if (result.ok) element.transcript = result.transcript;
+```
+
+The `telelux-element/parse` entry pulls in no Lit and registers no element,
+so a page can parse without rendering. The main entry re-exports the same
+function.
+
+The only format today is `claude-code`: Claude Code's session JSONL. The
+format is sniffed from the first line; pass `{ format: 'claude-code' }` to
+skip the sniff. An unknown or undetectable format is an error naming the
+known formats. `Format` is exported as the union of known names and
+`ParseRawOptions` as the options type.
+
+What the parser does with a Claude Code session:
+
+- One `ChatMessage` per record, in file order. User prompts and queued
+  prompts become `user` messages; each `tool_result` block becomes its own
+  `tool` message with `tool_call_id`, `function` (resolved from the earlier
+  `tool_use`), and `error` when the result was an error; everything else
+  (attachments, system events, the final `result`, titles, unknown record
+  types) becomes a `system` message with a one-line summary.
+- Assistant records that share a `message.id` and sit next to each other
+  merge into one `assistant` message: `thinking` blocks become `reasoning`
+  items, `tool_use` blocks become `tool_calls`, and the usage counts once.
+- Every record's `type`, `uuid`, and `timestamp` land in the message
+  `metadata`; the transcript `metadata` carries `format`, `sessionId`,
+  `cwd`, `version`, `gitBranch`, the record count, and the summed usage.
+- A line that is not a JSON object is kept verbatim as a `system` message
+  with `metadata.raw: true`. Blank lines are skipped. Nothing is dropped.
+- Text over 50 MiB or more than 100,000 records is an error rather than a
+  truncated transcript.
+
+The reference corpus lives at `fixtures/claude-code/` in the repo:
+`sample.jsonl` and the `sample.transcript.json` it parses to.
 
 ### Without a bundler
 
