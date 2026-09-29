@@ -33,3 +33,15 @@ path = "parse-json-object.ts"
 lines = [7]
 rules = ["mutation"]
 reason = "equivalent mutant: emptying the catch arm makes the function fall out of the try and return undefined, which is what the arm returns. JSON.parse has no non-throwing form, so the arm cannot be written to differ"
+
+[[typescript.exempt]]
+path = "telelux-message.ts"
+lines = [9, 10, 11, 14, 196]
+rules = ["mutation"]
+reason = "static mutants: the reactive property table, the styles sheet, and the customElements.define call all run once at module load, before stryker's per-test instrumentation activates. Applied by hand, emptying the property table fails 're-renders when the message changes', flipping attribute to true fails 'ignores message and index attributes', and emptying the tag name throws at import so the whole file fails; emptying the stylesheet is invisible to jsdom and fails the role-colour assertions in tests/integration/message-block.test.ts"
+
+[[typescript.exempt]]
+path = "telelux-transcript.ts"
+lines = [15]
+rules = ["mutation"]
+reason = "static mutant: the styles sheet is read once when Lit registers the class at module load, before stryker's per-test instrumentation activates, and jsdom applies no layout to observe it. It only spaces the block list"
