@@ -9,6 +9,7 @@ import { formatCreatedAt } from './format-created-at';
 import { isTextEntry } from './is-text-entry';
 import { parseRawTranscript } from './parse-raw-transcript';
 import { targetBlock } from './target-block';
+import { theme } from './theme';
 import { parseTranscript, type ParseResult, type Transcript } from './transcript';
 import { transcriptTotals, USAGE_TOTALS } from './transcript-totals';
 
@@ -20,17 +21,20 @@ export class TeleluxTranscript extends LitElement {
     transcript: { attribute: false },
     annotations: { attribute: false },
     format: { type: String },
+    theme: { type: String, reflect: true },
     slotText: { state: true },
     metadataOpen: { state: true },
     copyStatus: { state: true },
     highlighted: { state: true },
   };
 
-  static override styles = css`
+  static override styles = [theme, css`
     :host {
       display: block;
-      font-family: var(--telelux-font-sans, system-ui, sans-serif);
-      font-size: 14px;
+      font-family: var(--_font-sans);
+      font-size: var(--_font-size);
+      color: var(--_foreground);
+      background: var(--_background);
     }
 
     :host(:focus) {
@@ -45,7 +49,7 @@ export class TeleluxTranscript extends LitElement {
       gap: 8px 16px;
       margin-bottom: 8px;
       font-size: 12px;
-      color: var(--telelux-muted-foreground, #6b7280);
+      color: var(--_muted-foreground);
     }
 
     .identity,
@@ -58,7 +62,7 @@ export class TeleluxTranscript extends LitElement {
 
     .label {
       font-weight: 600;
-      color: var(--telelux-foreground, #111827);
+      color: var(--_foreground);
     }
 
     .pill {
@@ -66,25 +70,25 @@ export class TeleluxTranscript extends LitElement {
       align-items: center;
       gap: 4px;
       padding: 1px 2px 1px 6px;
-      border: 1px solid var(--telelux-border, #e5e7eb);
+      border: 1px solid var(--_border);
       border-radius: 999px;
-      background: var(--telelux-secondary, #f1f5f9);
+      background: var(--_secondary);
     }
 
     .id {
-      font-family: var(--telelux-font-mono, ui-monospace, monospace);
+      font-family: var(--_font-mono);
       overflow-wrap: anywhere;
     }
 
     .name {
-      color: var(--telelux-foreground, #111827);
+      color: var(--_foreground);
     }
 
     button {
       padding: 1px 6px;
-      border: 1px solid var(--telelux-border, #e5e7eb);
-      border-radius: 4px;
-      background: var(--telelux-background, #ffffff);
+      border: 1px solid var(--_border);
+      border-radius: var(--_radius-sm);
+      background: var(--_background);
       font: inherit;
       color: inherit;
       cursor: pointer;
@@ -96,7 +100,7 @@ export class TeleluxTranscript extends LitElement {
 
     button:hover,
     button[aria-expanded='true'] {
-      background: var(--telelux-secondary, #f1f5f9);
+      background: var(--_secondary);
     }
 
     .popover {
@@ -108,11 +112,11 @@ export class TeleluxTranscript extends LitElement {
       max-height: 320px;
       overflow: auto;
       padding: 8px;
-      border: 1px solid var(--telelux-border, #e5e7eb);
-      border-radius: var(--telelux-radius, 6px);
-      background: var(--telelux-background, #ffffff);
-      color: var(--telelux-foreground, #111827);
-      box-shadow: 0 4px 12px rgb(0 0 0 / 12%);
+      border: 1px solid var(--_border);
+      border-radius: var(--_radius);
+      background: var(--_background);
+      color: var(--_foreground);
+      box-shadow: 0 4px 12px var(--_shadow);
     }
 
     .popover-title {
@@ -134,19 +138,23 @@ export class TeleluxTranscript extends LitElement {
 
     .totals dd {
       margin: 0;
-      color: var(--telelux-foreground, #111827);
+      color: var(--_foreground);
       font-variant-numeric: tabular-nums;
     }
 
     .jump input {
       width: 6em;
+      border: 1px solid var(--_border);
+      border-radius: var(--_radius-sm);
+      background: var(--_background);
       font: inherit;
+      color: inherit;
     }
 
     ol {
       display: flex;
       flex-direction: column;
-      gap: 4px;
+      gap: var(--_block-gap);
       margin: 0;
       padding: 0;
       list-style: none;
@@ -154,11 +162,11 @@ export class TeleluxTranscript extends LitElement {
 
     li {
       scroll-margin-top: 8px;
-      border-radius: var(--telelux-radius, 6px);
+      border-radius: var(--_radius);
     }
 
     li.highlight {
-      outline: 2px solid var(--telelux-highlight, #f59e0b);
+      outline: 2px solid var(--_highlight);
       outline-offset: 2px;
     }
 
@@ -174,20 +182,21 @@ export class TeleluxTranscript extends LitElement {
 
     .block-nav button {
       pointer-events: auto;
-      box-shadow: 0 2px 6px rgb(0 0 0 / 12%);
+      box-shadow: 0 2px 6px var(--_shadow);
     }
 
     kbd {
       margin-left: 4px;
-      font-family: var(--telelux-font-mono, ui-monospace, monospace);
+      font-family: var(--_font-mono);
       font-size: 10px;
-      color: var(--telelux-muted-foreground, #6b7280);
+      color: var(--_muted-foreground);
     }
-  `;
+  `];
 
   declare transcript: Transcript | undefined;
   declare annotations: unknown;
   declare format: string | undefined;
+  declare theme: string | undefined;
   private declare slotText: string | undefined;
   private declare metadataOpen: boolean;
   private declare copyStatus: string | undefined;
@@ -252,9 +261,9 @@ export class TeleluxTranscript extends LitElement {
       return html`${this.#header(transcript)}<p class="empty">No messages.</p>`;
     }
     return html`${this.#header(transcript)}<ol>
-      ${messages.map((message, index) => html`<li class=${index === this.highlighted ? 'highlight' : nothing}><telelux-message .message=${message} .index=${index}></telelux-message></li>`)}
+      ${messages.map((message, index) => html`<li class=${index === this.highlighted ? 'highlight' : nothing}><telelux-message exportparts="block, block-user, block-assistant, block-system, block-tool, header, content, reasoning, tool-call" theme=${this.theme ?? nothing} .message=${message} .index=${index}></telelux-message></li>`)}
     </ol>
-    <nav class="block-nav" aria-label="Block navigation">
+    <nav class="block-nav" part="block-nav" aria-label="Block navigation">
       <button class="previous" type="button" aria-label="Previous block" aria-keyshortcuts="k" @click=${() => this.#step(-1)}>Previous<kbd>K</kbd></button>
       <button class="next" type="button" aria-label="Next block" aria-keyshortcuts="j" @click=${() => this.#step(1)}>Next<kbd>J</kbd></button>
     </nav>`;
@@ -265,7 +274,7 @@ export class TeleluxTranscript extends LitElement {
     const createdAt = formatCreatedAt(transcript.created_at);
     const keys = definedEntries(transcript.metadata).length;
     const count = transcript.messages.length;
-    return html`<header class="header" @keydown=${this.#onHeaderKeydown}>
+    return html`<header class="header" part="transcript-header" @keydown=${this.#onHeaderKeydown}>
       <slot name="before"></slot>
       <div class="identity">
         <span class="label">Transcript</span>
@@ -274,7 +283,7 @@ export class TeleluxTranscript extends LitElement {
         ${createdAt === undefined ? nothing : html`<span class="created-at" title=${transcript.created_at as string}>${createdAt}</span>`}
         ${keys > 0 ? html`<button class="metadata-toggle" type="button" aria-haspopup="dialog" aria-expanded=${this.metadataOpen} @click=${() => (this.metadataOpen = !this.metadataOpen)}>Metadata (${keys})</button>` : nothing}
       </div>
-      ${this.metadataOpen ? html`<div class="popover" role="dialog" aria-label="Transcript Metadata"><div class="popover-title">Transcript Metadata</div><telelux-metadata .metadata=${transcript.metadata}></telelux-metadata></div>` : nothing}
+      ${this.metadataOpen ? html`<div class="popover" role="dialog" aria-label="Transcript Metadata"><div class="popover-title">Transcript Metadata</div><telelux-metadata theme=${this.theme ?? nothing} .metadata=${transcript.metadata}></telelux-metadata></div>` : nothing}
       ${this.#totals(transcript)}
       ${count === 0 ? nothing : html`<form class="jump" @submit=${(event: SubmitEvent) => this.#onJump(event, count)}>
         <span class="count">${count.toLocaleString()} ${count === 1 ? 'block' : 'blocks'}</span>

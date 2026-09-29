@@ -127,7 +127,7 @@ Slotted `slot="before"` content is never read as raw transcript text.
 - Each step moves from the current block: the one last navigated to while it
   is still on screen, else the first block not yet scrolled past.
 
-The outline colour is `--telelux-highlight` (`#f59e0b`).
+The outline colour is `--telelux-highlight`.
 
 ### Blocks
 
@@ -172,16 +172,7 @@ a different message.
 The popover's key/value list is its own element, `<telelux-metadata>`, with a
 `metadata` property. `TeleluxMetadata` is exported.
 
-Role colours come from custom properties, so a host can override them on
-the element or any ancestor:
-
-| Role | Border | Background |
-| --- | --- | --- |
-| `user` | `--telelux-user-border` (`#d1d5db`) | `--telelux-user-background` (`#f9fafb`) |
-| `assistant` | `--telelux-assistant-border` (`#93c5fd`) | `--telelux-assistant-background` (`#eff6ff`) |
-| `system` | `--telelux-system-border` (`#fdba74`) | `--telelux-system-background` (`#fff7ed`) |
-| `tool` | `--telelux-tool-border` (`#86efac`) | `--telelux-tool-background` (`#f0fdf4`) |
-| other | `--telelux-unknown-border` (`#d1d5db`) | `--telelux-unknown-background` (`#f9fafb`) |
+Role colours and the rest of the look are set under [Theming](#theming).
 
 `TeleluxMessage` is exported, and the element works on its own: set its
 `message` and `index` properties.
@@ -219,6 +210,71 @@ parsing. Bare text works too, but the HTML parser gets to it first, so
 `annotations` is a second property, accepted and stored but not rendered yet.
 It reserves room for the annotation sidecar in
 [#40](https://github.com/thekevinscott/telelux/issues/40).
+
+## Theming
+
+Set `theme="dark"` on `<telelux-transcript>` for the dark defaults, or
+`theme="light"` to force the light ones. With no `theme` attribute the
+element follows the reader's `prefers-color-scheme`. The attribute is the
+whole theming API; offering a choice and remembering it is the host's job.
+The transcript passes its theme to every block and popover inside it, and
+`<telelux-message>` and `<telelux-metadata>` take the same attribute when
+used on their own.
+
+```html
+<telelux-transcript theme="dark" style="--telelux-assistant-border: #a78bfa"></telelux-transcript>
+```
+
+Every colour, font, corner radius, and block spacing value comes from a
+custom property. Set one on the element or on any ancestor and it wins over
+both themes' defaults. Small fixed gaps inside a block (1–8 px) are not
+properties.
+
+| Property | Used for | Light | Dark |
+| --- | --- | --- | --- |
+| `--telelux-font-sans` | Body text | `system-ui, sans-serif` | same |
+| `--telelux-font-mono` | Message content, code, ids | `ui-monospace, monospace` | same |
+| `--telelux-font-size` | Base text size | `14px` | same |
+| `--telelux-radius` | Block and popover corners | `6px` | same |
+| `--telelux-radius-sm` | Inset and button corners | `4px` | same |
+| `--telelux-block-padding` | Padding inside a block | `8px` | same |
+| `--telelux-block-gap` | Space between blocks | `4px` | same |
+| `--telelux-background` | Element and popover background | `#ffffff` | `#111827` |
+| `--telelux-foreground` | Text | `#111827` | `#f3f4f6` |
+| `--telelux-muted` | Reasoning inset | `#f3f4f6` | `#1f2937` |
+| `--telelux-muted-foreground` | Labels, secondary text | `#6b7280` | `#9ca3af` |
+| `--telelux-secondary` | Tool call and code insets, pills | `#f1f5f9` | `#1e293b` |
+| `--telelux-border` | Borders and dividers | `#e5e7eb` | `#374151` |
+| `--telelux-destructive` | Tool errors | `#dc2626` | `#f87171` |
+| `--telelux-highlight` | Outline on a block reached by navigation | `#f59e0b` | `#fbbf24` |
+| `--telelux-shadow` | Popover and floating button shadow | `rgb(0 0 0 / 12%)` | `rgb(0 0 0 / 50%)` |
+| `--telelux-user-border` | `user` block border | `#d1d5db` | `#4b5563` |
+| `--telelux-user-background` | `user` block background | `#f9fafb` | `#1f2937` |
+| `--telelux-assistant-border` | `assistant` block border | `#93c5fd` | `#3b82f6` |
+| `--telelux-assistant-background` | `assistant` block background | `#eff6ff` | `#172554` |
+| `--telelux-system-border` | `system` block border | `#fdba74` | `#f97316` |
+| `--telelux-system-background` | `system` block background | `#fff7ed` | `#431407` |
+| `--telelux-tool-border` | `tool` block border | `#86efac` | `#22c55e` |
+| `--telelux-tool-background` | `tool` block background | `#f0fdf4` | `#052e16` |
+| `--telelux-unknown-border` | Other roles block border | `#d1d5db` | `#4b5563` |
+| `--telelux-unknown-background` | Other roles block background | `#f9fafb` | `#1f2937` |
+
+For structure the properties do not reach, the transcript exposes
+`::part()` names:
+
+| Part | Region |
+| --- | --- |
+| `transcript-header` | The header above the blocks |
+| `block-nav` | The floating Previous / Next controls |
+| `block` | Each block, plus `block-user`, `block-assistant`, `block-system`, or `block-tool` |
+| `header` | A block's header row |
+| `content` | A block's text content |
+| `reasoning` | A block's reasoning inset |
+| `tool-call` | One tool call box |
+
+```css
+telelux-transcript::part(block-tool) { border-left-width: 8px; }
+```
 
 ## Parsing raw transcripts
 

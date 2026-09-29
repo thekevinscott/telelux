@@ -1,6 +1,7 @@
 import { css, html, LitElement } from 'lit';
 
 import { definedEntries } from './defined-entries';
+import { theme } from './theme';
 import type { Metadata } from './transcript';
 
 type Value = NonNullable<Metadata[string]>;
@@ -8,9 +9,10 @@ type Value = NonNullable<Metadata[string]>;
 export class TeleluxMetadata extends LitElement {
   static override properties = {
     metadata: { attribute: false },
+    theme: { type: String, reflect: true },
   };
 
-  static override styles = css`
+  static override styles = [theme, css`
     :host {
       display: block;
       font-size: 12px;
@@ -24,12 +26,12 @@ export class TeleluxMetadata extends LitElement {
     }
 
     dt {
-      color: var(--telelux-muted-foreground, #6b7280);
+      color: var(--_muted-foreground);
     }
 
     dd {
       margin: 0;
-      font-family: var(--telelux-font-mono, ui-monospace, monospace);
+      font-family: var(--_font-mono);
       white-space: pre-wrap;
       overflow-wrap: anywhere;
     }
@@ -41,11 +43,12 @@ export class TeleluxMetadata extends LitElement {
 
     dl dl {
       padding-left: 8px;
-      border-left: 2px solid var(--telelux-border, #e5e7eb);
+      border-left: 2px solid var(--_border);
     }
-  `;
+  `];
 
   declare metadata: Metadata | undefined;
+  declare theme: string | undefined;
 
   override render() {
     const entries = definedEntries(this.metadata);

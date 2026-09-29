@@ -410,4 +410,60 @@ describe('TeleluxMessage', () => {
     });
   });
 
+  describe('theming', () => {
+    const withMetadata: ChatMessage = { role: 'user', content: 'x', metadata: { a: 1 } };
+
+    it('reflects the theme property to the attribute the stylesheet selects on', async () => {
+      const el = await mount(withMetadata);
+      el.theme = 'dark';
+      await el.updateComplete;
+      expect(el.getAttribute('theme')).toBe('dark');
+    });
+
+    it('reads the theme attribute', async () => {
+      const el = await mount(withMetadata);
+      el.setAttribute('theme', 'light');
+      expect(el.theme).toBe('light');
+    });
+
+    it('passes its theme to the metadata popover', async () => {
+      const el = await mount(withMetadata);
+      el.theme = 'dark';
+      (find(el, '.metadata-toggle') as HTMLElement).click();
+      await el.updateComplete;
+      expect(find(el, 'telelux-metadata')?.getAttribute('theme')).toBe('dark');
+    });
+
+    it('leaves the popover unthemed when it has no theme', async () => {
+      const el = await mount(withMetadata);
+      (find(el, '.metadata-toggle') as HTMLElement).click();
+      await el.updateComplete;
+      expect(find(el, 'telelux-metadata')?.hasAttribute('theme')).toBe(false);
+    });
+
+    it('names its regions as parts', async () => {
+      const el = await mount({
+        role: 'assistant',
+        content: [{ type: 'reasoning', reasoning: 'think' }, { type: 'text', text: 'say' }],
+        tool_calls: [{ id: 'c', function: 'f', type: 'function' }],
+      });
+      expect(find(el, '.block')?.getAttribute('part')).toBe('block block-assistant');
+      expect(find(el, '.header')?.getAttribute('part')).toBe('header');
+      expect(find(el, '.content')?.getAttribute('part')).toBe('content');
+      expect(find(el, '.reasoning')?.getAttribute('part')).toBe('reasoning');
+      expect(find(el, '.tool-call')?.getAttribute('part')).toBe('tool-call');
+    });
+
+    it('keeps the content part in the formatted views', async () => {
+      const prose = await mount({ role: 'user', content: 'plain words' });
+      (find(prose, '.text-mode') as HTMLElement).click();
+      await prose.updateComplete;
+      expect(find(prose, '.content.formatted')?.getAttribute('part')).toBe('content');
+      const json = await mount({ role: 'user', content: '{"a":1}' });
+      (find(json, '.text-mode') as HTMLElement).click();
+      await json.updateComplete;
+      expect(find(json, '.content')?.textContent).toBe('{\n  "a": 1\n}');
+      expect(find(json, '.content')?.getAttribute('part')).toBe('content');
+    });
+  });
 });
