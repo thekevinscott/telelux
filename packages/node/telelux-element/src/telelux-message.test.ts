@@ -35,6 +35,15 @@ describe('TeleluxMessage', () => {
     expect(find(el, '.block')).toBeNull();
   });
 
+  it('ignores message and index attributes', async () => {
+    const el = await mount({ role: 'user', content: 'x' }, 3);
+    el.setAttribute('message', '{"role":"system","content":"y"}');
+    el.setAttribute('index', '9');
+    await el.updateComplete;
+    expect(el.message).toEqual({ role: 'user', content: 'x' });
+    expect(el.index).toBe(3);
+  });
+
   describe('header', () => {
     it.each([
       ['user', 'User'],
@@ -218,6 +227,17 @@ describe('TeleluxMessage', () => {
     it('renders only the function when there is no call id', async () => {
       const el = await mount({ role: 'tool', content: 'ok', function: 'clock' });
       expect(all(el, '.tool-info span')).toEqual(['Function: clock']);
+    });
+
+    it('renders only the call id when there is no function', async () => {
+      const el = await mount({ role: 'tool', content: 'ok', tool_call_id: 'call_4' });
+      expect(all(el, '.tool-info span')).toEqual(['Tool Call ID: call_4']);
+    });
+
+    it('renders an error with no call id or function', async () => {
+      const el = await mount({ role: 'tool', content: 'boom', error: { type: 'tool_error', message: 'lost' } });
+      expect(all(el, '.tool-info span')).toEqual([]);
+      expect(find(el, '.tool-info .error')?.textContent).toBe('Error: lost');
     });
 
     it('omits the footer when it has nothing to show', async () => {
