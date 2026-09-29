@@ -23,7 +23,7 @@ export default defineConfig({
     outDir: fileURLToPath(new URL('./dist-demo', import.meta.url)),
     emptyOutDir: true,
     rollupOptions: {
-      input: { index: demo('index.html'), slot: demo('slot.html') },
+      input: { index: demo('index.html'), slot: demo('slot.html'), long: demo('long.html') },
       // The package's `sideEffects` field scopes side effects to
       // dist/index.js for publishing; that marks everything under src/ and
       // demo/ as effect-free, so Rollup drops the whole demo bundle.

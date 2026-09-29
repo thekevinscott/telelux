@@ -1,6 +1,6 @@
-import { html, LitElement, type PropertyValues } from 'lit';
+import { css, html, LitElement, type PropertyValues } from 'lit';
 
-import { messageText } from './message-text';
+import './telelux-message';
 import { parseRawTranscript } from './parse-raw-transcript';
 import { parseTranscript, type ParseResult, type Transcript } from './transcript';
 
@@ -11,6 +11,17 @@ export class TeleluxTranscript extends LitElement {
     format: { type: String },
     slotText: { state: true },
   };
+
+  static override styles = css`
+    ol {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+  `;
 
   declare transcript: Transcript | undefined;
   declare annotations: unknown;
@@ -58,9 +69,7 @@ export class TeleluxTranscript extends LitElement {
       return html`<p class="empty">No messages.</p>`;
     }
     return html`<ol>
-      ${messages.map(
-        (message) => html`<li><span class="role">${message.role}</span> ${messageText(message.content)}</li>`,
-      )}
+      ${messages.map((message, index) => html`<li><telelux-message .message=${message} .index=${index}></telelux-message></li>`)}
     </ol>`;
   }
 }

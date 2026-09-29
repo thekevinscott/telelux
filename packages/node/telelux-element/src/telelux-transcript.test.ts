@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+import type { TeleluxMessage } from './telelux-message';
 import { TeleluxTranscript } from './telelux-transcript';
 import type { Transcript } from './transcript';
 
@@ -32,12 +33,6 @@ vi.mock('./parse-raw-transcript', async () => {
   return { ...actual, parseRawTranscript };
 });
 
-vi.mock('./message-text', async () => {
-  const actual = await vi.importActual<typeof import('./message-text')>('./message-text');
-  const messageText: typeof actual.messageText = (content) => (typeof content === 'string' ? content : '[content]');
-  return { ...actual, messageText };
-});
-
 const transcript: Transcript = {
   id: 't1',
   metadata: {},
@@ -62,12 +57,12 @@ async function settle(el: TeleluxTranscript): Promise<void> {
 
 const plain = (jsonl: string) => `<script type="text/plain">${jsonl}</script>`;
 
-function text(el: TeleluxTranscript): string {
-  return el.shadowRoot?.textContent?.replace(/\s+/g, ' ').trim() ?? '';
+function blocks(el: TeleluxTranscript): TeleluxMessage[] {
+  return [...(el.shadowRoot?.querySelectorAll<TeleluxMessage>('li > telelux-message') ?? [])];
 }
 
 function items(el: TeleluxTranscript): string[] {
-  return [...(el.shadowRoot?.querySelectorAll('li') ?? [])].map((li) => li.textContent?.trim() ?? '');
+  return blocks(el).map(({ message }) => `${message?.role} ${typeof message?.content === 'string' ? message.content : '[content]'}`);
 }
 
 describe('TeleluxTranscript', () => {
@@ -95,13 +90,12 @@ describe('TeleluxTranscript', () => {
   });
 
   describe('when transcript is set', () => {
-    it('renders one item per message with its role and text', async () => {
+    it('renders one block per message, in order, with its index', async () => {
       const el = await mount();
       el.transcript = transcript;
       await el.updateComplete;
-      const items = [...(el.shadowRoot?.querySelectorAll('li') ?? [])];
-      expect(items.map((li) => li.textContent?.trim())).toEqual(['user first message', 'assistant [content]']);
-      expect(items[0]?.querySelector('.role')?.textContent).toBe('user');
+      expect(blocks(el).map(({ message }) => message)).toEqual(transcript.messages);
+      expect(blocks(el).map(({ index }) => index)).toEqual([0, 1]);
     });
 
     it('accepts the property before the element is upgraded', async () => {
@@ -109,7 +103,7 @@ describe('TeleluxTranscript', () => {
       el.transcript = transcript;
       document.body.appendChild(el);
       await el.updateComplete;
-      expect(text(el)).toContain('first message');
+      expect(items(el)).toEqual(['user first message', 'assistant [content]']);
     });
 
     it('re-renders when the property is set again', async () => {
@@ -118,15 +112,7 @@ describe('TeleluxTranscript', () => {
       await el.updateComplete;
       el.transcript = { ...transcript, messages: [{ role: 'system', content: 'replaced' }] };
       await el.updateComplete;
-      expect(text(el)).toBe('system replaced');
-    });
-
-    it('renders transcript text as text, never as markup', async () => {
-      const el = await mount();
-      el.transcript = { ...transcript, messages: [{ role: 'user', content: '<b>bold</b>' }] };
-      await el.updateComplete;
-      expect(el.shadowRoot?.querySelector('b')).toBeNull();
-      expect(text(el)).toBe('user <b>bold</b>');
+      expect(items(el)).toEqual(['system replaced']);
     });
 
     it('renders the empty state for a transcript with no messages', async () => {
@@ -165,7 +151,7 @@ describe('TeleluxTranscript', () => {
       el.transcript = transcript;
       await el.updateComplete;
       expect(el.shadowRoot?.querySelector('.error')).toBeNull();
-      expect(text(el)).toContain('first message');
+      expect(items(el)).toEqual(['user first message', 'assistant [content]']);
     });
   });
 
@@ -182,12 +168,12 @@ describe('TeleluxTranscript', () => {
       el.innerHTML = plain('{"a":1}');
       document.body.appendChild(el);
       await settle(el);
-      expect(text(el)).toBe('user claude-code: {"a":1}');
+      expect(items(el)).toEqual(['user claude-code: {"a":1}']);
     });
 
     it('accepts bare text', async () => {
       const el = await mount('{"a":1}');
-      expect(text(el)).toBe('user sniffed: {"a":1}');
+      expect(items(el)).toEqual(['user sniffed: {"a":1}']);
     });
 
     it('treats whitespace-only content as no transcript', async () => {
@@ -199,14 +185,14 @@ describe('TeleluxTranscript', () => {
       const el = await mount(plain('{"a":1}'));
       el.innerHTML = plain('{"b":2}');
       await settle(el);
-      expect(text(el)).toBe('user sniffed: {"b":2}');
+      expect(items(el)).toEqual(['user sniffed: {"b":2}']);
     });
 
     it('re-parses when the format attribute changes', async () => {
       const el = await mount(plain('{"a":1}'));
       el.setAttribute('format', 'claude-code');
       await settle(el);
-      expect(text(el)).toBe('user claude-code: {"a":1}');
+      expect(items(el)).toEqual(['user claude-code: {"a":1}']);
     });
 
     it('does not re-parse when an unrelated property changes', async () => {
@@ -231,7 +217,7 @@ describe('TeleluxTranscript', () => {
       await settle(el);
       el.transcript = undefined;
       await settle(el);
-      expect(text(el)).toBe('user sniffed: {"a":1}');
+      expect(items(el)).toEqual(['user sniffed: {"a":1}']);
     });
 
     it('renders the error state for an unknown format', async () => {
@@ -259,7 +245,7 @@ describe('TeleluxTranscript', () => {
       el.annotations = [{ label: 'cheating', note: 'suspicious' }];
       await el.updateComplete;
       expect(el.annotations).toEqual([{ label: 'cheating', note: 'suspicious' }]);
-      expect(text(el)).not.toContain('suspicious');
+      expect(el.shadowRoot?.textContent).not.toContain('suspicious');
     });
   });
 });

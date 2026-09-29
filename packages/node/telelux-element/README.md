@@ -38,9 +38,7 @@ Assign a transcript to the element's `transcript` property:
 </script>
 ```
 
-Rendering is a placeholder list of messages for now. Block rendering lands
-in later work under
-[#49](https://github.com/thekevinscott/telelux/issues/49).
+Each message renders as a block. See [Blocks](#blocks).
 
 ## Input
 
@@ -81,10 +79,46 @@ know about pass through untouched.
   empty state.
 - **Invalid**: a value that fails the runtime check renders an error state
   naming the failing path. The element never throws.
-- **Valid**: one item per message.
+- **Valid**: one block per message.
 
 Setting the property again re-renders. All transcript text lands in the DOM
 through Lit templates, so nothing in a transcript is interpreted as HTML.
+
+### Blocks
+
+Each message renders as a `<telelux-message>` element inside the
+transcript's shadow root, in message order, as a rounded card with a
+role-coloured left border and tint.
+
+- **Header**: `Block {index} | {Role}`, the index counted from 0. The right
+  side is empty, reserved for per-block controls.
+- **Content**: string content, or the `text` items of a `Content[]` joined
+  with newlines, in monospace with whitespace kept and long lines wrapped
+  anywhere. A message with no text has no content box.
+- **Reasoning**: the first `reasoning` item, above the content, in a
+  `Reasoning` inset that starts expanded and collapses on click.
+- **Images**: one `[image]` label per `image` item. `Content` carries no
+  image source, so there is nothing to draw yet.
+- **Tool calls** (assistant): one box per call, `Tool Call ID: {id}`, then
+  `view.content` verbatim when the call has a `view`, else
+  `function(k=v, k=v)` with the name in bold. String arguments print as they
+  are; anything else prints as JSON.
+- **Tool results** (tool): a footer with `Tool Call ID`, `Function`, and
+  `Error: {message}` in red, each only when set.
+
+Role colours come from custom properties, so a host can override them on
+the element or any ancestor:
+
+| Role | Border | Background |
+| --- | --- | --- |
+| `user` | `--telelux-user-border` (`#d1d5db`) | `--telelux-user-background` (`#f9fafb`) |
+| `assistant` | `--telelux-assistant-border` (`#93c5fd`) | `--telelux-assistant-background` (`#eff6ff`) |
+| `system` | `--telelux-system-border` (`#fdba74`) | `--telelux-system-background` (`#fff7ed`) |
+| `tool` | `--telelux-tool-border` (`#86efac`) | `--telelux-tool-background` (`#f0fdf4`) |
+| other | `--telelux-unknown-border` (`#d1d5db`) | `--telelux-unknown-background` (`#f9fafb`) |
+
+`TeleluxMessage` is exported, and the element works on its own: set its
+`message` and `index` properties.
 
 ### Slotted raw input
 
