@@ -389,7 +389,19 @@ describe('TeleluxMessage', () => {
       expect(find(el, '.raw')).toBeNull();
     });
 
-    it('keeps its state when an unrelated property changes', async () => {
+    it('ignores attributes named after its internal state', async () => {
+      const el = await mount(withMetadata);
+      el.setAttribute('formatted', 'x');
+      el.setAttribute('metadataopen', 'x');
+      el.setAttribute('rawopen', 'x');
+      el.index = 2;
+      await el.updateComplete;
+      expect(find(el, '.text-mode')?.getAttribute('aria-pressed')).toBe('false');
+      expect(find(el, '.popover')).toBeNull();
+      expect(find(el, '.raw')).toBeNull();
+    });
+
+        it('keeps its state when an unrelated property changes', async () => {
       const el = await mount(withMetadata);
       await click(el, '.raw-toggle');
       el.index = 9;

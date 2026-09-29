@@ -226,20 +226,11 @@ export class TeleluxMessage extends LitElement {
   private declare metadataOpen: boolean;
   private declare rawOpen: boolean;
 
-  constructor() {
-    super();
-    this.#reset();
-  }
-
-  #reset() {
-    this.formatted = false;
-    this.metadataOpen = false;
-    this.rawOpen = false;
-  }
-
   protected override willUpdate(changed: PropertyValues<this>) {
-    if (changed.has('message') && changed.get('message') !== undefined) {
-      this.#reset();
+    if (changed.has('message')) {
+      this.formatted = false;
+      this.metadataOpen = false;
+      this.rawOpen = false;
     }
   }
 
@@ -268,7 +259,7 @@ export class TeleluxMessage extends LitElement {
   #onKeydown(event: KeyboardEvent) {
     if (event.key === 'Escape' && this.metadataOpen) {
       this.metadataOpen = false;
-      this.shadowRoot?.querySelector<HTMLButtonElement>('.metadata-toggle')?.focus();
+      (this.renderRoot.querySelector('.metadata-toggle') as HTMLButtonElement).focus();
     }
   }
 
