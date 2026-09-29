@@ -306,6 +306,26 @@ describe('TeleluxTranscript', () => {
       expect($(el, '.empty')?.textContent).toBe('No transcript.');
     });
 
+    it('reads the text on either side of slotted before content as one transcript', async () => {
+      const el = await mount('{"a":1}\n<span slot="before">crumb</span>{"b":2}');
+      expect(items(el)).toEqual(['user sniffed: {"a":1}', 'user sniffed: {"b":2}']);
+    });
+
+    it('ignores attributes named after its internal state', async () => {
+      const bare = await mount();
+      bare.setAttribute('slottext', '{"a":1}');
+      await bare.updateComplete;
+      expect($(bare, '.empty')?.textContent).toBe('No transcript.');
+      const el = await header();
+      el.setAttribute('metadataopen', 'x');
+      el.setAttribute('copystatus', 'x');
+      el.setAttribute('highlighted', '0');
+      await el.updateComplete;
+      expect($(el, '.popover')).toBeNull();
+      expect($(el, '.copy')?.textContent).toBe('Copy');
+      expect(el.shadowRoot?.querySelector('li[class]')).toBeNull();
+    });
+
     describe('totals', () => {
       const totals = (el: TeleluxTranscript) =>
         [...(el.shadowRoot?.querySelectorAll('.totals > div') ?? [])].map((row) => `${row.className}: ${row.querySelector('dt')?.textContent} = ${row.querySelector('dd')?.textContent}`);
@@ -479,7 +499,13 @@ describe('TeleluxTranscript', () => {
       }
 
       const highlighted = (el: TeleluxTranscript) =>
-        [...(el.shadowRoot?.querySelectorAll('ol > li') ?? [])].flatMap((item, index) => (item.classList.contains('highlight') ? [index] : []));
+        [...(el.shadowRoot?.querySelectorAll('ol > li') ?? [])].flatMap((item, index) => {
+          if (item.hasAttribute('class')) {
+            expect(item.className).toBe('highlight');
+            return [index];
+          }
+          return [];
+        });
 
       async function jump(el: TeleluxTranscript, value: string) {
         const input = $(el, '.jump input') as HTMLInputElement;
@@ -590,6 +616,16 @@ describe('TeleluxTranscript', () => {
         const event = await press(el, 'j', init, inInput ? ($(el, '.jump input') as Element) : el);
         expect(event.defaultPrevented).toBe(false);
         expect(scrolled).toEqual([]);
+      });
+
+      it('does nothing when there are no blocks to move to', async () => {
+        const el = await header({ ...full, messages: [] });
+        const errors: unknown[] = [];
+        const record = (event: ErrorEvent) => errors.push(event.error);
+        window.addEventListener('error', record);
+        await press(el, 'j');
+        window.removeEventListener('error', record);
+        expect(errors).toEqual([]);
       });
 
       it('ignores other keys', async () => {

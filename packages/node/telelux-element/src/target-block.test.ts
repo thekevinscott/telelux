@@ -39,6 +39,10 @@ describe('targetBlock', () => {
       expect(targetBlock(at(0, 100, 800, 900), 800, 2, 1)).toBe(1);
     });
 
+    it('treats it as scrolled past once it ends exactly at the top', () => {
+      expect(targetBlock([{ top: -100, bottom: 0 }, { top: 0, bottom: 100 }, { top: 100, bottom: 200 }], 800, 0, 1)).toBe(2);
+    });
+
     it('ignores an index past the end of the list', () => {
       expect(targetBlock(at(0, 100), 800, 7, 1)).toBe(1);
     });

@@ -18,9 +18,9 @@ reason = "vitest configuration, not shipped source; it has to live in src/ becau
 
 [[typescript.exempt]]
 path = "telelux-transcript.ts"
-lines = [9, 10, 11, 12]
+lines = [20, 21, 22, 23, 24, 25, 26]
 rules = ["mutation"]
-reason = "static mutants: the reactive property table is read once when Lit registers the class at module load, before stryker's per-test instrumentation activates, so no test is recorded as covering it. Applied by hand, emptying the table fails every property-driven test in telelux-transcript.test.ts, and flipping attribute to true fails 'ignores a transcript attribute' — the suite kills them, the runner just cannot attribute it"
+reason = "static mutants: the reactive property table is read once when Lit registers the class at module load, before stryker's per-test instrumentation activates, so no test is recorded as covering it. Applied by hand, emptying the table fails every property-driven test in telelux-transcript.test.ts, flipping attribute to true fails 'ignores a transcript attribute', and emptying the slotText, metadataOpen, or copyStatus entry, or flipping its state to false, fails 'ignores attributes named after its internal state'. Emptying the highlighted entry is equivalent: an attribute value is a string and never equals a numeric block index, so no block is highlighted either way"
 
 [[typescript.exempt]]
 path = "transcript.ts"
@@ -42,12 +42,18 @@ reason = "static mutants: the document icon, the reactive property table, the st
 
 [[typescript.exempt]]
 path = "telelux-transcript.ts"
-lines = [15]
+lines = [29]
 rules = ["mutation"]
-reason = "static mutant: the styles sheet is read once when Lit registers the class at module load, before stryker's per-test instrumentation activates, and jsdom applies no layout to observe it. It only spaces the block list"
+reason = "static mutant: the styles sheet is read once when Lit registers the class at module load, before stryker's per-test instrumentation activates, and jsdom applies no layout to observe it. Emptying it unpins the Previous / Next controls, which fails 'keeps the Previous and Next controls on screen while scrolling' in tests/integration/transcript-header.test.ts"
 
 [[typescript.exempt]]
 path = "telelux-metadata.ts"
 lines = [9, 10, 13, 69]
 rules = ["mutation"]
 reason = "static mutants: the reactive property table, the styles sheet, and the customElements.define call run once at module load, before stryker's per-test instrumentation activates. Applied by hand, emptying the property table fails 're-renders when the metadata changes', flipping attribute to true fails 'ignores a metadata attribute', and emptying the tag name throws at import. The stylesheet is layout only"
+
+[[typescript.exempt]]
+path = "target-block.ts"
+lines = [8]
+rules = ["mutation"]
+reason = "equivalent mutant: indexing the extents with an undefined current yields undefined, which is what the guarded arm returns, so dropping the guard changes nothing. The guard exists for the type checker"

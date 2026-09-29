@@ -30,6 +30,12 @@ describe('transcriptTotals', () => {
       ];
       expect(transcriptTotals(messages).toolCalls).toBe(3);
     });
+
+    it('counts tool calls only on assistant messages', () => {
+      const call = { id: 'c', function: 'f', type: 'function' };
+      const stray = { role: 'user', content: '', tool_calls: [call] } as unknown as ChatMessage;
+      expect(transcriptTotals([stray]).toolCalls).toBe(0);
+    });
   });
 
   describe('usage', () => {

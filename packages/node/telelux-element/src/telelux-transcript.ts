@@ -14,7 +14,6 @@ import { transcriptTotals, USAGE_TOTALS } from './transcript-totals';
 
 const ROLES = ['user', 'assistant', 'tool', 'system'] as const;
 const FLASH_MS = 1500;
-const STEPS: Record<string, number> = { j: 1, k: -1 };
 
 export class TeleluxTranscript extends LitElement {
   static override properties = {
@@ -253,7 +252,7 @@ export class TeleluxTranscript extends LitElement {
       return html`${this.#header(transcript)}<p class="empty">No messages.</p>`;
     }
     return html`${this.#header(transcript)}<ol>
-      ${messages.map((message, index) => html`<li class=${index === this.highlighted ? 'highlight' : ''}><telelux-message .message=${message} .index=${index}></telelux-message></li>`)}
+      ${messages.map((message, index) => html`<li class=${index === this.highlighted ? 'highlight' : nothing}><telelux-message .message=${message} .index=${index}></telelux-message></li>`)}
     </ol>
     <nav class="block-nav" aria-label="Block navigation">
       <button class="previous" type="button" aria-label="Previous block" aria-keyshortcuts="k" @click=${() => this.#step(-1)}>Previous<kbd>K</kbd></button>
@@ -275,7 +274,7 @@ export class TeleluxTranscript extends LitElement {
         ${createdAt === undefined ? nothing : html`<span class="created-at" title=${transcript.created_at as string}>${createdAt}</span>`}
         ${keys > 0 ? html`<button class="metadata-toggle" type="button" aria-haspopup="dialog" aria-expanded=${this.metadataOpen} @click=${() => (this.metadataOpen = !this.metadataOpen)}>Metadata (${keys})</button>` : nothing}
       </div>
-      ${keys > 0 && this.metadataOpen ? html`<div class="popover" role="dialog" aria-label="Transcript Metadata"><div class="popover-title">Transcript Metadata</div><telelux-metadata .metadata=${transcript.metadata}></telelux-metadata></div>` : nothing}
+      ${this.metadataOpen ? html`<div class="popover" role="dialog" aria-label="Transcript Metadata"><div class="popover-title">Transcript Metadata</div><telelux-metadata .metadata=${transcript.metadata}></telelux-metadata></div>` : nothing}
       ${this.#totals(transcript)}
       ${count === 0 ? nothing : html`<form class="jump" @submit=${(event: SubmitEvent) => this.#onJump(event, count)}>
         <span class="count">${count.toLocaleString()} ${count === 1 ? 'block' : 'blocks'}</span>
@@ -303,7 +302,7 @@ export class TeleluxTranscript extends LitElement {
   }
 
   #onKeydown = (event: KeyboardEvent) => {
-    const step = STEPS[event.key.toLowerCase()];
+    const step = ({ j: 1, k: -1 } as Record<string, number | undefined>)[event.key.toLowerCase()];
     if (step === undefined || event.ctrlKey || event.metaKey || event.altKey || isTextEntry(event.composedPath()[0])) {
       return;
     }
