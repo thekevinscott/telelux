@@ -1,15 +1,17 @@
+import 'telelux-element';
+
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 
-import { TranscriptBox } from './TranscriptBox';
+import { Viewer } from './Viewer';
 
 const PLACEHOLDER = '{"type":"user","message":{"role":"user","content":"Hello"}}';
 
 const root = document.getElementById('root');
-if (!root) {throw new Error('No #root element in index.html');}
+if (!root) {throw new Error('No #root element in viewer.html');}
 
 createRoot(root).render(
   <StrictMode>
-    <TranscriptBox text={PLACEHOLDER} />
+    <Viewer text={PLACEHOLDER} />
   </StrictMode>,
 );

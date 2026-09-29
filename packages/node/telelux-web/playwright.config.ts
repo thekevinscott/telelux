@@ -5,7 +5,7 @@ export default defineConfig({
   use: { baseURL: 'http://localhost:4173' },
   webServer: {
     command: 'pnpm preview --port 4173 --strictPort',
-    url: 'http://localhost:4173',
+    url: 'http://localhost:4173/viewer.html',
     reuseExistingServer: !process.env.CI,
   },
 });
