@@ -21,6 +21,15 @@ describe('TeleluxMetadata', () => {
     document.body.replaceChildren();
   });
 
+  it('reflects the theme property to its attribute', async () => {
+    const el = await mount({ a: 1 });
+    el.theme = 'dark';
+    await el.updateComplete;
+    expect(el.getAttribute('theme')).toBe('dark');
+    el.setAttribute('theme', 'light');
+    expect(el.theme).toBe('light');
+  });
+
   it('registers the telelux-metadata tag', () => {
     expect(customElements.get('telelux-metadata')).toBe(TeleluxMetadata);
   });

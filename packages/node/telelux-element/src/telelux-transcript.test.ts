@@ -649,4 +649,47 @@ describe('TeleluxTranscript', () => {
       });
     });
   });
+
+  describe('theming', () => {
+    const themed: Transcript = { ...transcript, metadata: { a: 1 } };
+
+    it('reflects the theme property to its attribute', async () => {
+      const el = await mount();
+      el.theme = 'dark';
+      await el.updateComplete;
+      expect(el.getAttribute('theme')).toBe('dark');
+      el.setAttribute('theme', 'light');
+      expect(el.theme).toBe('light');
+    });
+
+    it('passes its theme to every block and to the header metadata popover', async () => {
+      const el = await mount();
+      el.setAttribute('theme', 'dark');
+      el.transcript = themed;
+      await el.updateComplete;
+      el.shadowRoot?.querySelector<HTMLElement>('.metadata-toggle')?.click();
+      await el.updateComplete;
+      expect(blocks(el).map((block) => block.getAttribute('theme'))).toEqual(['dark', 'dark']);
+      expect(el.shadowRoot?.querySelector('.popover telelux-metadata')?.getAttribute('theme')).toBe('dark');
+    });
+
+    it('leaves blocks and the popover unthemed when it has no theme', async () => {
+      const el = await mount();
+      el.transcript = themed;
+      await el.updateComplete;
+      el.shadowRoot?.querySelector<HTMLElement>('.metadata-toggle')?.click();
+      await el.updateComplete;
+      expect(blocks(el).map((block) => block.hasAttribute('theme'))).toEqual([false, false]);
+      expect(el.shadowRoot?.querySelector('.popover telelux-metadata')?.hasAttribute('theme')).toBe(false);
+    });
+
+    it('names its own regions as parts and re-exports the block parts', async () => {
+      const el = await mount();
+      el.transcript = themed;
+      await el.updateComplete;
+      expect(el.shadowRoot?.querySelector('.header')?.getAttribute('part')).toBe('transcript-header');
+      expect(el.shadowRoot?.querySelector('.block-nav')?.getAttribute('part')).toBe('block-nav');
+      expect(blocks(el)[0].getAttribute('exportparts')).toBe('block, block-user, block-assistant, block-system, block-tool, header, content, reasoning, tool-call');
+    });
+  });
 });
