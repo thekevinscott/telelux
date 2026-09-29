@@ -129,6 +129,22 @@ Slotted `slot="before"` content is never read as raw transcript text.
 
 The outline colour is `--telelux-highlight`.
 
+### Minimap
+
+Between the header and the blocks, a strip with one chip per message, in
+order, filled with the role's border colour (`--telelux-<role>-border`).
+A legend names the roles, and a tool message with `error` set carries a red
+triangle (`--telelux-destructive`). The strip scrolls sideways rather than
+wrapping.
+
+- The current block's chip is outlined. It follows the page as it scrolls,
+  using the same rule as **Previous** / **Next**, and the strip scrolls to
+  keep that chip in view.
+- Hovering a chip shows `Block {index} {role}`. Clicking it jumps there, as
+  **Jump to block** does.
+- The strip is one tab stop. Left and Right move between chips, Home and End
+  go to the ends, and Enter or Space jumps.
+
 ### Blocks
 
 Each message renders as a `<telelux-message>` element inside the
@@ -266,6 +282,7 @@ For structure the properties do not reach, the transcript exposes
 | --- | --- |
 | `transcript-header` | The header above the blocks |
 | `block-nav` | The floating Previous / Next controls |
+| `minimap` | The minimap strip and its legend |
 | `block` | Each block, plus `block-user`, `block-assistant`, `block-system`, or `block-tool` |
 | `header` | A block's header row |
 | `content` | A block's text content |

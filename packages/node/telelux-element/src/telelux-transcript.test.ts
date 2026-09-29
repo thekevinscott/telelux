@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import type { TeleluxMessage } from './telelux-message';
 import type { TeleluxMetadata } from './telelux-metadata';
+import type { TeleluxMinimap } from './telelux-minimap';
 import { TeleluxTranscript } from './telelux-transcript';
 import type { Transcript } from './transcript';
 
@@ -646,6 +647,96 @@ describe('TeleluxTranscript', () => {
         const scrolled = stubItems(el, [0, 100, 200, 300]);
         await press(el, 'k');
         expect(scrolled).toEqual([0]);
+      });
+
+      describe('minimap', () => {
+        const minimap = (el: TeleluxTranscript) => el.shadowRoot?.querySelector<TeleluxMinimap>('telelux-minimap') ?? null;
+
+        async function scroll(el: TeleluxTranscript, target: EventTarget = document) {
+          target.dispatchEvent(new Event('scroll'));
+          await el.updateComplete;
+        }
+
+        it('sits between the header and the blocks with every message', async () => {
+          const el = await header();
+          const map = minimap(el) as TeleluxMinimap;
+          expect(map.previousElementSibling?.tagName).toBe('HEADER');
+          expect(map.nextElementSibling?.tagName).toBe('OL');
+          expect(map.messages).toBe(full.messages);
+          expect(map.getAttribute('part')).toBe('minimap');
+        });
+
+        it('is absent without messages', async () => {
+          expect(minimap(await header({ ...full, messages: [] }))).toBeNull();
+        });
+
+        it('starts on the first block', async () => {
+          expect(minimap(await header())?.current).toBe(0);
+        });
+
+        it('follows the block nearest the top as the page scrolls', async () => {
+          const el = await header();
+          stubItems(el, [-150, -50, 50, 150]);
+          await scroll(el);
+          expect(minimap(el)?.current).toBe(1);
+          stubItems(el, [-350, -250, -150, -50]);
+          await scroll(el);
+          expect(minimap(el)?.current).toBe(3);
+        });
+
+        it('follows a scrolling container around the transcript', async () => {
+          const el = await header();
+          const container = document.createElement('div');
+          document.body.appendChild(container);
+          stubItems(el, [-150, -50, 50, 150]);
+          await scroll(el, container);
+          expect(minimap(el)?.current).toBe(1);
+        });
+
+        it('stops following once removed from the page', async () => {
+          const el = await header();
+          stubItems(el, [-150, -50, 50, 150]);
+          el.remove();
+          await scroll(el);
+          expect(minimap(el)?.current).toBe(0);
+        });
+
+        it('jumps to a clicked chip through the same path as the jump input', async () => {
+          const el = await header();
+          const scrolled = stubItems(el, [0, 100, 200, 300]);
+          minimap(el)?.dispatchEvent(new CustomEvent('telelux-jump', { detail: { index: 2 } }));
+          await el.updateComplete;
+          expect(scrolled).toEqual([2]);
+          expect(highlighted(el)).toEqual([2]);
+          expect(minimap(el)?.current).toBe(2);
+        });
+
+        it('keeps a jumped-to block current while it stays on screen', async () => {
+          const el = await header();
+          stubItems(el, [0, 100, 200, 300]);
+          minimap(el)?.dispatchEvent(new CustomEvent('telelux-jump', { detail: { index: 2 } }));
+          await scroll(el);
+          expect(minimap(el)?.current).toBe(2);
+        });
+
+        it('returns to the first block when the transcript changes', async () => {
+          const el = await header();
+          stubItems(el, [-150, -50, 50, 150]);
+          await scroll(el);
+          el.transcript = { ...full };
+          await el.updateComplete;
+          expect(minimap(el)?.current).toBe(0);
+        });
+
+        it('passes its theme to the minimap', async () => {
+          const el = await header();
+          el.theme = 'dark';
+          await el.updateComplete;
+          expect(minimap(el)?.getAttribute('theme')).toBe('dark');
+          el.theme = undefined;
+          await el.updateComplete;
+          expect(minimap(el)?.hasAttribute('theme')).toBe(false);
+        });
       });
     });
   });

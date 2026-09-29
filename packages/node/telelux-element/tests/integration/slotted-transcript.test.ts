@@ -5,7 +5,7 @@ test.describe('the telelux-transcript element fed by its slot alone', () => {
     await page.goto('/slot.html');
 
     const element = page.locator('telelux-transcript');
-    await expect(element.locator('li').first()).toContainText('Port reference_implementation/ to typescript');
-    await expect(element.locator('li')).toHaveCount(30);
+    await expect(element.locator('ol > li').first()).toContainText('Port reference_implementation/ to typescript');
+    await expect(element.locator('ol > li')).toHaveCount(30);
   });
 });
