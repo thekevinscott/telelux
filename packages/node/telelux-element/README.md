@@ -16,7 +16,7 @@ pnpm add telelux-element
 <telelux-transcript></telelux-transcript>
 ```
 
-`lit` is a regular dependency, resolved by the host's package manager rather
+`lit` and `marked` are regular dependencies, resolved by the host's package manager rather
 than bundled into `dist/index.js`.
 
 Assign a transcript to the element's `transcript` property:

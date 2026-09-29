@@ -22,7 +22,7 @@ export default defineConfig({
       fileName: (_format, name) => `${name}.js`,
     },
     rollupOptions: {
-      external: [/^lit(\/|$)/, /^@lit\//],
+      external: [/^lit(\/|$)/, /^@lit\//, 'marked'],
     },
   },
 });
