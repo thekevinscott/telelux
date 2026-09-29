@@ -2,7 +2,9 @@ import { css, html, LitElement, nothing, type PropertyValues } from 'lit';
 
 import './telelux-message';
 import './telelux-metadata';
+import './telelux-minimap';
 import { blockNumber } from './block-number';
+import { currentBlock } from './current-block';
 import { definedEntries } from './defined-entries';
 import { displayName } from './display-name';
 import { formatCreatedAt } from './format-created-at';
@@ -26,6 +28,7 @@ export class TeleluxTranscript extends LitElement {
     metadataOpen: { state: true },
     copyStatus: { state: true },
     highlighted: { state: true },
+    current: { state: true },
   };
 
   static override styles = [theme, css`
@@ -201,9 +204,10 @@ export class TeleluxTranscript extends LitElement {
   private declare metadataOpen: boolean;
   private declare copyStatus: string | undefined;
   private declare highlighted: number | undefined;
+  private declare current: number | undefined;
 
   #parsed: ParseResult | undefined;
-  #current: number | undefined;
+  #tracked: number | undefined;
   #highlightTimer: ReturnType<typeof setTimeout> | undefined;
   #copyTimer: ReturnType<typeof setTimeout> | undefined;
 
@@ -218,6 +222,12 @@ export class TeleluxTranscript extends LitElement {
       this.tabIndex = -1;
     }
     this.#readSlot();
+    document.addEventListener('scroll', this.#onScroll, { capture: true });
+  }
+
+  override disconnectedCallback() {
+    super.disconnectedCallback();
+    document.removeEventListener('scroll', this.#onScroll, { capture: true });
   }
 
   #readSlot = () => {
@@ -233,7 +243,8 @@ export class TeleluxTranscript extends LitElement {
       this.#parsed = this.#parse();
       this.metadataOpen = false;
       this.highlighted = undefined;
-      this.#current = undefined;
+      this.#tracked = undefined;
+      this.current = 0;
     }
   }
 
@@ -260,7 +271,7 @@ export class TeleluxTranscript extends LitElement {
     if (messages.length === 0) {
       return html`${this.#header(transcript)}<p class="empty">No messages.</p>`;
     }
-    return html`${this.#header(transcript)}<ol>
+    return html`${this.#header(transcript)}<telelux-minimap part="minimap" theme=${this.theme ?? nothing} .messages=${messages} .current=${this.current} @telelux-jump=${(event: CustomEvent<{ index: number }>) => this.#goTo(event.detail.index)}></telelux-minimap><ol>
       ${messages.map((message, index) => html`<li class=${index === this.highlighted ? 'highlight' : nothing}><telelux-message exportparts="block, block-user, block-assistant, block-system, block-tool, header, content, reasoning, tool-call" theme=${this.theme ?? nothing} .message=${message} .index=${index}></telelux-message></li>`)}
     </ol>
     <nav class="block-nav" part="block-nav" aria-label="Block navigation">
@@ -332,16 +343,24 @@ export class TeleluxTranscript extends LitElement {
     return [...this.renderRoot.querySelectorAll<HTMLLIElement>('ol > li')];
   }
 
+  #extents() {
+    return this.#items().map((item) => item.getBoundingClientRect());
+  }
+
+  #onScroll = () => {
+    this.current = currentBlock(this.#extents(), window.innerHeight, this.#tracked);
+  };
+
   #step(step: number) {
-    const extents = this.#items().map((item) => item.getBoundingClientRect());
-    const index = targetBlock(extents, window.innerHeight, this.#current, step);
+    const index = targetBlock(this.#extents(), window.innerHeight, this.#tracked, step);
     if (index !== undefined) {
       this.#goTo(index);
     }
   }
 
   #goTo(index: number) {
-    this.#current = index;
+    this.#tracked = index;
+    this.current = index;
     this.#items()[index].scrollIntoView({ block: 'start', behavior: 'smooth' });
     this.highlighted = index;
     clearTimeout(this.#highlightTimer);

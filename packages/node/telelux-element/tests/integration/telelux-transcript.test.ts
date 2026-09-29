@@ -5,7 +5,7 @@ test.describe('the telelux-transcript element in a real page', () => {
     await page.goto('/');
 
     const element = page.locator('telelux-transcript');
-    await expect(element.locator('li').first()).toContainText('What time is it in Tokyo?');
-    await expect(element.locator('li')).toHaveCount(4);
+    await expect(element.locator('ol > li').first()).toContainText('What time is it in Tokyo?');
+    await expect(element.locator('ol > li')).toHaveCount(4);
   });
 });
