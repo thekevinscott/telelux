@@ -222,7 +222,7 @@ export class TeleluxTranscript extends LitElement {
       this.tabIndex = -1;
     }
     this.#readSlot();
-    document.addEventListener('scroll', this.#onScroll, { capture: true, passive: true });
+    document.addEventListener('scroll', this.#onScroll, { capture: true });
   }
 
   override disconnectedCallback() {
@@ -244,7 +244,7 @@ export class TeleluxTranscript extends LitElement {
       this.metadataOpen = false;
       this.highlighted = undefined;
       this.#tracked = undefined;
-      this.current = this.#parsed?.ok === true && this.#parsed.transcript.messages.length > 0 ? 0 : undefined;
+      this.current = 0;
     }
   }
 

@@ -321,10 +321,12 @@ describe('TeleluxTranscript', () => {
       el.setAttribute('metadataopen', 'x');
       el.setAttribute('copystatus', 'x');
       el.setAttribute('highlighted', '0');
+      el.setAttribute('current', '2');
       await el.updateComplete;
       expect($(el, '.popover')).toBeNull();
       expect($(el, '.copy')?.textContent).toBe('Copy');
       expect(el.shadowRoot?.querySelector('li[class]')).toBeNull();
+      expect(el.shadowRoot?.querySelector<TeleluxMinimap>('telelux-minimap')?.current).toBe(0);
     });
 
     describe('totals', () => {

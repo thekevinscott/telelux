@@ -76,8 +76,10 @@ describe('TeleluxMinimap', () => {
   });
 
   it('overlays the error triangle only on tool messages with an error', async () => {
-    const el = await mount([...messages, { role: 'user', content: 'x', metadata: { error: 'no' } }]);
+    const stray = { role: 'user', content: 'x', error: { type: 'x', message: 'y' } } as ChatMessage;
+    const el = await mount([...messages, stray]);
     expect(chips(el).map((chip) => chip.querySelector('.triangle') !== null)).toEqual([false, false, false, false, true, false]);
+    expect(chips(el)[5].title).toBe('Block 5 user');
   });
 
   it('is a labelled toolbar', async () => {
