@@ -23,6 +23,6 @@ reason = "vitest configuration, not shipped source; it has to live in src/ becau
 
 [[typescript.exempt]]
 path = "main.tsx"
-lines = [8, 10, 11]
+lines = [11]
 rules = ["mutation"]
-reason = "composition root: the placeholder string, the #root id and its missing-element guard are only observable in a real browser, which tests/integration asserts via Playwright"
+reason = "defensive guard: viewer.html always ships #root, so the throw cannot run in the built file; the mount itself is asserted in tests/integration"
