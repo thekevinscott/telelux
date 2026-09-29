@@ -74,6 +74,9 @@ importers:
       lit:
         specifier: ^3.3.3
         version: 3.3.3
+      marked:
+        specifier: ^18.0.14
+        version: 18.0.14
       zod:
         specifier: ^4.6.5
         version: 4.6.5
@@ -1911,6 +1914,11 @@ packages:
 
   mark.js@8.11.1:
     resolution: {integrity: sha512-1I+1qpDt4idfgLQG+BNWmrqku+7/2bi5nLf4YwF8y8zXvmfiTBY3PV3ZibfrjBueCByROpuBjLLFCajqkgYoLQ==}
+
+  marked@18.0.14:
+    resolution: {integrity: sha512-mBHK6FBHuBAlhgRe88w9F0O1AbwwXJUcQibUbC/QcdTbVGAD7aWza+xt3N6oT/jCZx3/OMeS+8rnuiHZcQ9s7A==}
+    engines: {node: '>= 20'}
+    hasBin: true
 
   mdast-util-to-hast@13.2.1:
     resolution: {integrity: sha512-cctsq2wp5vTsLIcaymblUriiTcZd0CwWtCbLvrOzYCDZoWyMNV8sZ7krj09FSnsiJi3WVsHLM4k6Dq/yaPyCXA==}
@@ -4384,6 +4392,8 @@ snapshots:
       semver: 7.8.5
 
   mark.js@8.11.1: {}
+
+  marked@18.0.14: {}
 
   mdast-util-to-hast@13.2.1:
     dependencies:

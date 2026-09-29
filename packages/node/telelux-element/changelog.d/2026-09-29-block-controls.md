@@ -1,0 +1,1 @@
+**Added** Each block header has a text mode toggle (raw, or indented JSON / prose with monospace code fences), a Metadata popover when the message has metadata, and a Raw toggle showing the message as received. `<telelux-metadata>` renders a metadata key/value list and is exported. `marked` is a new dependency, used only for its lexer. (#55)
