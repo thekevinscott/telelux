@@ -1,0 +1,1 @@
+**Added** A transcript header: the id with a copy button, name, local creation time, a Metadata popover, totals (messages by role, tool calls, token usage when reported), and a jump-to-block input. Previous / Next buttons and the `J` / `K` keys step between blocks and briefly outline the target. A `before` slot lets a host add content to the header. (#56)
