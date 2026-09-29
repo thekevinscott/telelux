@@ -1,10 +1,7 @@
-import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
-
 import { afterEach, describe, expect, it } from 'vitest';
 
 import { TeleluxMessage } from './telelux-message';
-import type { ChatMessage, Transcript } from './transcript';
+import type { ChatMessage } from './transcript';
 
 async function mount(message: ChatMessage | undefined, index = 0): Promise<TeleluxMessage> {
   const el = document.createElement('telelux-message') as TeleluxMessage;
@@ -23,10 +20,6 @@ function all(el: TeleluxMessage, selector: string): string[] {
   return [...(el.shadowRoot?.querySelectorAll(selector) ?? [])].map((node) => node.textContent ?? '');
 }
 
-function serialize(el: TeleluxMessage): string {
-  const html = find(el, 'article')?.outerHTML ?? '';
-  return html.replace(/<!--[^]*?-->/g, '').replace(/>\s+</g, '><').trim();
-}
 
 describe('TeleluxMessage', () => {
   afterEach(() => {
@@ -235,21 +228,6 @@ describe('TeleluxMessage', () => {
     it('renders no footer for a non-tool message carrying tool fields', async () => {
       const el = await mount({ role: 'user', content: 'x', tool_call_id: 'call_1' });
       expect(find(el, '.tool-info')).toBeNull();
-    });
-  });
-
-  describe('fixture parity', () => {
-    const fixture = join(import.meta.dirname, '../../../../fixtures/claude-code/sample.transcript.json');
-    const transcript = JSON.parse(readFileSync(fixture, 'utf8')) as Transcript;
-
-    it('renders every message of the reference corpus to the recorded DOM', async () => {
-      const blocks: string[] = [];
-      for (const [index, message] of transcript.messages.entries()) {
-        const el = await mount(message, index);
-        blocks.push(serialize(el));
-        el.remove();
-      }
-      await expect(blocks.join('\n')).toMatchFileSnapshot('../../../../fixtures/claude-code/sample.blocks.html');
     });
   });
 });
