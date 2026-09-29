@@ -75,14 +75,59 @@ know about pass through untouched.
 
 ### States
 
-- **Unset** (`undefined` or `null`), or a transcript with no messages: an
-  empty state.
+- **Unset** (`undefined` or `null`): an empty state.
+- **No messages**: the transcript header above an empty state.
 - **Invalid**: a value that fails the runtime check renders an error state
   naming the failing path. The element never throws.
-- **Valid**: one block per message.
+- **Valid**: the transcript header, then one block per message.
 
 Setting the property again re-renders. All transcript text lands in the DOM
 through Lit templates, so nothing in a transcript is interpreted as HTML.
+
+### Transcript header
+
+Above the blocks, left to right:
+
+- `Transcript`, then the `id` in a monospace pill with a **Copy** button that
+  puts the id on the clipboard. The button reads `Copied`, or `Copy failed`
+  when the page has no clipboard access, for a moment afterwards.
+- The `name` when it is set and not blank.
+- `created_at` formatted in the reader's locale and time zone. A value that
+  does not parse as a date is shown as given.
+- **Metadata ({n})**, `n` counting the transcript's defined `metadata` keys,
+  when there is at least one. Opens the same key/value popover the blocks
+  use; Escape or a second click closes it.
+- Totals over the messages: messages by role, tool calls, then input tokens,
+  output tokens, cache reads, and cache writes. Token totals sum
+  `metadata.usage.input_tokens`, `output_tokens`, `cache_read_input_tokens`,
+  and `cache_creation_input_tokens` across messages. A total no message
+  reports is left out rather than shown as zero.
+- The block count and a **Jump to block** input.
+
+A host that shows more around the transcript (a run crumb, run-level
+metadata) can put it at the start of the header with `slot="before"`:
+
+```html
+<telelux-transcript>
+  <a slot="before" href="/runs/42">Run 42</a>
+</telelux-transcript>
+```
+
+Slotted `slot="before"` content is never read as raw transcript text.
+
+### Navigation
+
+- **Jump to block**: type an index and press Enter. The block scrolls to the
+  top of the view and is outlined for a moment. An index past the end goes
+  to the last block.
+- **Previous** / **Next**: floating buttons pinned to the bottom-right of the
+  visible part of the transcript. `K` and `J` do the same whenever focus is
+  inside the element, except in a text field and with Ctrl, Alt, or Meta
+  held. Clicking anywhere in the transcript gives it focus.
+- Each step moves from the current block: the one last navigated to while it
+  is still on screen, else the first block not yet scrolled past.
+
+The outline colour is `--telelux-highlight` (`#f59e0b`).
 
 ### Blocks
 
