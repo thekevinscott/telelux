@@ -56,10 +56,6 @@ describe('TeleluxMessage', () => {
       expect(find(el, '.block')?.getAttribute('data-role')).toBe(role);
     });
 
-    it('reserves an empty controls slot on the right', async () => {
-      const el = await mount({ role: 'user', content: 'x' });
-      expect(find(el, '.header .controls')?.textContent).toBe('');
-    });
 
     it('re-renders when the message changes', async () => {
       const el = await mount({ role: 'user', content: 'before' });
@@ -250,4 +246,168 @@ describe('TeleluxMessage', () => {
       expect(find(el, '.tool-info')).toBeNull();
     });
   });
+
+  describe('controls', () => {
+    const withMetadata: ChatMessage = { role: 'user', content: '{"a":1}', metadata: { type: 'user', uuid: 'u1' } };
+
+    function click(el: TeleluxMessage, selector: string): Promise<boolean> {
+      (find(el, selector) as HTMLButtonElement).click();
+      return el.updateComplete;
+    }
+
+    it('are real buttons, in DOM order: text mode, metadata, raw', async () => {
+      const el = await mount(withMetadata);
+      const buttons = [...(el.shadowRoot?.querySelectorAll('.controls > *') ?? [])];
+      expect(buttons.map((button) => [button.tagName, button.getAttribute('type'), button.className]))
+        .toEqual([['BUTTON', 'button', 'text-mode'], ['BUTTON', 'button', 'metadata-toggle'], ['BUTTON', 'button', 'raw-toggle']]);
+    });
+
+    describe('text mode', () => {
+      it('shows raw text by default', async () => {
+        const el = await mount(withMetadata);
+        expect(find(el, '.text-mode')?.textContent).toBe('文A');
+        expect(find(el, '.text-mode')?.getAttribute('aria-pressed')).toBe('false');
+        expect(find(el, '.content')?.textContent).toBe('{"a":1}');
+      });
+
+      it('indents JSON content when switched on, and restores it when switched off', async () => {
+        const el = await mount(withMetadata);
+        await click(el, '.text-mode');
+        expect(find(el, '.text-mode')?.getAttribute('aria-pressed')).toBe('true');
+        expect(find(el, '.content')?.textContent).toBe('{\n  "a": 1\n}');
+        expect(find(el, '.content')?.classList.contains('formatted')).toBe(false);
+        await click(el, '.text-mode');
+        expect(find(el, '.content')?.textContent).toBe('{"a":1}');
+      });
+
+      it('renders other text as wrapped prose with fenced blocks in monospace', async () => {
+        const el = await mount({ role: 'assistant', content: 'Run:\n\n```bash\nls <dir>\n```\ndone' });
+        await click(el, '.text-mode');
+        expect(find(el, '.content')?.classList.contains('formatted')).toBe(true);
+        expect(all(el, '.content .fence')).toEqual(['ls <dir>']);
+        expect(find(el, '.content')?.textContent).toBe('Run:\n\nls <dir>done');
+        expect(find(el, '.content dir')).toBeNull();
+      });
+
+      it('is per block', async () => {
+        const first = await mount(withMetadata, 0);
+        const second = await mount(withMetadata, 1);
+        await click(first, '.text-mode');
+        expect(find(second, '.content')?.textContent).toBe('{"a":1}');
+      });
+    });
+
+    describe('metadata', () => {
+      it('is hidden when the message has no metadata', async () => {
+        const el = await mount({ role: 'user', content: 'x' });
+        expect(find(el, '.metadata-toggle')).toBeNull();
+      });
+
+      it('is hidden when every metadata value is undefined', async () => {
+        const el = await mount({ role: 'user', content: 'x', metadata: { gone: undefined } });
+        expect(find(el, '.metadata-toggle')).toBeNull();
+      });
+
+      it('opens a popover with the message metadata and closes on a second click', async () => {
+        const el = await mount(withMetadata, 4);
+        expect(find(el, '.metadata-toggle')?.textContent).toBe('Metadata');
+        expect(find(el, '.metadata-toggle svg')).not.toBeNull();
+        expect(find(el, '.popover')).toBeNull();
+        await click(el, '.metadata-toggle');
+        expect(find(el, '.metadata-toggle')?.getAttribute('aria-expanded')).toBe('true');
+        const popover = find(el, '.popover');
+        expect(popover?.getAttribute('role')).toBe('dialog');
+        expect(popover?.getAttribute('aria-label')).toBe('Message Metadata - Block 4');
+        expect(find(el, '.popover-title')?.textContent).toBe('Message Metadata - Block 4');
+        expect((find(el, '.popover telelux-metadata') as HTMLElement & { metadata: unknown }).metadata).toEqual(withMetadata.metadata);
+        await click(el, '.metadata-toggle');
+        expect(find(el, '.popover')).toBeNull();
+        expect(find(el, '.metadata-toggle')?.getAttribute('aria-expanded')).toBe('false');
+      });
+
+      it('closes on Escape and returns focus to its button', async () => {
+        const el = await mount(withMetadata);
+        await click(el, '.metadata-toggle');
+        find(el, '.popover')?.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, composed: true }));
+        await el.updateComplete;
+        expect(find(el, '.popover')).toBeNull();
+        expect(el.shadowRoot?.activeElement).toBe(find(el, '.metadata-toggle'));
+      });
+
+      it('ignores other keys and Escape while closed', async () => {
+        const el = await mount(withMetadata);
+        const button = find(el, '.metadata-toggle') as HTMLButtonElement;
+        find(el, '.block')?.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+        await el.updateComplete;
+        expect(el.shadowRoot?.activeElement).toBeNull();
+        await click(el, '.metadata-toggle');
+        find(el, '.popover')?.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+        await el.updateComplete;
+        expect(find(el, '.popover')).not.toBeNull();
+        expect(button.getAttribute('aria-expanded')).toBe('true');
+      });
+
+      it('closing one block\'s popover leaves another open', async () => {
+        const first = await mount(withMetadata, 0);
+        const second = await mount(withMetadata, 1);
+        await click(first, '.metadata-toggle');
+        await click(second, '.metadata-toggle');
+        await click(first, '.metadata-toggle');
+        expect(find(first, '.popover')).toBeNull();
+        expect(find(second, '.popover')).not.toBeNull();
+      });
+    });
+
+    describe('raw', () => {
+      it('reveals the message as received, indented, at the end of the block', async () => {
+        const message: ChatMessage = {
+          role: 'assistant',
+          content: [{ type: 'text', text: '<b>x</b>' }],
+          tool_calls: [{ id: 'c', function: 'f', type: 'function' }],
+        };
+        const el = await mount(message);
+        expect(find(el, '.raw')).toBeNull();
+        await click(el, '.raw-toggle');
+        expect(find(el, '.raw-toggle')?.getAttribute('aria-pressed')).toBe('true');
+        expect(find(el, '.raw')?.textContent).toBe(JSON.stringify(message, null, 2));
+        expect(find(el, '.block')?.lastElementChild).toBe(find(el, '.raw'));
+        await click(el, '.raw-toggle');
+        expect(find(el, '.raw')).toBeNull();
+        expect(find(el, '.raw-toggle')?.getAttribute('aria-pressed')).toBe('false');
+      });
+    });
+
+    it('resets when the block is given a different message', async () => {
+      const el = await mount(withMetadata);
+      await click(el, '.text-mode');
+      await click(el, '.metadata-toggle');
+      await click(el, '.raw-toggle');
+      el.message = { ...withMetadata };
+      await el.updateComplete;
+      expect(find(el, '.text-mode')?.getAttribute('aria-pressed')).toBe('false');
+      expect(find(el, '.popover')).toBeNull();
+      expect(find(el, '.raw')).toBeNull();
+    });
+
+    it('ignores attributes named after its internal state', async () => {
+      const el = await mount(withMetadata);
+      el.setAttribute('formatted', 'x');
+      el.setAttribute('metadataopen', 'x');
+      el.setAttribute('rawopen', 'x');
+      el.index = 2;
+      await el.updateComplete;
+      expect(find(el, '.text-mode')?.getAttribute('aria-pressed')).toBe('false');
+      expect(find(el, '.popover')).toBeNull();
+      expect(find(el, '.raw')).toBeNull();
+    });
+
+        it('keeps its state when an unrelated property changes', async () => {
+      const el = await mount(withMetadata);
+      await click(el, '.raw-toggle');
+      el.index = 9;
+      await el.updateComplete;
+      expect(find(el, '.raw')).not.toBeNull();
+    });
+  });
+
 });

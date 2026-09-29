@@ -16,7 +16,7 @@ pnpm add telelux-element
 <telelux-transcript></telelux-transcript>
 ```
 
-`lit` is a regular dependency, resolved by the host's package manager rather
+`lit` and `marked` are regular dependencies, resolved by the host's package manager rather
 than bundled into `dist/index.js`.
 
 Assign a transcript to the element's `transcript` property:
@@ -90,8 +90,8 @@ Each message renders as a `<telelux-message>` element inside the
 transcript's shadow root, in message order, as a rounded card with a
 role-coloured left border and tint.
 
-- **Header**: `Block {index} | {Role}`, the index counted from 0. The right
-  side is empty, reserved for per-block controls.
+- **Header**: `Block {index} | {Role}`, the index counted from 0, with the
+  block's controls on the right.
 - **Content**: string content, or the `text` items of a `Content[]` joined
   with newlines, in monospace with whitespace kept and long lines wrapped
   anywhere. A message with no text has no content box.
@@ -105,6 +105,27 @@ role-coloured left border and tint.
   are; anything else prints as JSON.
 - **Tool results** (tool): a footer with `Tool Call ID`, `Function`, and
   `Error: {message}` in red, each only when set.
+
+### Block controls
+
+Each block header carries up to three buttons, in this order. Their state
+belongs to the block, is never persisted, and resets when the block is given
+a different message.
+
+- **文A** (text mode): switches the content between raw text (the default)
+  and a formatted view. Formatted, content that parses as a JSON object or
+  array is indented; anything else renders as wrapped prose, with fenced code
+  blocks kept monospace. Fences are found with the
+  [`marked`](https://marked.js.org) lexer; its HTML output is never used.
+- **Metadata**: shown only when the message has `metadata` with at least one
+  defined value. Opens a popover listing each key and value. A nested object
+  renders one level deep, and an array renders as a list. Escape or a second
+  click closes it.
+- **Raw**: shows the message as the element received it, as indented JSON,
+  at the end of the block.
+
+The popover's key/value list is its own element, `<telelux-metadata>`, with a
+`metadata` property. `TeleluxMetadata` is exported.
 
 Role colours come from custom properties, so a host can override them on
 the element or any ancestor:

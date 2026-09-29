@@ -1,14 +1,23 @@
-import { css, html, LitElement, nothing } from 'lit';
+import { css, html, LitElement, nothing, type PropertyValues } from 'lit';
 
+import './telelux-metadata';
+import { definedEntries } from './defined-entries';
 import { messageText } from './message-text';
+import { prettyJson } from './pretty-json';
 import { reasoningText } from './reasoning-text';
+import { textSegments } from './text-segments';
 import { toolCallArguments } from './tool-call-arguments';
 import type { ChatMessage, ToolCall } from './transcript';
+
+const documentIcon = html`<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M4 1.5h5.5L12.5 4.5v10h-8.5z" /><path d="M9.5 1.5v3h3M6 8h4.5M6 10.5h4.5" /></svg>`;
 
 export class TeleluxMessage extends LitElement {
   static override properties = {
     message: { attribute: false },
     index: { attribute: false },
+    formatted: { state: true },
+    metadataOpen: { state: true },
+    rawOpen: { state: true },
   };
 
   static override styles = css`
@@ -48,16 +57,72 @@ export class TeleluxMessage extends LitElement {
     }
 
     .header {
+      position: relative;
       display: flex;
+      align-items: center;
       justify-content: space-between;
       margin-bottom: 4px;
       font-size: 10px;
       color: var(--telelux-muted-foreground, #6b7280);
     }
 
+    .controls {
+      display: flex;
+      gap: 4px;
+    }
+
+    .controls button {
+      display: inline-flex;
+      align-items: center;
+      gap: 2px;
+      padding: 1px 4px;
+      border: 1px solid transparent;
+      border-radius: 4px;
+      background: none;
+      font: inherit;
+      color: inherit;
+      cursor: pointer;
+    }
+
+    .controls button:hover,
+    .controls button[aria-pressed='true'],
+    .controls button[aria-expanded='true'] {
+      border-color: var(--telelux-border, #e5e7eb);
+      background: var(--telelux-secondary, #f1f5f9);
+    }
+
+    .controls svg {
+      width: 10px;
+      height: 10px;
+    }
+
+    .popover {
+      position: absolute;
+      top: 100%;
+      right: 0;
+      z-index: 1;
+      max-width: min(480px, 90vw);
+      max-height: 320px;
+      overflow: auto;
+      padding: 8px;
+      border: 1px solid var(--telelux-border, #e5e7eb);
+      border-radius: var(--telelux-radius, 6px);
+      background: var(--telelux-background, #ffffff);
+      color: var(--telelux-foreground, #111827);
+      box-shadow: 0 4px 12px rgb(0 0 0 / 12%);
+    }
+
+    .popover-title {
+      margin-bottom: 6px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
     .content,
     .reasoning-text,
-    .code {
+    .code,
+    .fence,
+    .raw {
       font-family: var(--telelux-font-mono, ui-monospace, monospace);
       white-space: pre-wrap;
       overflow-wrap: anywhere;
@@ -66,6 +131,20 @@ export class TeleluxMessage extends LitElement {
     .content {
       max-width: 100%;
       overflow-x: auto;
+      font-size: 12px;
+    }
+
+    .content.formatted {
+      font-family: var(--telelux-font-sans, system-ui, sans-serif);
+      font-size: 13px;
+    }
+
+    .fence,
+    .raw {
+      margin: 4px 0;
+      padding: 6px;
+      border-radius: 4px;
+      background: var(--telelux-secondary, #f1f5f9);
       font-size: 12px;
     }
 
@@ -143,6 +222,17 @@ export class TeleluxMessage extends LitElement {
 
   declare message: ChatMessage | undefined;
   declare index: number | undefined;
+  private declare formatted: boolean;
+  private declare metadataOpen: boolean;
+  private declare rawOpen: boolean;
+
+  protected override willUpdate(changed: PropertyValues<this>) {
+    if (changed.has('message')) {
+      this.formatted = false;
+      this.metadataOpen = false;
+      this.rawOpen = false;
+    }
+  }
 
   override render() {
     const { message } = this;
@@ -150,14 +240,43 @@ export class TeleluxMessage extends LitElement {
       return nothing;
     }
     const text = messageText(message.content);
-    return html`<article class="block" data-role=${message.role}>
-      <div class="header"><span class="label">Block ${this.index} | ${message.role.charAt(0).toUpperCase()}${message.role.slice(1)}</span><span class="controls"></span></div>
+    const metadata = definedEntries(message.metadata).length > 0;
+    return html`<article class="block" data-role=${message.role} @keydown=${this.#onKeydown}>
+      <div class="header"><span class="label">Block ${this.index} | ${message.role.charAt(0).toUpperCase()}${message.role.slice(1)}</span><span class="controls">
+        <button class="text-mode" type="button" aria-pressed=${this.formatted} aria-label="Formatted text" title="Formatted text" @click=${() => (this.formatted = !this.formatted)}>文A</button>
+        ${metadata ? html`<button class="metadata-toggle" type="button" aria-haspopup="dialog" aria-expanded=${this.metadataOpen} @click=${() => (this.metadataOpen = !this.metadataOpen)}>${documentIcon}Metadata</button>` : nothing}
+        <button class="raw-toggle" type="button" aria-pressed=${this.rawOpen} @click=${() => (this.rawOpen = !this.rawOpen)}>Raw</button>
+      </span>${metadata && this.metadataOpen ? this.#popover(message) : nothing}</div>
       ${this.#reasoning(message)}
-      ${text === '' ? nothing : html`<div class="content">${text}</div>`}
+      ${text === '' ? nothing : this.#content(text)}
       ${this.#images(message)}
       ${message.role === 'tool' ? this.#toolInfo(message) : nothing}
       ${message.role === 'assistant' ? (message.tool_calls ?? []).map((call) => this.#toolCall(call)) : nothing}
+      ${this.rawOpen ? html`<pre class="raw">${JSON.stringify(message, null, 2)}</pre>` : nothing}
     </article>`;
+  }
+
+  #onKeydown(event: KeyboardEvent) {
+    if (event.key === 'Escape' && this.metadataOpen) {
+      this.metadataOpen = false;
+      (this.renderRoot.querySelector('.metadata-toggle') as HTMLButtonElement).focus();
+    }
+  }
+
+  #popover(message: ChatMessage) {
+    const title = `Message Metadata - Block ${this.index}`;
+    return html`<div class="popover" role="dialog" aria-label=${title}><div class="popover-title">${title}</div><telelux-metadata .metadata=${message.metadata}></telelux-metadata></div>`;
+  }
+
+  #content(text: string) {
+    if (!this.formatted) {
+      return html`<div class="content">${text}</div>`;
+    }
+    const json = prettyJson(text);
+    if (json !== undefined) {
+      return html`<div class="content">${json}</div>`;
+    }
+    return html`<div class="content formatted">${textSegments(text).map((segment) => (segment.code ? html`<pre class="fence">${segment.text}</pre>` : segment.text))}</div>`;
   }
 
   #reasoning(message: ChatMessage) {

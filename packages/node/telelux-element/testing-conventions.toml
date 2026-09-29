@@ -36,12 +36,18 @@ reason = "equivalent mutant: emptying the catch arm makes the function fall out 
 
 [[typescript.exempt]]
 path = "telelux-message.ts"
-lines = [9, 10, 11, 14, 196]
+lines = [12, 15, 16, 17, 18, 19, 20, 23, 315]
 rules = ["mutation"]
-reason = "static mutants: the reactive property table, the styles sheet, and the customElements.define call all run once at module load, before stryker's per-test instrumentation activates. Applied by hand, emptying the property table fails 're-renders when the message changes', flipping attribute to true fails 'ignores message and index attributes', and emptying the tag name throws at import so the whole file fails; emptying the stylesheet is invisible to jsdom and fails the role-colour assertions in tests/integration/message-block.test.ts"
+reason = "static mutants: the document icon, the reactive property table, the styles sheet, and the customElements.define call all run once at module load, before stryker's per-test instrumentation activates. Applied by hand, emptying the property table fails 're-renders when the message changes', flipping attribute to true fails 'ignores message and index attributes', flipping state to false or emptying a state entry fails 'ignores attributes named after its internal state', emptying the icon fails the metadata popover test, and emptying the tag name throws at import so the whole file fails; emptying the stylesheet is invisible to jsdom and fails the role-colour assertions in tests/integration/message-block.test.ts"
 
 [[typescript.exempt]]
 path = "telelux-transcript.ts"
 lines = [15]
 rules = ["mutation"]
 reason = "static mutant: the styles sheet is read once when Lit registers the class at module load, before stryker's per-test instrumentation activates, and jsdom applies no layout to observe it. It only spaces the block list"
+
+[[typescript.exempt]]
+path = "telelux-metadata.ts"
+lines = [9, 10, 13, 69]
+rules = ["mutation"]
+reason = "static mutants: the reactive property table, the styles sheet, and the customElements.define call run once at module load, before stryker's per-test instrumentation activates. Applied by hand, emptying the property table fails 're-renders when the metadata changes', flipping attribute to true fails 'ignores a metadata attribute', and emptying the tag name throws at import. The stylesheet is layout only"
