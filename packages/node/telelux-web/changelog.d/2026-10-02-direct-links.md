@@ -1,0 +1,1 @@
+**Added** — The viewer fetches `#v=1&data=https://…` links as hosted transcripts. It shows progress with Cancel, enforces a 30-second deadline and a 50 MiB cap, and names HTTP, timeout, and CORS failures with an explicit Retry. Fetched transcripts are cached in memory for the page's lifetime.

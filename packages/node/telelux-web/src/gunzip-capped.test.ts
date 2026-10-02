@@ -38,6 +38,11 @@ describe('gunzipCapped', () => {
     expect(await gunzipCapped(new TextEncoder().encode('plain text'), 100)).toStrictEqual({ ok: false, reason: 'invalid' });
   });
 
+  it('reports a stream that breaks off after some of its output', async () => {
+    const whole = await gzip('y'.repeat(256 * 1024));
+    expect(await gunzipCapped(whole.subarray(0, whole.length - 4), 1024 * 1024)).toStrictEqual({ ok: false, reason: 'invalid' });
+  });
+
   it('reports a truncated gzip stream', async () => {
     const whole = await gzip('hello world');
     expect(await gunzipCapped(whole.subarray(0, whole.length - 6), 100)).toStrictEqual({ ok: false, reason: 'invalid' });
