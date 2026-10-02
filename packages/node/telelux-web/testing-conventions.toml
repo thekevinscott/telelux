@@ -95,3 +95,8 @@ reason = "@testing-library/react is the renderer the context is read through, no
 path = "use-theme.test.ts"
 rules = ["unmocked-collaborator"]
 reason = "@testing-library/react's renderHook is the React root this hook runs in, not a collaborator of the hook; mocking it would leave nothing under test"
+
+[[typescript.exempt]]
+path = "AnnotationsFile.test.tsx"
+rules = ["unmocked-collaborator"]
+reason = "@testing-library/react is the renderer this test runs in, not a collaborator of the component; mocking it would leave nothing under test"

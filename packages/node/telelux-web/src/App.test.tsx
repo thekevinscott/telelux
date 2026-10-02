@@ -12,7 +12,7 @@ vi.mock('./use-fragment-transcript', async () => {
 
 vi.mock('./Viewer', async () => {
   const actual = await vi.importActual<typeof import('./Viewer')>('./Viewer');
-  const Viewer: typeof actual.Viewer = ({ text }) => <output data-testid="viewer">{text}</output>;
+  const Viewer: typeof actual.Viewer = ({ text, annotations }) => <output data-testid="viewer" data-annotations={annotations}>{text}</output>;
   return { ...actual, Viewer };
 });
 
@@ -77,5 +77,12 @@ describe('App', () => {
     const { getByTestId, container } = render(<App />);
     expect(getByTestId('viewer')).toHaveTextContent('{"type":"user"}');
     expect(container.children).toHaveLength(1);
+    expect(getByTestId('viewer')).not.toHaveAttribute('data-annotations');
+  });
+
+  it('hands baked-in annotations to the viewer with their transcript', () => {
+    given({ kind: 'transcript', text: '{"type":"user"}', annotations: '{"version":1}' });
+    const { getByTestId } = render(<App />);
+    expect(getByTestId('viewer')).toHaveAttribute('data-annotations', '{"version":1}');
   });
 });
