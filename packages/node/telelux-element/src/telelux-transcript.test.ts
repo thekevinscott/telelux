@@ -499,6 +499,14 @@ describe('TeleluxTranscript', () => {
         expect(unanchored(el)[0].annotation?.resolution?.state).toBe('rejected');
       });
 
+      it('hands each decision to the timeline', async () => {
+        const el = await annotated();
+        resolve(cards(blocks(el)[1].parentElement)[0], { id: 'a', state: 'confirmed' });
+        await settle(el);
+        const line = el.shadowRoot?.querySelector<TeleluxTimeline>('telelux-timeline');
+        expect(line?.annotations?.annotations[0].resolution?.state).toBe('confirmed');
+      });
+
       it('keeps the decisions in the filter it applies', async () => {
         const el = await annotated();
         await choose(el, 'status', 'unresolved');

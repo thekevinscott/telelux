@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import type { Annotation, AnnotationSidecar } from './annotations';
+import { type Annotation, type AnnotationSidecar, parseAnnotations } from './annotations';
 import { resolveAnnotations } from './resolve-annotations';
 import { TeleluxTimeline } from './telelux-timeline';
 import type { ChatMessage } from './transcript';
@@ -8,6 +8,11 @@ import type { ChatMessage } from './transcript';
 vi.mock('./resolve-annotations', async () => {
   const actual = await vi.importActual<typeof import('./resolve-annotations')>('./resolve-annotations');
   return { ...actual, resolveAnnotations: vi.fn(actual.resolveAnnotations) };
+});
+
+vi.mock('./annotations', async () => {
+  const actual = await vi.importActual<typeof import('./annotations')>('./annotations');
+  return { ...actual, parseAnnotations: vi.fn(actual.parseAnnotations) };
 });
 
 vi.mock('./annotation-labels', async () => {
@@ -178,6 +183,18 @@ describe('TeleluxTimeline', () => {
       expect($(el, '.ticks')?.children).toHaveLength(0);
     });
 
+    it('re-validates only when the annotations change', async () => {
+      const el = await mount();
+      const calls = vi.mocked(parseAnnotations).mock.calls.length;
+      await zoom(el, 'in');
+      el.messages = [...messages];
+      await el.updateComplete;
+      expect(vi.mocked(parseAnnotations).mock.calls.length).toBe(calls);
+      el.annotations = { ...sidecar };
+      await el.updateComplete;
+      expect(vi.mocked(parseAnnotations).mock.calls.length).toBe(calls + 1);
+    });
+
     it('re-resolves only when the messages or annotations change', async () => {
       const el = await mount();
       const calls = vi.mocked(resolveAnnotations).mock.calls.length;
@@ -216,6 +233,7 @@ describe('TeleluxTimeline', () => {
       await zoom(el, 'in');
       expect($(el, '.zoom-level')?.textContent).toBe('2×');
       expect(track(el).style.width).toBe('200%');
+      expect(($(el, '.ticks') as HTMLElement).style.width).toBe('200%');
       expect(el.shadowRoot?.querySelectorAll('.tick')).toHaveLength(10);
       await zoom(el, 'in', 5);
       expect($(el, '.zoom-level')?.textContent).toBe('16×');
