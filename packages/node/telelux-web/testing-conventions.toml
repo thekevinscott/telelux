@@ -39,7 +39,7 @@ reason = "@testing-library/react's renderHook is the React root this hook runs i
 
 [[typescript.exempt]]
 path = "use-fragment-transcript.ts"
-lines = [34]
+lines = [36]
 rules = ["mutation"]
 reason = "equivalent mutant: the effect's dependency array holds no values, and replacing it with a one-element array of a constant string also never changes between renders, so the effect still runs once per mount"
 
