@@ -62,3 +62,20 @@ from disk and it renders the transcript with no network. A standalone file
 still accepts a `#v=1&data=` link, which replaces its baked-in transcript.
 
 Files over 50 MiB or 100,000 records are refused outright.
+
+## Theme
+
+Open the viewer and pick a theme from the **Theme** menu at the top right:
+
+- **Paper** is the default: warm off-white, for reading.
+- **Cool** is a light blue-grey.
+- **Dark** is the web component's own dark theme.
+
+The transcript restyles as soon as you choose. Nothing reloads, and your place
+in the transcript stays put.
+
+Reload the page and the viewer opens on the theme you chose last. It keeps that
+choice in your browser's `localStorage` under `telelux-theme`, and stores only
+the theme name, never any transcript content. If the browser blocks storage,
+as some private-browsing modes do, the theme still switches; the viewer forgets
+it when you close the page.

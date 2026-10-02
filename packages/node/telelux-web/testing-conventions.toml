@@ -23,7 +23,7 @@ reason = "vitest configuration, not shipped source; it has to live in src/ becau
 
 [[typescript.exempt]]
 path = "main.tsx"
-lines = [11]
+lines = [12]
 rules = ["mutation"]
 reason = "defensive guard: viewer.html always ships #root, so the throw cannot run in the built file; the mount itself is asserted in tests/integration"
 
@@ -66,7 +66,7 @@ reason = "@testing-library/react's renderHook is the React root this hook runs i
 
 [[typescript.exempt]]
 path = "main.tsx"
-lines = [13]
+lines = [14]
 rules = ["mutation"]
 reason = "composition root: the captured page is what the standalone download is built from, and tests/integration asserts that download renders its transcript when opened from disk"
 

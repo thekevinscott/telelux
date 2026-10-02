@@ -5,6 +5,7 @@ import { createRoot } from 'react-dom/client';
 
 import { App } from './App';
 import { LocalFile } from './LocalFile';
+import { ThemeShell } from './ThemeShell';
 import { UrlEntry } from './UrlEntry';
 
 const root = document.getElementById('root');
@@ -14,8 +15,10 @@ const pristineHtml = `<!doctype html>\n${document.documentElement.outerHTML}`;
 
 createRoot(root).render(
   <StrictMode>
-    <UrlEntry />
-    <LocalFile pristineHtml={pristineHtml} />
-    <App />
+    <ThemeShell>
+      <UrlEntry />
+      <LocalFile pristineHtml={pristineHtml} />
+      <App />
+    </ThemeShell>
   </StrictMode>,
 );
