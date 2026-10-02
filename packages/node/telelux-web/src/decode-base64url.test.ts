@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
+import vector from '../../../../fixtures/link/v1.json';
 import { decodeBase64url } from './decode-base64url';
 
 describe('decodeBase64url', () => {
@@ -23,5 +24,9 @@ describe('decodeBase64url', () => {
 
   it('rejects a length no byte sequence encodes to', () => {
     expect(decodeBase64url('aGVsb')).toBeUndefined();
+  });
+
+  it('decodes the link vector the Python package encodes to its gzip bytes', () => {
+    expect(Array.from(decodeBase64url(vector.data) ?? [])).toStrictEqual(Array.from(Buffer.from(vector.gzip, 'hex')));
   });
 });

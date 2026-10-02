@@ -7,6 +7,7 @@ import { gzipSync } from 'node:zlib';
 import { expect, test } from '@playwright/test';
 
 const dist = fileURLToPath(new URL('../../dist/', import.meta.url));
+const vector = JSON.parse(readFileSync(fileURLToPath(new URL('../../../../../fixtures/link/v1.json', import.meta.url)), 'utf8')) as { data: string };
 
 const transcript = '{"type":"user","message":{"role":"user","content":"Hello from a link"}}';
 const link = `#v=1&data=${gzipSync(transcript).toString('base64url')}`;
@@ -31,6 +32,13 @@ test.describe('the built viewer', () => {
     const block = page.locator('telelux-transcript ol > li').first();
     await expect(block).toContainText('Hello from a link');
     await expect(block).toContainText('User');
+  });
+
+  test('renders the link vector the Python package encodes', async ({ page }) => {
+    await page.goto(`/viewer.html#v=1&data=${vector.data}`);
+    const blocks = page.locator('telelux-transcript ol > li');
+    await expect(blocks.first()).toContainText('¿Qué tal? 👋');
+    await expect(blocks.nth(1)).toContainText('Done.');
   });
 
   test('loads a new link when the fragment changes, and Back restores the old one', async ({ page }) => {

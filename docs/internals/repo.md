@@ -124,7 +124,12 @@ Decided in [#23](https://github.com/thekevinscott/telelux/issues/23):
   command mirrors the `paths:` filter in `.github/workflows/docs.yml`, so it
   builds only when its inputs change. Keep the two in step when they move.
 
-The canonical URL is not yet a constant anywhere in the code. The SDK
-([#9](https://github.com/thekevinscott/telelux/issues/9),
-[#13](https://github.com/thekevinscott/telelux/issues/13)) is its first
-consumer and adds the one definition.
+The canonical URL is defined once, as `LINK_PREFIX`
+(`https://telelux.dev/#v=1&data=`) in the Python package's
+`src/telelux/build_link.py`; nothing else spells it out.
+
+**The link format is pinned by a shared vector.** `fixtures/link/v1.json` holds
+one transcript text, its gzip bytes, and its `#v=1&data=` payload. The Python
+encoder must produce that payload exactly. telelux-web's base64url and gunzip
+unit tests decode it back, and its integration tier renders it. Change the
+format only together with a new envelope version and a new vector.

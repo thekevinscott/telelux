@@ -13,6 +13,13 @@ def load_data():
         yield load_data
 
 
+@pytest.fixture
+def build_link():
+    with patch("telelux.Telelux.build_link") as build_link:
+        build_link.side_effect = lambda contents: f"link to {contents}"
+        yield build_link
+
+
 def describe_Telelux():
     def describe_constructor():
         def test_it_starts_empty_without_a_transcript(load_data):
@@ -73,3 +80,24 @@ def describe_Telelux():
                 viewer.transcript = "bar.jsonl"
             assert viewer.transcript == "foo.jsonl"
             assert viewer._contents == "contents of foo.jsonl"
+
+    def describe_url():
+        def test_it_links_to_the_snapshot(build_link):
+            assert Telelux("foo.jsonl").url == "link to contents of foo.jsonl"
+            build_link.assert_called_once_with("contents of foo.jsonl")
+
+        def test_it_follows_a_new_assignment(build_link):
+            viewer = Telelux("foo.jsonl")
+            viewer.transcript = "bar.jsonl"
+            assert viewer.url == "link to contents of bar.jsonl"
+
+        def test_it_raises_without_a_transcript(build_link):
+            with pytest.raises(ValueError, match="^No transcript set$"):
+                _ = Telelux().url
+            build_link.assert_not_called()
+
+        def test_it_raises_after_the_transcript_is_cleared(build_link):
+            viewer = Telelux("foo.jsonl")
+            viewer.transcript = None
+            with pytest.raises(ValueError, match="^No transcript set$"):
+                _ = viewer.url

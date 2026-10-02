@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
+import vector from '../../../../fixtures/link/v1.json';
 import { gunzipCapped } from './gunzip-capped';
 
 async function gzip(input: string | Uint8Array<ArrayBuffer>): Promise<Uint8Array<ArrayBuffer>> {
@@ -46,5 +47,10 @@ describe('gunzipCapped', () => {
   it('reports a truncated gzip stream', async () => {
     const whole = await gzip('hello world');
     expect(await gunzipCapped(whole.subarray(0, whole.length - 6), 100)).toStrictEqual({ ok: false, reason: 'invalid' });
+  });
+
+  it('inflates the link vector the Python package encodes to its UTF-8 text', async () => {
+    const result = await gunzipCapped(Uint8Array.from(Buffer.from(vector.gzip, 'hex')), 10 * 1024 * 1024);
+    expect(result.ok && new TextDecoder('utf-8', { fatal: true }).decode(result.bytes)).toBe(vector.text);
   });
 });
