@@ -1,6 +1,11 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import { type Annotation, type AnnotationSidecar, parseAnnotations } from './annotations';
+
+vi.mock('./sidecar-schema', async () => {
+  const actual = await vi.importActual<typeof import('./sidecar-schema')>('./sidecar-schema');
+  return { ...actual, sidecarSchema: vi.fn(actual.sidecarSchema) };
+});
 
 const annotation: Annotation = {
   id: 'a1',
@@ -100,8 +105,38 @@ describe('parseAnnotations', () => {
     });
 
     it('rejects an anchor with no identity', () => {
-      expect(failure(sidecar({ ...annotation, target: { start: {} } }))).toContain('uuid, tool_call_id, or index');
+      expect(failure(sidecar({ ...annotation, target: { start: {} } }))).toBe('✖ An anchor needs a uuid, tool_call_id, or index.\n  → at annotations[0].target.start');
       expect(failure(sidecar({ ...annotation, target: { start: { uuid: 'u1' }, end: {} } }))).toContain('target.end');
+    });
+
+    it('accepts any non-empty uuid or tool_call_id and rejects an empty one', () => {
+      expect(parseAnnotations(sidecar({ ...annotation, target: { start: { uuid: 'u', tool_call_id: 'toolu_01abc' } } })).ok).toBe(true);
+      expect(failure(sidecar({ ...annotation, target: { start: { uuid: '' } } }))).toContain('uuid');
+      expect(failure(sidecar({ ...annotation, target: { start: { tool_call_id: '' } } }))).toContain('tool_call_id');
+    });
+
+    it('accepts an anchor with only one identity', () => {
+      for (const start of [{ uuid: 'u' }, { tool_call_id: 'c' }, { index: 0 }]) {
+        expect(parseAnnotations(sidecar({ ...annotation, target: { start } })).ok).toBe(true);
+      }
+    });
+
+    it('accepts a one-character id and label', () => {
+      expect(parseAnnotations(sidecar({ ...annotation, id: 'ab', label: 'xy' })).ok).toBe(true);
+      expect(parseAnnotations(sidecar({ ...annotation, id: 'a', label: 'x' })).ok).toBe(true);
+    });
+
+    it('rejects fields of the wrong type', () => {
+      for (const field of ['summary', 'note', 'created_at']) {
+        expect(failure(sidecar({ ...annotation, [field]: 1 }))).toContain(field);
+      }
+      expect(failure(sidecar({ ...annotation, source: { kind: 'human', name: 1 } }))).toContain('source.name');
+      for (const field of ['by', 'note', 'at']) {
+        expect(failure(sidecar({ ...annotation, resolution: { state: 'confirmed', [field]: 1 } }))).toContain(`resolution.${field}`);
+      }
+      expect(failure(sidecar({ ...annotation, metadata: 'x' }))).toContain('metadata');
+      expect(failure({ version: 1, transcript_id: 1, annotations: [] })).toContain('transcript_id');
+      expect(failure(sidecar({ ...annotation, target: { start: { index: 0 }, end: 'x' } }))).toContain('target.end');
     });
 
     it('rejects an index that is negative or fractional', () => {
