@@ -25,8 +25,9 @@ export async function fetchBytes(url: string, { signal, onProgress }: FetchOptio
     }
     const header = response.headers.get('content-length');
     const total = header === null ? undefined : Number(header);
-    if (total !== undefined && total > limit) {
-      return { ok: false, error: `The transcript at ${url} is ${mib(total)} MiB; the limit is ${mib(limit)} MiB.` };
+    const declared = Number(header);
+    if (declared > limit) {
+      return { ok: false, error: `The transcript at ${url} is ${mib(declared)} MiB; the limit is ${mib(limit)} MiB.` };
     }
     if (response.body === null) {
       return { ok: true, bytes: new Uint8Array() };
