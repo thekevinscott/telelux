@@ -11,10 +11,12 @@ VECTOR = json.loads(
 )
 
 
+def unpad(payload):
+    return base64.urlsafe_b64decode(payload + "=" * (-len(payload) % 4))
+
+
 def decode(payload):
-    return gzip.decompress(
-        base64.urlsafe_b64decode(payload + "=" * (-len(payload) % 4))
-    )
+    return gzip.decompress(unpad(payload))
 
 
 def describe_encode_payload():
@@ -22,9 +24,12 @@ def describe_encode_payload():
         assert encode_payload(VECTOR["text"]) == VECTOR["data"]
 
     def test_the_vector_is_gzip_of_the_utf8_text():
-        assert bytes.fromhex(VECTOR["gzip"]) == gzip.compress(
-            VECTOR["text"].encode("utf-8"), mtime=0
-        )
+        assert unpad(VECTOR["data"]) == bytes.fromhex(VECTOR["gzip"])
+        assert gzip.decompress(bytes.fromhex(VECTOR["gzip"])) == VECTOR["text"].encode()
+
+    def test_it_pins_the_gzip_header_whatever_python_writes():
+        header = unpad(encode_payload(""))[:10]
+        assert header == bytes.fromhex("1f8b08000000000002ff")
 
     def test_it_round_trips_utf8_text():
         text = '{"text":"naïve ☕ 👋"}\r\n' * 50
