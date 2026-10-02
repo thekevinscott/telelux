@@ -1,0 +1,77 @@
+body {
+  margin: 0;
+}
+
+.theme-shell {
+  box-sizing: border-box;
+  min-height: 100vh;
+  padding: 12px 16px;
+  background: var(--telelux-background);
+  color: var(--telelux-foreground);
+  font-family: system-ui, sans-serif;
+}
+
+.theme-selector {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 12px;
+  font-size: 13px;
+}
+
+.theme-selector label {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.theme-shell[data-theme='paper'] {
+  color-scheme: light;
+  --telelux-background: #fbf7ef;
+  --telelux-foreground: #2d2a26;
+  --telelux-muted: #f3ecdf;
+  --telelux-muted-foreground: #7b7266;
+  --telelux-secondary: #f1eadc;
+  --telelux-border: #e3d9c6;
+  --telelux-destructive: #b42318;
+  --telelux-highlight: #d97706;
+  --telelux-shadow: rgb(60 40 20 / 12%);
+  --telelux-user-border: #d6cab4;
+  --telelux-user-background: #f7f1e5;
+  --telelux-assistant-border: #c7a77a;
+  --telelux-assistant-background: #fbf3e4;
+  --telelux-system-border: #e0a27a;
+  --telelux-system-background: #fbeee3;
+  --telelux-tool-border: #a9bf8a;
+  --telelux-tool-background: #f1f4e6;
+  --telelux-unknown-border: #d6cab4;
+  --telelux-unknown-background: #f7f1e5;
+}
+
+.theme-shell[data-theme='cool'] {
+  color-scheme: light;
+  --telelux-background: #f4f7fb;
+  --telelux-foreground: #0f1b2d;
+  --telelux-muted: #e6edf6;
+  --telelux-muted-foreground: #5a6b80;
+  --telelux-secondary: #e9eff7;
+  --telelux-border: #d3dceb;
+  --telelux-destructive: #dc2626;
+  --telelux-highlight: #0ea5e9;
+  --telelux-shadow: rgb(15 40 80 / 14%);
+  --telelux-user-border: #c3d0e2;
+  --telelux-user-background: #eef3f9;
+  --telelux-assistant-border: #7aa7e0;
+  --telelux-assistant-background: #e8f0fb;
+  --telelux-system-border: #a5b4fc;
+  --telelux-system-background: #eef0fe;
+  --telelux-tool-border: #67c8c0;
+  --telelux-tool-background: #e6f6f4;
+  --telelux-unknown-border: #c3d0e2;
+  --telelux-unknown-background: #eef3f9;
+}
+
+.theme-shell[data-theme='dark'] {
+  color-scheme: dark;
+  background: #111827;
+  color: #f3f4f6;
+}

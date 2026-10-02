@@ -1,0 +1,1 @@
+**Added** — The viewer has a theme selector with `paper` (the default), `cool`, and `dark`. Switching restyles the transcript at once without reloading it, and the choice is remembered in `localStorage` under `telelux-theme`, which holds only the theme name.
