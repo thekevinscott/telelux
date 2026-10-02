@@ -26,3 +26,13 @@ path = "main.tsx"
 lines = [9]
 rules = ["mutation"]
 reason = "defensive guard: viewer.html always ships #root, so the throw cannot run in the built file; the mount itself is asserted in tests/integration"
+
+[[typescript.exempt]]
+path = "App.test.tsx"
+rules = ["unmocked-collaborator"]
+reason = "@testing-library/react is the renderer this test runs in, not a collaborator of the component; mocking it would leave nothing under test"
+
+[[typescript.exempt]]
+path = "use-fragment-transcript.test.ts"
+rules = ["unmocked-collaborator"]
+reason = "@testing-library/react's renderHook is the React root this hook runs in, not a collaborator of the hook; mocking it would leave nothing under test"

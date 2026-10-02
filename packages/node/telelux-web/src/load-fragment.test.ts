@@ -4,8 +4,9 @@ import { decodePayload } from './decode-payload';
 import { loadFragment } from './load-fragment';
 import { parseFragment } from './parse-fragment';
 
-vi.mock('./parse-fragment', () => ({
-  parseFragment: vi.fn((hash: string) => {
+vi.mock('./parse-fragment', async () => {
+  const actual = await vi.importActual<typeof import('./parse-fragment')>('./parse-fragment');
+  const parseFragment: typeof actual.parseFragment = (hash) => {
     switch (hash) {
       case '':
         return { kind: 'none' };
@@ -18,12 +19,16 @@ vi.mock('./parse-fragment', () => ({
       default:
         return { kind: 'payload', data: hash.slice(1) };
     }
-  }),
-}));
+  };
+  return { ...actual, parseFragment: vi.fn(parseFragment) };
+});
 
-vi.mock('./decode-payload', () => ({
-  decodePayload: vi.fn(async (data: string) => (data === 'bad' ? { ok: false, error: 'Decoding failed.' } : { ok: true, text: `text:${data}` })),
-}));
+vi.mock('./decode-payload', async () => {
+  const actual = await vi.importActual<typeof import('./decode-payload')>('./decode-payload');
+  const decodePayload: typeof actual.decodePayload = async (data) =>
+    data === 'bad' ? { ok: false, error: 'Decoding failed.' } : { ok: true, text: `text:${data}` };
+  return { ...actual, decodePayload: vi.fn(decodePayload) };
+});
 
 describe('loadFragment', () => {
   it('reads the hash it is given', async () => {

@@ -4,12 +4,16 @@ import { decodeBase64url } from './decode-base64url';
 import { decodePayload, MAX_PAYLOAD_BYTES } from './decode-payload';
 import { gunzipCapped } from './gunzip-capped';
 
-vi.mock('./decode-base64url', () => ({
-  decodeBase64url: vi.fn((value: string) => (value === 'bad' ? undefined : new TextEncoder().encode(value))),
-}));
+vi.mock('./decode-base64url', async () => {
+  const actual = await vi.importActual<typeof import('./decode-base64url')>('./decode-base64url');
+  const decodeBase64url: typeof actual.decodeBase64url = (value) =>
+    value === 'bad' ? undefined : Uint8Array.from(new TextEncoder().encode(value));
+  return { ...actual, decodeBase64url: vi.fn(decodeBase64url) };
+});
 
-vi.mock('./gunzip-capped', () => ({
-  gunzipCapped: vi.fn(async (bytes: Uint8Array) => {
+vi.mock('./gunzip-capped', async () => {
+  const actual = await vi.importActual<typeof import('./gunzip-capped')>('./gunzip-capped');
+  const gunzipCapped: typeof actual.gunzipCapped = async (bytes) => {
     const value = new TextDecoder().decode(bytes);
     if (value === 'big') {
       return { ok: false, reason: 'too-large' };
@@ -21,8 +25,9 @@ vi.mock('./gunzip-capped', () => ({
       return { ok: true, bytes: new Uint8Array([0xff, 0xfe]) };
     }
     return { ok: true, bytes };
-  }),
-}));
+  };
+  return { ...actual, gunzipCapped: vi.fn(gunzipCapped) };
+});
 
 describe('decodePayload', () => {
   it('decodes, inflates under the 10 MiB cap, and reads the bytes as UTF-8', async () => {

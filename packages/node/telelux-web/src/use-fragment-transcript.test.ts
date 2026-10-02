@@ -4,7 +4,10 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { type LoadState, loadFragment } from './load-fragment';
 import { useFragmentTranscript } from './use-fragment-transcript';
 
-vi.mock('./load-fragment', () => ({ loadFragment: vi.fn() }));
+vi.mock('./load-fragment', async () => {
+  const actual = await vi.importActual<typeof import('./load-fragment')>('./load-fragment');
+  return { ...actual, loadFragment: vi.fn<typeof actual.loadFragment>() };
+});
 
 function deferred() {
   let resolve!: (state: LoadState) => void;

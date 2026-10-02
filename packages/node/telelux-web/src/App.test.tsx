@@ -4,8 +4,16 @@ import { describe, expect, it, vi } from 'vitest';
 import { App } from './App';
 import { useFragmentTranscript } from './use-fragment-transcript';
 
-vi.mock('./use-fragment-transcript', () => ({ useFragmentTranscript: vi.fn() }));
-vi.mock('./Viewer', () => ({ Viewer: ({ text }: { text: string }) => <output data-testid="viewer">{text}</output> }));
+vi.mock('./use-fragment-transcript', async () => {
+  const actual = await vi.importActual<typeof import('./use-fragment-transcript')>('./use-fragment-transcript');
+  return { ...actual, useFragmentTranscript: vi.fn<typeof actual.useFragmentTranscript>() };
+});
+
+vi.mock('./Viewer', async () => {
+  const actual = await vi.importActual<typeof import('./Viewer')>('./Viewer');
+  const Viewer: typeof actual.Viewer = ({ text }) => <output data-testid="viewer">{text}</output>;
+  return { ...actual, Viewer };
+});
 
 describe('App', () => {
   it('renders nothing while the fragment loads', () => {
