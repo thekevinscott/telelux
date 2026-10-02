@@ -5,9 +5,10 @@ import { type LoadState, loadFragment } from './load-fragment';
 export function useFragmentTranscript(): LoadState {
   const [state, setState] = useState<LoadState>({ kind: 'pending' });
   useEffect(() => {
-    let latest = 0;
+    let latest = {};
     const load = () => {
-      const request = ++latest;
+      const request = {};
+      latest = request;
       void loadFragment(window.location.hash).then((result) => {
         if (request === latest) {
           setState(result);
@@ -17,7 +18,7 @@ export function useFragmentTranscript(): LoadState {
     load();
     window.addEventListener('hashchange', load);
     return () => {
-      latest = -1;
+      latest = {};
       window.removeEventListener('hashchange', load);
     };
   }, []);

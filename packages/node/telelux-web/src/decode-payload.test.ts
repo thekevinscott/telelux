@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import { decodeBase64url } from './decode-base64url';
-import { decodePayload, MAX_PAYLOAD_BYTES } from './decode-payload';
+import { decodePayload } from './decode-payload';
 import { gunzipCapped } from './gunzip-capped';
 
 vi.mock('./decode-base64url', async () => {
@@ -34,7 +34,6 @@ describe('decodePayload', () => {
     expect(await decodePayload('Héllo ✓')).toStrictEqual({ ok: true, text: 'Héllo ✓' });
     expect(decodeBase64url).toHaveBeenLastCalledWith('Héllo ✓');
     expect(gunzipCapped).toHaveBeenLastCalledWith(expect.anything(), 10 * 1024 * 1024);
-    expect(MAX_PAYLOAD_BYTES).toBe(10 * 1024 * 1024);
   });
 
   it('reports data that is not base64url without inflating it', async () => {

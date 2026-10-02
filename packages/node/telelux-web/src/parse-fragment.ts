@@ -5,9 +5,8 @@ export type Fragment =
   | { kind: 'unsupported-version'; version: string }
   | { kind: 'malformed' };
 
-const DATA = '&data=';
-
 export function parseFragment(hash: string): Fragment {
+  const DATA = '&data=';
   const fragment = hash.startsWith('#') ? hash.slice(1) : hash;
   if (fragment === '') {
     return { kind: 'none' };

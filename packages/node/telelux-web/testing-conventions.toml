@@ -36,3 +36,9 @@ reason = "@testing-library/react is the renderer this test runs in, not a collab
 path = "use-fragment-transcript.test.ts"
 rules = ["unmocked-collaborator"]
 reason = "@testing-library/react's renderHook is the React root this hook runs in, not a collaborator of the hook; mocking it would leave nothing under test"
+
+[[typescript.exempt]]
+path = "use-fragment-transcript.ts"
+lines = [24]
+rules = ["mutation"]
+reason = "equivalent mutant: the effect's dependency array holds no values, and replacing it with a one-element array of a constant string also never changes between renders, so the effect still runs once per mount"

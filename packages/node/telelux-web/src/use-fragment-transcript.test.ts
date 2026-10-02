@@ -63,6 +63,17 @@ describe('useFragmentTranscript', () => {
     expect(result.current).toStrictEqual({ kind: 'transcript', text: 'newer' });
   });
 
+  it('ignores the load from an effect run React has already torn down', async () => {
+    const discarded = deferred();
+    const kept = deferred();
+    vi.mocked(loadFragment).mockReturnValueOnce(discarded.promise).mockReturnValueOnce(kept.promise);
+    const { result } = renderHook(() => useFragmentTranscript(), { reactStrictMode: true });
+    expect(loadFragment).toHaveBeenCalledTimes(2);
+    await act(async () => kept.resolve({ kind: 'transcript', text: 'kept' }));
+    await act(async () => discarded.resolve({ kind: 'transcript', text: 'discarded' }));
+    expect(result.current).toStrictEqual({ kind: 'transcript', text: 'kept' });
+  });
+
   it('stops listening and ignores in-flight loads once unmounted', async () => {
     const load = deferred();
     vi.mocked(loadFragment).mockReturnValueOnce(load.promise);
