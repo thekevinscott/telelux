@@ -1,26 +1,36 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import { type LoadState, loadFragment } from './load-fragment';
 
-export function useFragmentTranscript(): LoadState {
+export type FragmentTranscript = { state: LoadState; cancel: () => void; retry: () => void };
+
+export function useFragmentTranscript(): FragmentTranscript {
   const [state, setState] = useState<LoadState>({ kind: 'pending' });
+  const cache = useRef(new Map<string, string>());
+  const controls = useRef({ cancel: () => {}, retry: () => {} });
   useEffect(() => {
     let latest = {};
+    let controller = new AbortController();
     const load = () => {
+      controller.abort();
       const request = {};
       latest = request;
-      void loadFragment(window.location.hash).then((result) => {
+      controller = new AbortController();
+      const show = (next: LoadState) => {
         if (request === latest) {
-          setState(result);
+          setState(next);
         }
-      });
+      };
+      void loadFragment(window.location.hash, { signal: controller.signal, cache: cache.current, onProgress: show }).then(show);
     };
+    controls.current = { cancel: () => controller.abort(), retry: load };
     load();
     window.addEventListener('hashchange', load);
     return () => {
       latest = {};
+      controller.abort();
       window.removeEventListener('hashchange', load);
     };
   }, []);
-  return state;
+  return { state, cancel: () => controls.current.cancel(), retry: () => controls.current.retry() };
 }
