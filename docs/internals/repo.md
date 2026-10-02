@@ -22,7 +22,7 @@ Every PR that changes public API adds at least one fragment naming each touched 
 
 **Stubs at the conventional paths** — `packages/<lang>/<pkg>/CHANGELOG.md` and `packages/<lang>/<pkg>/MIGRATIONS.md` are short pointers into the folders, so anyone fetching the conventional filename gets one hop instead of a 404. Never append entries to the stubs.
 
-**Ship the folders in artifacts where the toolchain allows** — today the single published artifact is the Python wheel, and hatchling cannot include files outside the package root, so wheel consumers take the stub → folder hop on GitHub instead.
+**Ship the folders in artifacts where the toolchain allows** — hatchling cannot include files outside the package root, so wheel consumers take the stub → folder hop on GitHub instead. The npm packages' `"files"` allowlists ship `dist` only, so npm consumers take the same hop.
 
 Public-API surface for the purpose of these fragments: every exported value/type, every CLI flag, every config key, every observable artifact (tag format, GitHub Release body shape). Internal refactors, test-only changes, and docs-only edits stay out.
 
@@ -34,13 +34,16 @@ wrapper + npm-published Node shim) and pruned to its actual shape:
 - **No Rust.** `packages/rust/`, the `rust.yml` workflow, all `rust-*`
   justfile recipes, and every maturin/cargo reference are deleted. The
   Python package builds with `hatchling`.
-- **One published package: PyPI.** `putitoutthere.toml` declares exactly
-  one `[[package]]` (kind `pypi`, name `telelux`).
-- **`packages/node/telelux-web` is internal tooling.** It builds the static viewer
-  frontend whose output is bundled into the wheel; its `package.json` is
-  `"private": true` and carries no `bin` / `optionalDependencies` /
-  publish config. npm publishing machinery (`bootstrap-npm.yml`,
-  per-platform sub-packages) is deleted.
+- **Three published packages.** `putitoutthere.toml` declares PyPI
+  `telelux`, npm `telelux-element` (the web component), and npm `telelux`
+  (a placeholder for Node tooling).
+- **`packages/node/telelux-web` is the app shell, and it is not published.** It builds
+  the single-file viewer that GitHub Pages serves at `https://telelux.dev/`,
+  and [#6](https://github.com/thekevinscott/telelux/issues/6) will bundle the
+  same file into the wheel. Its `package.json` is `"private": true` and
+  carries no `bin` / `optionalDependencies` / publish config. The template's
+  per-platform npm machinery (`bootstrap-npm.yml`, per-platform
+  sub-packages) is deleted.
 
 ## Repo gates come from external tools
 
