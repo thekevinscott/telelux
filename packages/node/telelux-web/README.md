@@ -10,8 +10,8 @@ script and style inlined, so it opens straight from disk with no network.
 `build` and `typecheck` build `telelux-element` first, since this package
 consumes its `dist/`.
 
-The same file is deployed to `https://telelux.dev/` by the Netlify site that
-`netlify.toml` here configures.
+The same file is deployed to `https://telelux.dev/` on GitHub Pages, as
+`index.html`, by `.github/workflows/viewer-pages.yml`.
 
 Source lives in `src/` with colocated `*.test.tsx` unit tests (Vitest);
 `tests/integration` drives the built file in Playwright.

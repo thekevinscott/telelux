@@ -13,7 +13,7 @@ packages/
   node/
     telelux/          Node tooling; a placeholder until it wraps (or is wrapped by) the Python package. npm `telelux`.
     telelux-element/  the `<telelux-transcript>` web component. npm `telelux-element`.
-    telelux-web/      internal viewer workspace (Vitest + tsc). Never published.
+    telelux-web/      internal viewer workspace (Vitest + tsc). Never published; served at https://telelux.dev/ by GitHub Pages.
 docs/        VitePress site (published to https://docs.telelux.dev/ by Netlify).
   internals/ contributor + agent conventions (not published).
 ```
@@ -35,6 +35,7 @@ context so Trusted Publishing claims line up (see the comments in that file).
 ## CI gates
 
 - Per-package lanes (`python-telelux.yml`, `node-telelux-element.yml`, `node-telelux-web.yml`) run lint + typecheck + test + build with path filters.
+- `viewer-pages.yml` builds and stages the viewer on PRs and deploys it to GitHub Pages on `main`.
 - Each lane's `conventions` job runs the
   [testing-conventions](https://github.com/thekevinscott/testing-conventions)
   standard on that package. It names no `gates:`, which

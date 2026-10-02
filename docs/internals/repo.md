@@ -63,7 +63,8 @@ package lane (`python-telelux.yml`, `node-telelux-element.yml`, `node-telelux-we
 own subtree minus `changelog.d/`, `migrations.d/`, and `README.md`, and holds
 both that package's tests and its testing-conventions gates. `build-check.yml`
 mirrors the `putitoutthere.toml` globs; `check.yml` fires only when that config
-or a putitoutthere workflow changes. A fragment-only or docs-only PR runs
+or a putitoutthere workflow changes. `viewer-pages.yml` and `docs.yml` fire on
+the inputs of the site each one builds. A fragment-only or docs-only PR runs
 nothing but the gate.
 
 ## Transcripts are parsed in the browser, into one shape
@@ -108,19 +109,18 @@ Decided in [#23](https://github.com/thekevinscott/telelux/issues/23):
   shortest form, `https://telelux.dev/#v=1&data=<value>`. The 8,000-character
   link budget is the reason the viewer takes the root and not a subpath.
 - **The docs live at `https://docs.telelux.dev/`.**
-- **Both are Netlify sites built from this repo.** The docs site is configured
-  by the root `netlify.toml`. The viewer site uses the repo root as its base
-  directory and `packages/node/telelux-web` as its package directory, so
-  Netlify reads `packages/node/telelux-web/netlify.toml` while still installing
-  from the root, where pnpm finds the lockfile and workspace. That file builds
-  the viewer and rewrites `/` to `/viewer.html` with a 200, so the published
-  `dist/` is byte-for-byte what the wheel ships. A second site gives every PR
-  its own viewer preview, which GitHub Pages cannot.
-- **Each site builds only when its inputs change.** Each `netlify.toml`
-  carries an `ignore` command. The docs one mirrors the `paths:` filter in
-  `.github/workflows/docs.yml`; the viewer one covers `telelux-web`,
-  `telelux-element`, and the root workspace and lockfile. Keep each in step
-  with its inputs when they move.
+- **The viewer is on GitHub Pages; the docs are on Netlify.** Two separate
+  sites. `.github/workflows/viewer-pages.yml` builds `telelux-web` and deploys
+  it to Pages on every push to `main` that touches `telelux-web`,
+  `telelux-element`, or the root workspace and lockfile. Pages cannot rewrite,
+  so the workflow copies `dist/viewer.html` to `index.html` in the artifact;
+  the served page is byte-for-byte what the wheel ships. On PRs the same
+  workflow builds and stages the artifact without deploying. The custom domain
+  comes from the repo's Pages settings, not from a `CNAME` file, which Pages
+  ignores for workflow deploys.
+- **The docs site is configured by the root `netlify.toml`.** Its `ignore`
+  command mirrors the `paths:` filter in `.github/workflows/docs.yml`, so it
+  builds only when its inputs change. Keep the two in step when they move.
 
 The canonical URL is not yet a constant anywhere in the code. The SDK
 ([#9](https://github.com/thekevinscott/telelux/issues/9),

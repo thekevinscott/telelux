@@ -157,7 +157,7 @@ never store transcript contents or fetch caches in that preference.
 
 ## Architecture and deployment
 
-- Serve the application as static assets at https://telelux.dev/ (Netlify).
+- Serve the application as static assets at https://telelux.dev/ (GitHub Pages).
 - Ship prebuilt browser assets with the Python package. Generate HTML and
   compressed links in Python without a running server, Node, or an installed
   browser. Node may be used during development and release builds, but is not
