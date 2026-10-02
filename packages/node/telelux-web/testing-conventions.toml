@@ -63,3 +63,15 @@ reason = "@testing-library/react is the renderer this test runs in, not a collab
 path = "use-file-drop.test.ts"
 rules = ["unmocked-collaborator"]
 reason = "@testing-library/react's renderHook is the React root this hook runs in, not a collaborator of the hook; mocking it would leave nothing under test"
+
+[[typescript.exempt]]
+path = "main.tsx"
+lines = [12]
+rules = ["mutation"]
+reason = "composition root: the captured page is what the standalone download is built from, and tests/integration asserts that download renders its transcript when opened from disk"
+
+[[typescript.exempt]]
+path = "LocalFile.tsx"
+lines = [26]
+rules = ["mutation"]
+reason = "equivalent mutant: the input ref is attached on the same render that shows the button, so the optional chaining never meets null and dropping it changes nothing a user can reach"

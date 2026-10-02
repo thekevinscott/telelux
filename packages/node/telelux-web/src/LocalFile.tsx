@@ -12,15 +12,13 @@ export interface LocalFileProps {
 
 export function LocalFile({ pristineHtml }: LocalFileProps) {
   const input = useRef<HTMLInputElement>(null);
-  const [result, setResult] = useState<LocalFileResult>({ kind: 'none' });
+  const [result, setResult] = useState<LocalFileResult>();
   const open = async (files: ArrayLike<File>) => {
     const next = await prepareLocalFile(files, window.location.href.split('#')[0]);
     if (next.kind === 'link') {
       window.location.hash = next.hash;
-      setResult({ kind: 'none' });
-    } else {
-      setResult(next);
     }
+    setResult(next);
   };
   useFileDrop(open);
   return (
@@ -36,8 +34,8 @@ export function LocalFile({ pristineHtml }: LocalFileProps) {
           event.target.value = '';
         }}
       />
-      {result.kind === 'error' && <p className="load-error" role="alert">{result.message}</p>}
-      {result.kind === 'too-large' && (
+      {result?.kind === 'error' && <p className="load-error" role="alert">{result.message}</p>}
+      {result?.kind === 'too-large' && (
         <p className="load-error" role="alert">
           {result.message}{' '}
           <button type="button" onClick={() => downloadFile(standaloneName(result.name), bakeTranscript(pristineHtml, result.text))}>
