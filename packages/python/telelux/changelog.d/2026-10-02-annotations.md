@@ -1,0 +1,1 @@
+**Added** `Telelux(transcript, annotations=...)` and `telelux --annotations PATH` bake an annotations sidecar into the viewer for `html`, `write`, `serve` and `--out`. The file must be JSON, up to 50 MiB; `url` raises `ValueError`, and `--url` with `--annotations` exits `2`, because a link can't carry annotations (#40).

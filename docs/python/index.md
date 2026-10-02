@@ -132,6 +132,41 @@ event loop rather than blocking it:
 await viewer.serve_async(port=9000)
 ```
 
+## Show annotations
+
+An annotations file is the JSON sidecar a judge or a reviewer writes for a
+transcript, in the format the [component guide](../component/index.md#review-annotations)
+shows. Pass its path as `annotations`, next to the transcript:
+
+```python
+viewer = Telelux("path/to/transcript.jsonl", annotations="path/to/review.json")
+viewer.write("reviewed.html")
+```
+
+Open `reviewed.html` and each annotation sits under the block it points at.
+`viewer.html`, `viewer.write()` and `viewer.serve()` all carry the
+annotations along with the transcript.
+
+Annotations behave like the transcript. `Telelux` reads the file as soon as
+you give it, so assign the path again to pick up changes, and assign `None` to
+drop them:
+
+```python
+viewer.annotations = "path/to/review.json"
+viewer.annotations = None
+```
+
+A file that isn't JSON raises a `ValueError` naming it, and
+`viewer.annotations` keeps what it held before. So do a folder, a file that
+isn't UTF-8, and a file over 50 MiB. A missing file raises
+`FileNotFoundError`. Python only checks that the file is JSON. If the JSON
+isn't an annotations sidecar, the viewer says so above the transcript and
+still shows the transcript.
+
+A link has no room for annotations. While they're set, `viewer.url` raises a
+`ValueError` rather than share the transcript without them. Set
+`viewer.annotations = None` first if you want the bare link.
+
 ## From the command line
 
 Installing the package also installs a `telelux` command. Everything above
@@ -205,6 +240,28 @@ exits with status `1`, and the message gives the size, the limit, and the two
 alternatives: `--out`, or hosting the `.jsonl` file yourself. `--url` needs a
 transcript, and it can't be combined with `--out`. Either mistake is a usage
 error and exits with status `2`.
+
+### Add annotations
+
+Add `--annotations` to show an annotations file with the transcript, whether
+you serve it or export it with `--out`:
+
+```sh
+telelux path/to/transcript.jsonl --annotations path/to/review.json
+telelux path/to/transcript.jsonl --annotations path/to/review.json --out reviewed.html
+```
+
+A file that can't be read, or isn't JSON, exits with status `1` and names the
+file:
+
+```console
+$ telelux path/to/transcript.jsonl --annotations notes.txt
+Error: notes.txt is not valid JSON: Expecting value: line 1 column 1 (char 0)
+```
+
+`--annotations` needs a transcript, and a link can't carry annotations, so it
+can't be combined with `--url`. Either mistake is a usage error and exits with
+status `2`.
 
 ### When something goes wrong
 
