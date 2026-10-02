@@ -55,14 +55,13 @@ viewer.transcript = None
 
 ## Export a single HTML file
 
-`viewer.html` is the whole viewer with your transcript baked in, as one string.
-Save it and open the file in a browser:
+Write the viewer, with your transcript baked in, to a file:
 
 ```python
-from pathlib import Path
-
-Path("transcript.html").write_text(viewer.html, encoding="utf-8")
+viewer.write("transcript.html")
 ```
+
+Open `transcript.html` in a browser.
 
 The file needs no network and no server. Every script and style sits inside
 it, so you can email it, attach it to a ticket, or open it on a plane. Click
@@ -70,6 +69,11 @@ it, so you can email it, attach it to a ticket, or open it on a plane. Click
 
 The transcript inside is plain text, so a message that happens to contain
 `</script>` or other markup shows up as text and can't change the page.
+
+`write` never replaces a file. Run it again and it raises `FileExistsError`,
+leaving the first file exactly as it was. Choose a new name, or delete the old
+file first. If you want the HTML as a string instead, to serve it or attach it
+somewhere, use `viewer.html`.
 
 ## Share a link
 
