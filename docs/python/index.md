@@ -131,3 +131,46 @@ event loop rather than blocking it:
 ```python
 await viewer.serve_async(port=9000)
 ```
+
+## From the command line
+
+Installing the package also installs a `telelux` command. Everything above
+works from your shell too.
+
+### Open a transcript
+
+Point `telelux` at a transcript:
+
+```sh
+telelux path/to/transcript.jsonl
+```
+
+It starts the viewer on <http://127.0.0.1:8000/> and opens it in your browser,
+with the transcript already showing. Press Ctrl+C to stop.
+
+Run `telelux` on its own and the viewer opens on its loading screen instead,
+ready for a file, a dropped transcript, or a transcript URL.
+
+To start the server without opening a browser, add `--no-browser`. To choose
+the address, pass `--host` and `--port`. Uvicorn picks the defaults and checks
+the values, as it does for `viewer.serve()`:
+
+```sh
+telelux path/to/transcript.jsonl --no-browser --port 9000
+```
+
+Server logs go to stderr, so nothing from serving lands in a pipe.
+
+### When something goes wrong
+
+`telelux` prints problems to stderr, prefixed with `Error:`, and nothing to
+stdout. Problems with the files you named exit with status `1`:
+
+```console
+$ telelux missing.jsonl
+Error: missing.jsonl: No such file or directory
+```
+
+A folder, a file that isn't UTF-8, and a file over 50 MiB fail the same way,
+each with its own message. A mistyped command, such as an unknown option,
+exits with status `2` and shows the usage line.

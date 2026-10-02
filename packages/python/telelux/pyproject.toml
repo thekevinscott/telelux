@@ -18,8 +18,12 @@ classifiers = [
 ]
 dynamic = ["version"]
 dependencies = [
+    "click>=8.2.0",
     "uvicorn>=0.54.0",
 ]
+
+[project.scripts]
+telelux = "telelux.cli:cli"
 
 [project.urls]
 Repository = "https://github.com/thekevinscott/telelux"
