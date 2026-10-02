@@ -42,3 +42,9 @@ path = "use-fragment-transcript.ts"
 lines = [34]
 rules = ["mutation"]
 reason = "equivalent mutant: the effect's dependency array holds no values, and replacing it with a one-element array of a constant string also never changes between renders, so the effect still runs once per mount"
+
+[[typescript.exempt]]
+path = "use-fragment-transcript.ts"
+lines = [10]
+rules = ["mutation"]
+reason = "equivalent mutant: the ref's initial cancel/retry pair is replaced by the mount effect before anything can call it, so emptying the initial object changes nothing a user can reach"
