@@ -1,0 +1,1 @@
+**Added** — The viewer loads a transcript from a compressed `#v=1&data=<payload>` link (gzip + base64url, capped at 10 MiB decompressed), reloads when the fragment changes, and shows a decoding or compatibility error for a bad link. Without a fragment it says no transcript is loaded instead of showing a placeholder.
