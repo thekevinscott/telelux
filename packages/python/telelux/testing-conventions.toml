@@ -3,3 +3,9 @@ path = "hatch_build.py"
 lines = [26]
 rules = ["mutation"]
 reason = "equivalent mutants: hatch only ever passes the build version \"standard\" or \"editable\", so `>` and `is not` decide those two exactly as `!=` does"
+
+[[python.exempt]]
+path = "src/telelux/load_data.py"
+lines = [14]
+rules = ["mutation"]
+reason = "the read bound is defensive: `| 1` and `^ 1` equal `+ 1` on the even limit, and `+ 2` or `<< 1` only read more of an over-limit file before the same rejection, so no behavior distinguishes them"
