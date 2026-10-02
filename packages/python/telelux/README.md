@@ -14,6 +14,7 @@ file — no server required to view or share it.
 ```
 telelux [TRANSCRIPT] [--no-browser] [--host HOST] [--port PORT]
 telelux TRANSCRIPT --out FILE
+telelux TRANSCRIPT --url
 ```
 
 | Invocation | Result |
@@ -21,8 +22,10 @@ telelux TRANSCRIPT --out FILE
 | `telelux` | Serves the empty viewer through Uvicorn and opens it in a browser. |
 | `telelux TRANSCRIPT` | Serves the viewer with `TRANSCRIPT` loaded. |
 | `telelux TRANSCRIPT --out FILE` | Writes `Telelux.html` to `FILE` and prints `FILE`. An existing `FILE` is left untouched and the command exits `1`. |
+| `telelux TRANSCRIPT --url` | Prints `Telelux.url`, a `https://telelux.dev/#v=1&data=` link, as one line. A link over 8,000 characters exits `1`. |
 | `--no-browser` | Serves without opening a browser. |
 | `--host`, `--port` | Forwarded to Uvicorn, which owns their defaults (`127.0.0.1`, `8000`) and validation. |
 
-Exit status is `0` on success, `1` when a file can't be read or written, and `2` for a
-usage error. Errors and server logs go to stderr.
+Exit status is `0` on success, `1` when a file can't be read or written or a
+link would be too long, and `2` for a usage error, including `--out` or `--url`
+without a transcript, or both together. Errors and server logs go to stderr.

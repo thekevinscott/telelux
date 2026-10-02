@@ -1,3 +1,7 @@
+import base64
+import gzip
+import json
+import random
 import socket
 import subprocess
 import sys
@@ -7,10 +11,12 @@ from urllib.error import URLError
 from urllib.request import urlopen
 
 import pytest
+from playwright.sync_api import expect, sync_playwright
 
 from telelux import Telelux
 
 PACKAGE = Path(__file__).parents[2]
+SAMPLE = PACKAGE.parents[2] / "fixtures/claude-code/sample.jsonl"
 FIRST = '{"type":"user","message":{"role":"user","content":"First session"}}\n'
 
 
@@ -84,6 +90,21 @@ def serve(telelux):
         process.communicate()
 
 
+def decode(url):
+    prefix, payload = url.split("#v=1&data=")
+    assert prefix == "https://telelux.dev/"
+    padded = payload + "=" * (-len(payload) % 4)
+    return gzip.decompress(base64.urlsafe_b64decode(padded)).decode("utf-8")
+
+
+@pytest.fixture(scope="module")
+def browser():
+    with sync_playwright() as playwright:
+        browser = playwright.chromium.launch()
+        yield browser
+        browser.close()
+
+
 def run(telelux, *args, cwd=None):
     return subprocess.run(
         [telelux, *args], capture_output=True, encoding="utf-8", cwd=cwd, check=False
@@ -137,6 +158,53 @@ def describe_the_installed_telelux_command():
             result = run(telelux, "--out", str(out))
             assert result.returncode == 2
             assert "--out needs a TRANSCRIPT" in result.stderr
+            assert not out.exists()
+
+    def describe_url():
+        def test_it_prints_one_line_the_link_to_the_transcript(telelux):
+            result = run(telelux, str(SAMPLE), "--url")
+            assert result.returncode == 0
+            assert result.stderr == ""
+            link, end = result.stdout.split("\n")
+            assert end == ""
+            assert link == Telelux(SAMPLE).url
+            assert decode(link) == SAMPLE.read_text(encoding="utf-8")
+
+        def test_the_served_viewer_opens_the_link(telelux, serve, transcript, browser):
+            link = run(telelux, str(transcript), "--url").stdout.strip()
+            port = free_port()
+            serve("--port", str(port))
+            fetch(f"http://127.0.0.1:{port}/")
+            page = browser.new_page()
+            page.goto(f"http://127.0.0.1:{port}/#{link.split('#')[1]}")
+            expect(page.locator("telelux-transcript ol > li").first).to_contain_text(
+                "First session"
+            )
+            page.close()
+
+        def test_a_link_too_long_exits_1_naming_the_alternatives(telelux, tmp_path):
+            noisy = tmp_path / "noisy.jsonl"
+            noise = random.Random(0).randbytes(6000).hex()
+            noisy.write_text(json.dumps({"noise": noise}) + "\n", encoding="utf-8")
+            result = run(telelux, str(noisy), "--url")
+            assert result.returncode == 1
+            assert result.stdout == ""
+            assert result.stderr.startswith("Error: The link would be ")
+            assert "over the 8000-character limit" in result.stderr
+            assert "baked HTML" in result.stderr
+            assert "https://telelux.dev/#v=1&data=<transcript-url>" in result.stderr
+
+        def test_it_exits_2_without_a_transcript(telelux):
+            result = run(telelux, "--url")
+            assert result.returncode == 2
+            assert result.stdout == ""
+            assert "--url needs a TRANSCRIPT" in result.stderr
+
+        def test_it_exits_2_alongside_out(telelux, transcript, tmp_path):
+            out = tmp_path / "session.html"
+            result = run(telelux, str(transcript), "--url", "--out", str(out))
+            assert result.returncode == 2
+            assert "--out and --url can't be used together" in result.stderr
             assert not out.exists()
 
     def describe_failures():
