@@ -21,7 +21,7 @@ describe('resolveAnnotation', () => {
   });
 
   it('leaves out a blank reviewer or note', () => {
-    const next = resolveAnnotation(sidecar, 'a', { state: 'rejected', by: ' ', note: '', at: 'now' });
+    const next = resolveAnnotation(sidecar, 'a', { state: 'rejected', by: ' ', note: '\n', at: 'now' });
     expect(next.annotations[0].resolution).toEqual({ state: 'rejected', at: 'now' });
   });
 
