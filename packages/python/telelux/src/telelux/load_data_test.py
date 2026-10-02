@@ -42,8 +42,18 @@ def describe_load_data():
             load_data(path)
 
     def test_it_rejects_a_directory_naming_the_fix(tmp_path):
-        with pytest.raises(ValueError, match="is a directory; pass one .jsonl"):
+        with pytest.raises(ValueError) as error:
             load_data(tmp_path)
+        assert str(error.value) == (
+            f"{tmp_path} is a directory; pass one .jsonl transcript file inside it"
+        )
+
+    def test_it_names_the_kind_of_file_it_wanted(tmp_path):
+        with pytest.raises(ValueError) as error:
+            load_data(tmp_path, "annotations", ".json")
+        assert str(error.value) == (
+            f"{tmp_path} is a directory; pass one .json annotations file inside it"
+        )
 
     def describe_the_size_limit():
         def test_it_is_50_mib():
@@ -64,6 +74,17 @@ def describe_load_data():
             assert str(error.value) == (
                 f"{path} is 52428801 bytes, over the 52428800-byte (50 MiB) "
                 "transcript limit"
+            )
+
+        def test_it_names_the_kind_of_file_over_the_limit(tmp_path):
+            path = tmp_path / "over-limit.json"
+            with path.open("wb") as file:
+                file.truncate(MAX_TRANSCRIPT_BYTES + 1)
+            with pytest.raises(ValueError) as error:
+                load_data(path, "annotations", ".json")
+            assert str(error.value) == (
+                f"{path} is 52428801 bytes, over the 52428800-byte (50 MiB) "
+                "annotations limit"
             )
 
     def describe_with_the_shared_claude_code_corpus():

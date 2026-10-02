@@ -17,6 +17,19 @@ TRANSCRIPT = (
     '"content":"Rendered offline."}}\n'
 )
 
+SIDECAR = {
+    "version": 1,
+    "annotations": [
+        {
+            "id": "a1",
+            "target": {"start": {"index": 1}},
+            "label": "baked-label",
+            "note": "Baked </script><!-- & note",
+            "source": {"kind": "judge", "name": "rubric-v2"},
+        }
+    ],
+}
+
 
 @pytest.fixture(scope="module")
 def browser():
@@ -53,6 +66,17 @@ def exported(tmp_path):
     return path
 
 
+@pytest.fixture
+def annotated(tmp_path):
+    transcript = tmp_path / "session.jsonl"
+    transcript.write_text(TRANSCRIPT, encoding="utf-8")
+    annotations = tmp_path / "review.json"
+    annotations.write_text(json.dumps(SIDECAR), encoding="utf-8")
+    path = tmp_path / "annotated.html"
+    path.write_text(Telelux(transcript, annotations).html, encoding="utf-8")
+    return path
+
+
 def describe_Telelux_html():
     def test_it_is_one_document_with_everything_inlined(exported):
         html = exported.read_text(encoding="utf-8")
@@ -75,3 +99,30 @@ def describe_Telelux_html():
         transcript = page.locator("telelux-transcript")
         expect(transcript).to_contain_text("¿Qué tal? 👋")
         expect(transcript).not_to_contain_text("Rendered offline.")
+
+    def describe_with_annotations():
+        def test_it_renders_them_from_the_baked_slot_offline(annotated, page):
+            page.goto(annotated.as_uri())
+            card = (
+                page.locator("telelux-transcript ol > li")
+                .nth(1)
+                .get_by_role("article", name="Annotation baked-label")
+            )
+            expect(card).to_contain_text("Baked </script><!-- & note")
+            expect(card).to_contain_text("judge: rubric-v2")
+            expect(page.get_by_role("alert")).to_have_count(0)
+            assert [url for url in page.requests if not url.startswith("file:")] == []
+
+        def test_a_link_fragment_drops_them_with_the_baked_transcript(annotated, page):
+            page.goto(f"{annotated.as_uri()}#v=1&data={VECTOR['data']}")
+            expect(page.locator("telelux-transcript")).to_contain_text("¿Qué tal? 👋")
+            expect(page.locator("telelux-transcript telelux-annotation")).to_have_count(
+                0
+            )
+
+        def test_without_them_the_page_shows_none(exported, page):
+            page.goto(exported.as_uri())
+            expect(page.locator("telelux-transcript ol > li")).to_have_count(2)
+            expect(page.locator("telelux-transcript telelux-annotation")).to_have_count(
+                0
+            )

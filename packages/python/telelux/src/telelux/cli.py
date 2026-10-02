@@ -20,6 +20,11 @@ from .Telelux import Telelux
     is_flag=True,
     help="Print a telelux.dev link that carries TRANSCRIPT, compressed.",
 )
+@click.option(
+    "--annotations",
+    type=click.Path(path_type=Path),
+    help="Bake an annotations file (JSON) in with TRANSCRIPT.",
+)
 @click.option("--no-browser", is_flag=True, help="Don't open the viewer in a browser.")
 @click.option("--host", help="Interface to serve on, passed to Uvicorn.")
 @click.option("--port", type=int, help="Port to serve on, passed to Uvicorn.")
@@ -27,6 +32,7 @@ def cli(
     transcript: Path | None,
     out: Path | None,
     url: bool,
+    annotations: Path | None,
     no_browser: bool,
     host: str | None,
     port: int | None,
@@ -40,8 +46,15 @@ def cli(
     export = "--url" if url else "--out" if out is not None else None
     if export is not None and transcript is None:
         raise click.UsageError(f"{export} needs a TRANSCRIPT to export")
+    if annotations is not None and transcript is None:
+        raise click.UsageError("--annotations needs a TRANSCRIPT to annotate")
+    if annotations is not None and url:
+        raise click.UsageError(
+            "--url can't carry --annotations; bake them in with --out, "
+            "or serve the viewer"
+        )
     try:
-        viewer = Telelux(transcript)
+        viewer = Telelux(transcript, annotations)
         if out is not None:
             viewer.write(out)
         link = viewer.url if url else None

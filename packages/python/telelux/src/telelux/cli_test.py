@@ -53,7 +53,7 @@ def describe_cli():
         ):
             result = run()
             assert result.exit_code == 0
-            Telelux.assert_called_once_with(None)
+            Telelux.assert_called_once_with(None, None)
             Telelux.return_value.serve.assert_called_once_with(
                 log_config={"log": "config"}
             )
@@ -61,7 +61,7 @@ def describe_cli():
 
         def test_it_serves_the_transcript(run, Telelux):
             assert run("session.jsonl").exit_code == 0
-            Telelux.assert_called_once_with(Path("session.jsonl"))
+            Telelux.assert_called_once_with(Path("session.jsonl"), None)
             Telelux.return_value.serve.assert_called_once_with(
                 log_config={"log": "config"}
             )
@@ -115,7 +115,7 @@ def describe_cli():
         ):
             result = run("session.jsonl", "--out", "session.html")
             assert result.exit_code == 0
-            Telelux.assert_called_once_with(Path("session.jsonl"))
+            Telelux.assert_called_once_with(Path("session.jsonl"), None)
             Telelux.return_value.write.assert_called_once_with(Path("session.html"))
             assert result.stdout == "session.html\n"
             assert result.stderr == ""
@@ -156,7 +156,7 @@ def describe_cli():
             Telelux.return_value.url = "https://telelux.dev/#v=1&data=abc"
             result = run("session.jsonl", "--url")
             assert result.exit_code == 0
-            Telelux.assert_called_once_with(Path("session.jsonl"))
+            Telelux.assert_called_once_with(Path("session.jsonl"), None)
             assert result.stdout == "https://telelux.dev/#v=1&data=abc\n"
             assert result.stderr == ""
             Telelux.return_value.serve.assert_not_called()
@@ -178,6 +178,64 @@ def describe_cli():
             assert result.stdout == ""
             assert result.stderr == f"Error: described {error}\n"
             describe_error.assert_called_once_with(error, Path("session.jsonl"))
+
+    def describe_annotations():
+        def test_it_serves_them_with_the_transcript(run, Telelux):
+            result = run("session.jsonl", "--annotations", "notes.json")
+            assert result.exit_code == 0
+            Telelux.assert_called_once_with(Path("session.jsonl"), Path("notes.json"))
+            Telelux.return_value.serve.assert_called_once_with(
+                log_config={"log": "config"}
+            )
+
+        def test_out_writes_them_in(run, Telelux):
+            result = run(
+                "session.jsonl", "--annotations", "notes.json", "--out", "s.html"
+            )
+            assert result.exit_code == 0
+            assert result.stdout == "s.html\n"
+            Telelux.assert_called_once_with(Path("session.jsonl"), Path("notes.json"))
+            Telelux.return_value.write.assert_called_once_with(Path("s.html"))
+
+        def test_they_need_a_transcript(run, Telelux, open_browser_when_ready):
+            result = run("--annotations", "notes.json")
+            assert result.exit_code == 2
+            assert "--annotations needs a TRANSCRIPT" in result.stderr
+            assert result.stdout == ""
+            Telelux.assert_not_called()
+            open_browser_when_ready.assert_not_called()
+
+        def test_a_link_cannot_carry_them(run, Telelux):
+            result = run("session.jsonl", "--annotations", "notes.json", "--url")
+            assert result.exit_code == 2
+            assert (
+                "--url can't carry --annotations; bake them in with --out, "
+                "or serve the viewer"
+            ) in result.stderr
+            assert result.stdout == ""
+            Telelux.assert_not_called()
+
+        def test_a_missing_transcript_is_reported_before_the_link(run, Telelux):
+            result = run("--annotations", "notes.json", "--url")
+            assert result.exit_code == 2
+            assert "--url needs a TRANSCRIPT" in result.stderr
+
+        @pytest.mark.parametrize(
+            "error",
+            [
+                FileNotFoundError(2, "No such file or directory", "notes.json"),
+                ValueError("notes.json is not valid JSON: Expecting value"),
+            ],
+        )
+        def test_unusable_annotations_exit_1_on_stderr(
+            run, Telelux, describe_error, open_browser_when_ready, error
+        ):
+            Telelux.side_effect = error
+            result = run("session.jsonl", "--annotations", "notes.json")
+            assert result.exit_code == 1
+            assert result.stdout == ""
+            assert result.stderr == f"Error: described {error}\n"
+            open_browser_when_ready.assert_not_called()
 
     def describe_out_and_url_together():
         def test_they_are_a_usage_error(run, Telelux):
@@ -235,6 +293,7 @@ def describe_cli():
                 "TRANSCRIPT",
                 "--out",
                 "--url",
+                "--annotations",
                 "--no-browser",
                 "--host",
                 "--port",

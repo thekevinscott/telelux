@@ -18,6 +18,19 @@ from telelux import Telelux
 PACKAGE = Path(__file__).parents[2]
 SAMPLE = PACKAGE.parents[2] / "fixtures/claude-code/sample.jsonl"
 FIRST = '{"type":"user","message":{"role":"user","content":"First session"}}\n'
+SECOND = '{"type":"user","message":{"role":"user","content":"Second question"}}\n'
+SIDECAR = {
+    "version": 1,
+    "annotations": [
+        {
+            "id": "a1",
+            "target": {"start": {"index": 1}},
+            "label": "cli-label",
+            "note": "Baked from the command line",
+            "source": {"kind": "human", "name": "kevin"},
+        }
+    ],
+}
 
 
 @pytest.fixture(scope="module")
@@ -49,6 +62,24 @@ def transcript(tmp_path):
     path = tmp_path / "session.jsonl"
     path.write_text(FIRST, encoding="utf-8")
     return path
+
+
+@pytest.fixture
+def annotated(tmp_path):
+    transcript = tmp_path / "two.jsonl"
+    transcript.write_text(FIRST + SECOND, encoding="utf-8")
+    annotations = tmp_path / "review.json"
+    annotations.write_text(json.dumps(SIDECAR), encoding="utf-8")
+    return transcript, annotations
+
+
+def expect_annotation(page):
+    card = (
+        page.locator("telelux-transcript ol > li")
+        .nth(1)
+        .get_by_role("article", name="Annotation cli-label")
+    )
+    expect(card).to_contain_text("Baked from the command line")
 
 
 def free_port():
@@ -206,6 +237,99 @@ def describe_the_installed_telelux_command():
             assert result.returncode == 2
             assert "--out and --url can't be used together" in result.stderr
             assert not out.exists()
+
+    def describe_annotations():
+        def test_out_bakes_them_in_as_the_sdk_does(
+            telelux, annotated, tmp_path, browser
+        ):
+            transcript, annotations = annotated
+            out = tmp_path / "annotated.html"
+            result = run(
+                telelux,
+                str(transcript),
+                "--annotations",
+                str(annotations),
+                "--out",
+                str(out),
+            )
+            assert result.returncode == 0
+            assert result.stderr == ""
+            assert out.read_bytes() == (
+                Telelux(transcript, annotations).html.encode("utf-8")
+            )
+            page = browser.new_page()
+            page.goto(out.as_uri())
+            expect_annotation(page)
+            page.close()
+
+        def test_serving_renders_them(serve, annotated, browser):
+            transcript, annotations = annotated
+            port = free_port()
+            serve(
+                str(transcript), "--annotations", str(annotations), "--port", str(port)
+            )
+            fetch(f"http://127.0.0.1:{port}/")
+            page = browser.new_page()
+            page.goto(f"http://127.0.0.1:{port}/")
+            expect_annotation(page)
+            page.close()
+
+        def test_the_viewer_reports_json_that_is_not_an_annotations_file(
+            telelux, annotated, tmp_path, browser
+        ):
+            transcript, _ = annotated
+            wrong = tmp_path / "wrong.json"
+            wrong.write_text('{"version": 2, "annotations": []}', encoding="utf-8")
+            out = tmp_path / "wrong.html"
+            result = run(
+                telelux, str(transcript), "--annotations", str(wrong), "--out", str(out)
+            )
+            assert result.returncode == 0
+            page = browser.new_page()
+            page.goto(out.as_uri())
+            expect(page.get_by_role("alert")).to_contain_text(
+                "The baked-in annotations slot is not an annotations file:"
+            )
+            expect(page.locator("telelux-transcript ol > li")).to_have_count(2)
+            page.close()
+
+        def test_invalid_json_exits_1_naming_the_file(telelux, transcript, tmp_path):
+            broken = tmp_path / "broken.json"
+            broken.write_text('{"version": 1,', encoding="utf-8")
+            out = tmp_path / "session.html"
+            result = run(
+                telelux,
+                str(transcript),
+                "--annotations",
+                str(broken),
+                "--out",
+                str(out),
+            )
+            assert result.returncode == 1
+            assert result.stdout == ""
+            assert result.stderr.startswith(f"Error: {broken} is not valid JSON: ")
+            assert not out.exists()
+
+        def test_a_missing_file_exits_1(telelux, transcript, tmp_path):
+            result = run(
+                telelux,
+                str(transcript),
+                "--annotations",
+                "missing.json",
+                "--no-browser",
+                cwd=tmp_path,
+            )
+            assert result.returncode == 1
+            assert result.stderr == "Error: missing.json: No such file or directory\n"
+
+        def test_url_refuses_them_with_exit_2(telelux, annotated):
+            transcript, annotations = annotated
+            result = run(
+                telelux, str(transcript), "--annotations", str(annotations), "--url"
+            )
+            assert result.returncode == 2
+            assert result.stdout == ""
+            assert "--url can't carry --annotations" in result.stderr
 
     def describe_failures():
         def test_a_missing_transcript_exits_1(telelux, tmp_path):
