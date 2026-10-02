@@ -43,3 +43,6 @@ packages/node/telelux-web/playwright-report/
 packages/node/telelux-element/test-results/
 packages/node/telelux-element/playwright-report/
 packages/node/telelux-element/dist-demo/
+
+# Copied from telelux-web by the Python build hook
+packages/python/telelux/src/telelux/_assets/

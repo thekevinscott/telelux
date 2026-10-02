@@ -14,6 +14,9 @@ result in any browser.
 pip install telelux
 ```
 
+The package carries the viewer with it, so nothing else needs installing and
+nothing below needs a network connection.
+
 ## Your first view
 
 <!-- Smallest end-to-end example that runs successfully. Filled in when the
