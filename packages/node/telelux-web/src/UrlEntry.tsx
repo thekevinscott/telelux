@@ -21,16 +21,14 @@ export function UrlEntry() {
   return (
     <form className="url-entry" noValidate onSubmit={open}>
       <label>
-        Transcript URL{' '}
-        <input
+        Transcript URL <input
           type="url"
           value={value}
           onChange={(event) => setValue(event.target.value)}
           aria-invalid={error !== undefined}
           aria-describedby={error === undefined ? undefined : errorId}
         />
-      </label>{' '}
-      <button type="submit">Open</button>
+      </label> <button type="submit">Open</button>
       {error !== undefined && (
         <p id={errorId} className="url-entry-error" role="alert">
           {error}

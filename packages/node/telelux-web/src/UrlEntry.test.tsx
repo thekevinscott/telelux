@@ -23,8 +23,10 @@ beforeEach(() => {
 
 describe('UrlEntry', () => {
   it('offers a labelled URL box with nothing flagged', () => {
-    const { getByRole, queryByRole } = render(<UrlEntry />);
+    const { container, getByRole, queryByRole } = render(<UrlEntry />);
+    expect(container).toHaveTextContent(/^Transcript URL  Open$/, { normalizeWhitespace: false });
     const input = getByRole('textbox', { name: 'Transcript URL' });
+    expect(input).toHaveValue('');
     expect(input).toHaveAttribute('type', 'url');
     expect(input).toHaveAttribute('aria-invalid', 'false');
     expect(input).not.toHaveAttribute('aria-describedby');
