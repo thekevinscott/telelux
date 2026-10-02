@@ -1,0 +1,64 @@
+name: viewer-pages
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'packages/node/telelux-web/**'
+      - 'packages/node/telelux-element/**'
+      - 'pnpm-lock.yaml'
+      - 'pnpm-workspace.yaml'
+      - '.github/workflows/viewer-pages.yml'
+  pull_request:
+    paths:
+      - 'packages/node/telelux-web/**'
+      - 'packages/node/telelux-element/**'
+      - 'pnpm-lock.yaml'
+      - 'pnpm-workspace.yaml'
+      - '.github/workflows/viewer-pages.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: 'viewer-pages: build'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: pnpm/action-setup@v5
+        with:
+          version: 10.33.0
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter telelux-web build
+      # Pages cannot rewrite, so the viewer must be index.html to serve at the root.
+      - run: |
+          mkdir -p _site
+          cp packages/node/telelux-web/dist/viewer.html _site/index.html
+      - if: github.event_name != 'pull_request'
+        uses: actions/configure-pages@v6
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: _site
+
+  deploy:
+    name: 'viewer-pages: deploy'
+    if: github.event_name != 'pull_request'
+    needs: build
+    runs-on: ubuntu-latest
+    concurrency:
+      group: pages
+      cancel-in-progress: false
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v5
