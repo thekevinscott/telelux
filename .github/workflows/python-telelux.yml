@@ -57,6 +57,8 @@ jobs:
           node-version: 24
       - run: pnpm install --frozen-lockfile
       - run: pnpm --filter telelux-web build
+      - run: uv run playwright install --with-deps chromium
+        working-directory: packages/python/telelux
       - run: just test_integration
         working-directory: packages/python/telelux
 

@@ -20,6 +20,13 @@ def build_link():
         yield build_link
 
 
+@pytest.fixture
+def bake_viewer():
+    with patch("telelux.Telelux.bake_viewer") as bake_viewer:
+        bake_viewer.side_effect = lambda contents: f"<html>{contents}</html>"
+        yield bake_viewer
+
+
 def describe_Telelux():
     def describe_constructor():
         def test_it_starts_empty_without_a_transcript(load_data):
@@ -101,3 +108,24 @@ def describe_Telelux():
             viewer.transcript = None
             with pytest.raises(ValueError, match="^No transcript set$"):
                 _ = viewer.url
+
+    def describe_html():
+        def test_it_bakes_the_snapshot_into_the_viewer(bake_viewer):
+            assert Telelux("foo.jsonl").html == "<html>contents of foo.jsonl</html>"
+            bake_viewer.assert_called_once_with("contents of foo.jsonl")
+
+        def test_it_follows_a_new_assignment(bake_viewer):
+            viewer = Telelux("foo.jsonl")
+            viewer.transcript = "bar.jsonl"
+            assert viewer.html == "<html>contents of bar.jsonl</html>"
+
+        def test_it_raises_without_a_transcript(bake_viewer):
+            with pytest.raises(ValueError, match="^No transcript set$"):
+                _ = Telelux().html
+            bake_viewer.assert_not_called()
+
+        def test_it_raises_after_the_transcript_is_cleared(bake_viewer):
+            viewer = Telelux("foo.jsonl")
+            viewer.transcript = None
+            with pytest.raises(ValueError, match="^No transcript set$"):
+                _ = viewer.html

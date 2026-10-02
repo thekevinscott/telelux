@@ -1,5 +1,6 @@
 from pathlib import Path
 
+from .bake_viewer import bake_viewer
 from .build_link import build_link
 from .load_data import load_data
 
@@ -20,6 +21,10 @@ class Telelux:
         contents = None if transcript is None else load_data(transcript)
         self._transcript_path = transcript
         self._contents = contents
+
+    @property
+    def html(self) -> str:
+        return bake_viewer(self._snapshot())
 
     @property
     def url(self) -> str:

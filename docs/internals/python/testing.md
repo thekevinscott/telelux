@@ -77,8 +77,16 @@ pre-release concern, not a per-PR gate.
 | Unit | Colocated (`foo_test.py`) | `just py-test` | Isolate dependencies as needed |
 | Integration | `tests/integration/` | `just py-test-integration` | Targets the SDK exclusively; mock LLM calls once those exist |
 
-`testpaths` in `pyproject.toml` is scoped to `src` — a bare `pytest` (the
-unit tier) never picks up `tests/integration`; that tier runs by passing the
-directory explicitly, which overrides `testpaths`. `tests/` sits outside the
+`testpaths` in `pyproject.toml` is scoped to `src` and the build hook's
+colocated `hatch_build_test.py`, so a bare `pytest` (the unit tier) never picks up
+`tests/integration`. That tier runs by passing the directory explicitly, which
+overrides `testpaths`.
+
+The integration tier exercises the packaged viewer, so it needs telelux-web
+built (`pnpm --filter telelux-web build` from the repo root) before the
+editable install copies it in. If the venv predates the build, run
+`uv sync --reinstall-package telelux` to pick it up. It also drives Chromium
+through Playwright to render exported HTML offline; run
+`uv run playwright install chromium` once. `tests/` sits outside the
 wheel's packaged directory (`src/telelux`), so no tier ships
 in the built package.
