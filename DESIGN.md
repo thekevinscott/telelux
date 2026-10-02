@@ -44,7 +44,7 @@ CLI can also produce a compressed link to the canonical static hosted viewer:
 
 ```bash
 uv run telelux ./path/to/transcript --url
-> https://thekevinscott.github.io/telelux#v=1&data=<encoded-payload>
+> https://telelux.dev/#v=1&data=<encoded-payload>
 ```
 
 Generated links always target the canonical static hosted viewer over HTTPS;
@@ -138,7 +138,7 @@ raises exceptions and never exits the process.
 
 ### Goal
 
-Deployed to GitHub Pages. Users load transcripts into the browser, where they are parsed and rendered without a backend server.
+Deployed as static assets at https://telelux.dev/. Users load transcripts into the browser, where they are parsed and rendered without a backend server.
 
 Preserve the existing viewer's rendering and interaction behavior. The intended product change is how transcripts are supplied: add a reusable static page with a dynamic loader alongside the existing transcript-specific HTML generation, which is preserved.
 
@@ -151,13 +151,13 @@ never store transcript contents or fetch caches in that preference.
 
 1. **Local file:** Drop a transcript onto the page or select it with a file picker.
 2. **URL entry:** Paste a transcript URL into the page and load it.
-3. **Direct link:** Open a viewer URL that identifies a hosted transcript; the viewer fetches and displays it automatically without another input step. https://thekevinscott.github.io/telelux#v=1&data=https://example.com/transcript.jsonl
-4. **Compressed link:** Open a viewer URL containing compressed transcript data; the viewer decompresses and displays it without fetching a transcript file. Provide a way to produce these shareable links. https://thekevinscott.github.io/telelux#v=1&data=<encoded-payload>
+3. **Direct link:** Open a viewer URL that identifies a hosted transcript; the viewer fetches and displays it automatically without another input step. https://telelux.dev/#v=1&data=https://example.com/transcript.jsonl
+4. **Compressed link:** Open a viewer URL containing compressed transcript data; the viewer decompresses and displays it without fetching a transcript file. Provide a way to produce these shareable links. https://telelux.dev/#v=1&data=<encoded-payload>
 
 
 ## Architecture and deployment
 
-- Serve the application as static assets on GitHub Pages.
+- Serve the application as static assets at https://telelux.dev/ (Netlify).
 - Ship prebuilt browser assets with the Python package. Generate HTML and
   compressed links in Python without a running server, Node, or an installed
   browser. Node may be used during development and release builds, but is not
@@ -165,7 +165,7 @@ never store transcript contents or fetch caches in that preference.
 - Use Uvicorn with a small ASGI application to serve the viewer locally through
   the SDK and CLI. Use the same reusable application and all four loading
   methods, including fragment loading, for hosted and Uvicorn viewers. The
-  GitHub Pages deployment remains entirely static.
+  hosted deployment remains entirely static.
 - Load, parse, decompress, and render transcripts in the browser.
 - Preserve the current model of baking a transcript into generated HTML: the
   CLI continues to produce self-contained pages with the transcript embedded
@@ -176,7 +176,7 @@ never store transcript contents or fetch caches in that preference.
 - Bundle all required CSS, JavaScript, fonts, and other assets into exported
   HTML so it works fully offline. Verify that rendering and record inspection
   work with networking disabled.
-- Support direct and compressed links on GitHub Pages without requiring
+- Support direct and compressed links on the static host without requiring
   server-side routing or a backend proxy.
 - Use the versioned fragment format `#v=1&data=<value>` for both loading modes.
   Parse `v` as the envelope version, then read everything after the literal
@@ -336,7 +336,7 @@ e2e tests should target both the SDK and the CLI, though the majority should tar
 
 ## Acceptance criteria
 
-- The viewer deploys to GitHub Pages and operates without a backend server.
+- The viewer deploys to https://telelux.dev/ and operates without a backend server.
 - Each of the four loading strategies displays the same transcript with
   equivalent content and interactions.
 - Direct and compressed links load automatically on a fresh page visit.
