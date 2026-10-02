@@ -8,6 +8,8 @@ from urllib.request import urlopen
 
 import pytest
 
+from telelux import Telelux
+
 PACKAGE = Path(__file__).parents[2]
 FIRST = '{"type":"user","message":{"role":"user","content":"First session"}}\n'
 
@@ -107,6 +109,35 @@ def describe_the_installed_telelux_command():
             assert '<script type="application/x-ndjson" id="transcript"></script>' in (
                 page
             )
+
+    def describe_out():
+        def test_it_writes_the_sdks_html_and_prints_only_the_path(
+            telelux, transcript, tmp_path
+        ):
+            out = tmp_path / "session.html"
+            result = run(telelux, str(transcript), "--out", str(out))
+            assert result.returncode == 0
+            assert result.stdout == f"{out}\n"
+            assert result.stderr == ""
+            assert out.read_bytes() == Telelux(transcript).html.encode("utf-8")
+
+        def test_it_leaves_an_existing_file_byte_identical(
+            telelux, transcript, tmp_path
+        ):
+            out = tmp_path / "session.html"
+            out.write_bytes(b"keep me\r\n")
+            result = run(telelux, str(transcript), "--out", str(out))
+            assert result.returncode == 1
+            assert result.stdout == ""
+            assert result.stderr == f"Error: {out}: File exists\n"
+            assert out.read_bytes() == b"keep me\r\n"
+
+        def test_it_exits_2_without_a_transcript(telelux, tmp_path):
+            out = tmp_path / "session.html"
+            result = run(telelux, "--out", str(out))
+            assert result.returncode == 2
+            assert "--out needs a TRANSCRIPT" in result.stderr
+            assert not out.exists()
 
     def describe_failures():
         def test_a_missing_transcript_exits_1(telelux, tmp_path):

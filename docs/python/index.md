@@ -161,6 +161,30 @@ telelux path/to/transcript.jsonl --no-browser --port 9000
 
 Server logs go to stderr, so nothing from serving lands in a pipe.
 
+### Export a single HTML file
+
+Add `--out` to write the viewer, with the transcript baked in, to a file
+instead of serving it:
+
+```sh
+telelux path/to/transcript.jsonl --out transcript.html
+```
+
+It prints `transcript.html` and nothing else, so you can hand the path
+straight to another command. The file is the same one `viewer.write()`
+produces, and opens in a browser with no network and no server.
+
+Like `viewer.write()`, `--out` never replaces a file. If `transcript.html`
+already exists, `telelux` leaves it alone and exits with status `1`:
+
+```console
+$ telelux path/to/transcript.jsonl --out transcript.html
+Error: transcript.html: File exists
+```
+
+`--out` needs a transcript. Without one, it's a usage error and exits with
+status `2`.
+
 ### When something goes wrong
 
 `telelux` prints problems to stderr, prefixed with `Error:`, and nothing to
