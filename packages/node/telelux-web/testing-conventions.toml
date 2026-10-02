@@ -66,7 +66,7 @@ reason = "@testing-library/react's renderHook is the React root this hook runs i
 
 [[typescript.exempt]]
 path = "main.tsx"
-lines = [12]
+lines = [13]
 rules = ["mutation"]
 reason = "composition root: the captured page is what the standalone download is built from, and tests/integration asserts that download renders its transcript when opened from disk"
 
