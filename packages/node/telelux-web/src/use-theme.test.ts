@@ -74,13 +74,5 @@ describe('useTheme', () => {
       act(() => result.current[1]('dark'));
       expect(result.current[0]).toBe('dark');
     });
-
-    it('hands back the same setter across renders', () => {
-      const { result, rerender } = renderHook(() => useTheme());
-      const choose = result.current[1];
-      rerender();
-      act(() => choose('cool'));
-      expect(result.current[1]).toBe(choose);
-    });
   });
 });

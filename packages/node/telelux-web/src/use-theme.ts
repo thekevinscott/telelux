@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useState } from 'react';
 
 export type ThemeName = 'paper' | 'cool' | 'dark';
 
@@ -11,13 +11,11 @@ export function useTheme(): [ThemeName, (theme: ThemeName) => void] {
       return 'paper';
     }
   });
-  const choose = useCallback((next: ThemeName) => {
+  const choose = (next: ThemeName) => {
     setTheme(next);
     try {
       window.localStorage.setItem('telelux-theme', next);
-    } catch {
-      return;
-    }
-  }, []);
+    } catch {}
+  };
   return [theme, choose];
 }

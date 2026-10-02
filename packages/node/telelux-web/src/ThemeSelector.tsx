@@ -9,7 +9,7 @@ export function ThemeSelector({ theme, onChange }: ThemeSelectorProps) {
   return (
     <div className="theme-selector">
       <label>
-        Theme{' '}
+        Theme
         <select value={theme} onChange={(event) => onChange(event.target.value as ThemeName)}>
           <option value="paper">Paper</option>
           <option value="cool">Cool</option>

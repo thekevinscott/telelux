@@ -18,6 +18,12 @@ body {
   font-size: 13px;
 }
 
+.theme-selector label {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
 .theme-shell[data-theme='paper'] {
   color-scheme: light;
   --telelux-background: #fbf7ef;
