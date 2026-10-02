@@ -11,9 +11,9 @@ describe('sidecarSchema', () => {
 
   it('points a duplicate id at the later annotation', () => {
     const result = sidecarSchema().safeParse({ version: 1, annotations: [annotation, { ...annotation, label: 'other' }, annotation] });
-    expect(result.success ? [] : result.error.issues.map(({ path, message }) => [path.join('.'), message])).toEqual([
-      ['annotations.1.id', 'Duplicate annotation id "a1".'],
-      ['annotations.2.id', 'Duplicate annotation id "a1".'],
+    expect(result.success ? [] : result.error.issues.map(({ code, path, message }) => [code, path.join('.'), message])).toEqual([
+      ['custom', 'annotations.1.id', 'Duplicate annotation id "a1".'],
+      ['custom', 'annotations.2.id', 'Duplicate annotation id "a1".'],
     ]);
   });
 });

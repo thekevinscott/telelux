@@ -10,7 +10,10 @@ const messages: ChatMessage[] = [
     role: 'assistant',
     content: 'reading',
     metadata: { uuid: 'u1', mergedUuids: ['u1b', 'u1c'] },
-    tool_calls: [{ id: 'call_1', function: 'Read', type: 'function' }],
+    tool_calls: [
+      { id: 'call_0', function: 'Read', type: 'function' },
+      { id: 'call_1', function: 'Read', type: 'function' },
+    ],
   },
   { role: 'tool', content: 'ok', tool_call_id: 'call_1', metadata: { uuid: 'u2' } },
   { role: 'tool', content: 'orphan', tool_call_id: 'call_x', metadata: { uuid: 'u2' } },
