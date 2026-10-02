@@ -59,6 +59,13 @@ Give each failure mode its own exception variant. One variant per condition (loc
 
 **Class-with-`__call__` vs function**: prefer a function for one-shot behaviour; a class for stateful workflows. Intermediate variables read better in Python than chained pipelines (`process(data).then(...).then(...)`).
 
+**Async twins take an `_async` suffix.** `Telelux.serve_async` is the awaitable
+twin of `serve`, as DESIGN names it. `aserve` was considered and rejected:
+a one-letter prefix hides the method from autocomplete next to the
+synchronous `serve`. Both forward `**uvicorn_options` verbatim, to
+`uvicorn.run()` and `uvicorn.Config()` respectively, and neither restates a
+Uvicorn default.
+
 **Avoid built-in names for fields and variables** (`type`, `id`, `list`, `dict`, `input`, `format`). Use `kind`/`type_` and `key`/`id_` so the built-in stays usable in scope.
 
 ---

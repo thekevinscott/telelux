@@ -98,3 +98,36 @@ and the two ways to share a long transcript instead:
   `https://telelux.dev/#v=1&data=<transcript-url>`.
 
 With no transcript loaded, `viewer.url` raises `ValueError("No transcript set")`.
+
+## Serve it locally
+
+`viewer.serve()` runs the viewer on your machine:
+
+```python
+viewer = Telelux("path/to/transcript.jsonl")
+viewer.serve()
+```
+
+Open <http://127.0.0.1:8000/> and the transcript is there. Press Ctrl+C to
+stop. Any keyword you pass goes straight to
+[Uvicorn](https://www.uvicorn.org/settings/), so `viewer.serve(port=9000)` or
+`viewer.serve(host="0.0.0.0")` work as they would there.
+
+The server reads the transcript each time the page loads. To show another
+transcript, assign it and reload the browser tab:
+
+```python
+viewer.transcript = "path/to/other.jsonl"
+```
+
+`Telelux().serve()`, with no transcript, opens the viewer on its loading
+screen. From there you can open or drop a transcript file, or enter a
+transcript's URL. Shared links work too: add their `#v=1&data=…` part to the
+local address.
+
+Inside async code, await `serve_async` instead, so the server shares your
+event loop rather than blocking it:
+
+```python
+await viewer.serve_async(port=9000)
+```

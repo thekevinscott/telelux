@@ -15,3 +15,9 @@ path = "src/telelux/encode_payload.py"
 lines = [10]
 rules = ["mutation"]
 reason = "levels 8 and 9 differ only in how far zlib searches for matches, and emit identical bytes for the shared link vector and the shared corpus; the vector test catches any level change that alters the wire bytes"
+
+[[python.exempt]]
+path = "src/telelux/ViewerApp.py"
+lines = [25]
+rules = ["mutation"]
+reason = "equivalent mutants: every HTTP request path starts with '/', so any other path also compares greater than '/', and CPython caches one-character strings, so `is not '/'` decides exactly as `!= '/'`"

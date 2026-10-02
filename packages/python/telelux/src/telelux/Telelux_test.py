@@ -1,5 +1,6 @@
+import asyncio
 from pathlib import Path
-from unittest.mock import call, patch
+from unittest.mock import AsyncMock, call, patch
 
 import pytest
 
@@ -31,6 +32,30 @@ def bake_viewer():
 def write_exclusive():
     with patch("telelux.Telelux.write_exclusive") as write_exclusive:
         yield write_exclusive
+
+
+@pytest.fixture
+def uvicorn():
+    with patch("telelux.Telelux.uvicorn") as uvicorn:
+        uvicorn.Server.return_value.serve = AsyncMock()
+        yield uvicorn
+
+
+@pytest.fixture
+def ViewerApp():
+    with patch("telelux.Telelux.ViewerApp") as ViewerApp:
+        yield ViewerApp
+
+
+@pytest.fixture
+def read_viewer_html():
+    with patch("telelux.Telelux.read_viewer_html") as read_viewer_html:
+        read_viewer_html.return_value = "<html>empty viewer</html>"
+        yield read_viewer_html
+
+
+def page_of(ViewerApp):
+    return ViewerApp.call_args.args[0]
 
 
 def describe_Telelux():
@@ -154,3 +179,53 @@ def describe_Telelux():
             write_exclusive.side_effect = FileExistsError("out.html")
             with pytest.raises(FileExistsError):
                 Telelux("foo.jsonl").write("out.html")
+
+    def describe_serving():
+        def test_serve_runs_the_app_with_the_options_verbatim(uvicorn, ViewerApp):
+            viewer = Telelux("foo.jsonl")
+            viewer.serve(host="0.0.0.0", port=9000, log_level="debug")
+            uvicorn.run.assert_called_once_with(
+                ViewerApp.return_value, host="0.0.0.0", port=9000, log_level="debug"
+            )
+
+        def test_serve_leaves_every_default_to_uvicorn(uvicorn, ViewerApp):
+            Telelux().serve()
+            uvicorn.run.assert_called_once_with(ViewerApp.return_value)
+
+        def test_serve_async_awaits_uvicorns_server(uvicorn, ViewerApp):
+            viewer = Telelux("foo.jsonl")
+            asyncio.run(viewer.serve_async(port=9000, reload=False))
+            uvicorn.Config.assert_called_once_with(
+                ViewerApp.return_value, port=9000, reload=False
+            )
+            uvicorn.Server.assert_called_once_with(uvicorn.Config.return_value)
+            uvicorn.Server.return_value.serve.assert_awaited_once_with()
+            uvicorn.run.assert_not_called()
+
+        def test_both_serve_the_same_app(uvicorn, ViewerApp):
+            viewer = Telelux()
+            viewer.serve()
+            asyncio.run(viewer.serve_async())
+            ViewerApp.assert_called_once()
+            app = ViewerApp.return_value
+            assert uvicorn.run.call_args == call(app)
+            assert uvicorn.Config.call_args == call(app)
+
+        def describe_the_page():
+            def test_it_is_the_empty_viewer_without_a_transcript(
+                ViewerApp, read_viewer_html, bake_viewer
+            ):
+                Telelux()
+                assert page_of(ViewerApp)() == "<html>empty viewer</html>"
+                bake_viewer.assert_not_called()
+
+            def test_it_follows_the_transcript_at_request_time(
+                ViewerApp, read_viewer_html, bake_viewer
+            ):
+                viewer = Telelux("foo.jsonl")
+                page = page_of(ViewerApp)
+                assert page() == "<html>contents of foo.jsonl</html>"
+                viewer.transcript = "bar.jsonl"
+                assert page() == "<html>contents of bar.jsonl</html>"
+                viewer.transcript = None
+                assert page() == "<html>empty viewer</html>"
