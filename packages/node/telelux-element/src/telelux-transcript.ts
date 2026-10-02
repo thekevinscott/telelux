@@ -1,16 +1,22 @@
 import { css, html, LitElement, nothing, type PropertyValues } from 'lit';
 
+import './telelux-annotation';
 import './telelux-message';
 import './telelux-metadata';
 import './telelux-minimap';
-import type { AnnotationSidecar } from './annotations';
+import { type AnnotationFilter, matchesFilter } from './annotation-filter';
+import { sourceName } from './annotation-labels';
+import { type AnnotationSidecar, parseAnnotations } from './annotations';
 import { blockNumber } from './block-number';
 import { currentBlock } from './current-block';
 import { definedEntries } from './defined-entries';
 import { displayName } from './display-name';
+import { downloadJson } from './download-json';
 import { formatCreatedAt } from './format-created-at';
 import { isTextEntry } from './is-text-entry';
 import { parseRawTranscript } from './parse-raw-transcript';
+import { resolveAnnotation, type ResolutionChange } from './resolve-annotation';
+import { resolveAnnotations, type ResolvedAnnotations } from './resolve-annotations';
 import { targetBlock } from './target-block';
 import { theme } from './theme';
 import { parseTranscript, type ParseResult, type Transcript } from './transcript';
@@ -18,6 +24,7 @@ import { transcriptTotals, USAGE_TOTALS } from './transcript-totals';
 
 const ROLES = ['user', 'assistant', 'tool', 'system'] as const;
 const FLASH_MS = 1500;
+const STATUSES = [['unresolved', 'Unresolved'], ['confirmed', 'Confirmed'], ['rejected', 'Rejected']] as const;
 
 export class TeleluxTranscript extends LitElement {
   static override properties = {
@@ -30,6 +37,8 @@ export class TeleluxTranscript extends LitElement {
     copyStatus: { state: true },
     highlighted: { state: true },
     current: { state: true },
+    sidecar: { state: true },
+    annotationFilter: { state: true },
   };
 
   static override styles = [theme, css`
@@ -189,6 +198,57 @@ export class TeleluxTranscript extends LitElement {
       box-shadow: 0 2px 6px var(--_shadow);
     }
 
+    .annotations {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-bottom: 8px;
+      font-size: 12px;
+    }
+
+    .annotations-bar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .annotations-count {
+      font-weight: 600;
+    }
+
+    .annotations select,
+    .annotations input {
+      border: 1px solid var(--_border);
+      border-radius: var(--_radius-sm);
+      background: var(--_background);
+      font: inherit;
+      color: inherit;
+    }
+
+    .annotations-mismatch,
+    .annotations-error {
+      margin: 0;
+      color: var(--_destructive);
+      white-space: pre-wrap;
+    }
+
+    .unanchored {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .unanchored summary {
+      cursor: pointer;
+      color: var(--_muted-foreground);
+    }
+
+    .unanchored telelux-annotation,
+    li telelux-annotation {
+      margin-top: 4px;
+    }
+
     kbd {
       margin-left: 4px;
       font-family: var(--_font-mono);
@@ -206,8 +266,13 @@ export class TeleluxTranscript extends LitElement {
   private declare copyStatus: string | undefined;
   private declare highlighted: number | undefined;
   private declare current: number | undefined;
+  private declare sidecar: AnnotationSidecar | undefined;
+  private declare annotationFilter: AnnotationFilter;
 
   #parsed: ParseResult | undefined;
+  #annotationsError: string | undefined;
+  #resolved: ResolvedAnnotations | undefined;
+  #reviewer = '';
   #tracked: number | undefined;
   #highlightTimer: ReturnType<typeof setTimeout> | undefined;
   #copyTimer: ReturnType<typeof setTimeout> | undefined;
@@ -240,12 +305,22 @@ export class TeleluxTranscript extends LitElement {
   };
 
   protected override willUpdate(changed: PropertyValues) {
-    if (changed.has('transcript') || changed.has('slotText') || changed.has('format')) {
+    const reparse = changed.has('transcript') || changed.has('slotText') || changed.has('format');
+    if (reparse) {
       this.#parsed = this.#parse();
       this.metadataOpen = false;
       this.highlighted = undefined;
       this.#tracked = undefined;
       this.current = 0;
+    }
+    if (changed.has('annotations')) {
+      const parsed = this.annotations == null ? undefined : parseAnnotations(this.annotations);
+      this.sidecar = parsed?.ok === true ? parsed.annotations : undefined;
+      this.#annotationsError = parsed?.ok === false ? parsed.error : undefined;
+      this.annotationFilter = {};
+    }
+    if (reparse || changed.has('sidecar')) {
+      this.#resolved = this.sidecar === undefined || this.#parsed?.ok !== true ? undefined : resolveAnnotations(this.#parsed.transcript.messages, this.sidecar.annotations);
     }
   }
 
@@ -270,10 +345,13 @@ export class TeleluxTranscript extends LitElement {
     const { transcript } = this.#parsed;
     const { messages } = transcript;
     if (messages.length === 0) {
-      return html`${this.#header(transcript)}<p class="empty">No messages.</p>`;
+      return html`${this.#header(transcript)}${this.#annotationsPanel(transcript)}<p class="empty">No messages.</p>`;
     }
-    return html`${this.#header(transcript)}<telelux-minimap part="minimap" theme=${this.theme ?? nothing} .messages=${messages} .current=${this.current} @telelux-jump=${(event: CustomEvent<{ index: number }>) => this.#goTo(event.detail.index)}></telelux-minimap><ol>
-      ${messages.map((message, index) => html`<li class=${index === this.highlighted ? 'highlight' : nothing}><telelux-message exportparts="block, block-user, block-assistant, block-system, block-tool, header, content, reasoning, tool-call" theme=${this.theme ?? nothing} .message=${message} .index=${index}></telelux-message></li>`)}
+    const anchored = this.#resolved?.anchored.filter(({ annotation }) => matchesFilter(annotation, this.annotationFilter)) ?? [];
+    return html`${this.#header(transcript)}${this.#annotationsPanel(transcript)}<telelux-minimap part="minimap" theme=${this.theme ?? nothing} .messages=${messages} .current=${this.current} @telelux-jump=${(event: CustomEvent<{ index: number }>) => this.#goTo(event.detail.index)}></telelux-minimap><ol @telelux-resolve=${this.#onResolve}>
+      ${messages.map((message, index) => html`<li class=${index === this.highlighted ? 'highlight' : nothing}><telelux-message exportparts="block, block-user, block-assistant, block-system, block-tool, header, content, reasoning, tool-call" theme=${this.theme ?? nothing} .message=${message} .index=${index}></telelux-message>${anchored
+        .filter(({ start }) => start === index)
+        .map(({ annotation, start, end }) => html`<telelux-annotation exportparts="annotation" theme=${this.theme ?? nothing} .annotation=${annotation} .span=${{ start, end }}></telelux-annotation>`)}</li>`)}
     </ol>
     <nav class="block-nav" part="block-nav" aria-label="Block navigation">
       <button class="previous" type="button" aria-label="Previous block" aria-keyshortcuts="k" @click=${() => this.#step(-1)}>Previous<kbd>K</kbd></button>
@@ -303,6 +381,48 @@ export class TeleluxTranscript extends LitElement {
       </form>`}
     </header>`;
   }
+
+  #annotationsPanel(transcript: Transcript) {
+    if (this.#annotationsError !== undefined) {
+      return html`<pre class="annotations-error" role="alert">Invalid annotations:\n${this.#annotationsError}</pre>`;
+    }
+    if (this.sidecar === undefined) {
+      return nothing;
+    }
+    const { annotations, transcript_id: named } = this.sidecar;
+    const shown = annotations.filter((annotation) => matchesFilter(annotation, this.annotationFilter)).length;
+    const unanchored = (this.#resolved as ResolvedAnnotations).unanchored.filter(({ annotation }) => matchesFilter(annotation, this.annotationFilter));
+    const distinct = (values: string[]) => [...new Set(values)].sort().map((value) => [value, value] as const);
+    return html`<section class="annotations" part="annotations" aria-label="Annotations" @telelux-resolve=${this.#onResolve}>
+      <div class="annotations-bar">
+        <span class="annotations-count">Annotations (${shown === annotations.length ? shown : `${shown} of ${annotations.length}`})</span>
+        ${this.#filterSelect('label', 'labels', distinct(annotations.map(({ label }) => label)))}
+        ${this.#filterSelect('source', 'sources', distinct(annotations.map(({ source }) => sourceName(source))))}
+        ${this.#filterSelect('status', 'statuses', STATUSES)}
+        <input class="reviewer" aria-label="Reviewer" placeholder="Reviewer" @input=${(event: InputEvent) => (this.#reviewer = (event.currentTarget as HTMLInputElement).value)} />
+        <button class="download" type="button" @click=${() => downloadJson(`${transcript.id}.annotations.json`, this.sidecar)}>Download annotations</button>
+      </div>
+      ${named === undefined || named === transcript.id ? nothing : html`<p class="annotations-mismatch" role="status">These annotations name transcript "${named}", not "${transcript.id}".</p>`}
+      ${unanchored.length === 0 ? nothing : html`<details class="unanchored" open><summary>Unanchored (${unanchored.length})</summary>${unanchored.map(({ annotation, reason }) => html`<telelux-annotation exportparts="annotation" theme=${this.theme ?? nothing} .annotation=${annotation} .reason=${reason}></telelux-annotation>`)}</details>`}
+    </section>`;
+  }
+
+  #filterSelect(key: keyof AnnotationFilter, plural: string, options: readonly (readonly [string, string])[]) {
+    const onChange = (event: Event) => {
+      const { value } = event.currentTarget as HTMLSelectElement;
+      this.annotationFilter = { ...this.annotationFilter, [key]: value === '' ? undefined : value };
+    };
+    return html`<select class=${key} aria-label="Filter by ${key}" .value=${this.annotationFilter[key] ?? ''} @change=${onChange}>
+      <option value="">All ${plural}</option>
+      ${options.map(([value, text]) => html`<option value=${value}>${text}</option>`)}
+    </select>`;
+  }
+
+  #onResolve = (event: CustomEvent<Pick<ResolutionChange, 'state' | 'note'> & { id: string }>) => {
+    const { id, state, note } = event.detail;
+    this.sidecar = resolveAnnotation(this.sidecar as AnnotationSidecar, id, { state, note, by: this.#reviewer, at: new Date().toISOString() });
+    this.dispatchEvent(new CustomEvent('telelux-annotations-change', { bubbles: true, composed: true, detail: { annotations: this.sidecar } }));
+  };
 
   #totals(transcript: Transcript) {
     const totals = transcriptTotals(transcript.messages);

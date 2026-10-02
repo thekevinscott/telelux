@@ -4,6 +4,7 @@ export type { Format } from './formats';
 export { type ParseRawOptions, parseRawTranscript } from './parse-raw-transcript';
 export type { AnchoredAnnotation, ResolvedAnnotations, UnanchoredAnnotation } from './resolve-annotations';
 export { resolveAnnotations } from './resolve-annotations';
+export { TeleluxAnnotation } from './telelux-annotation';
 export { TeleluxMessage } from './telelux-message';
 export { TeleluxMetadata } from './telelux-metadata';
 export { TeleluxMinimap } from './telelux-minimap';
