@@ -23,12 +23,17 @@ reason = "vitest configuration, not shipped source; it has to live in src/ becau
 
 [[typescript.exempt]]
 path = "main.tsx"
-lines = [9]
+lines = [10]
 rules = ["mutation"]
 reason = "defensive guard: viewer.html always ships #root, so the throw cannot run in the built file; the mount itself is asserted in tests/integration"
 
 [[typescript.exempt]]
 path = "App.test.tsx"
+rules = ["unmocked-collaborator"]
+reason = "@testing-library/react is the renderer this test runs in, not a collaborator of the component; mocking it would leave nothing under test"
+
+[[typescript.exempt]]
+path = "UrlEntry.test.tsx"
 rules = ["unmocked-collaborator"]
 reason = "@testing-library/react is the renderer this test runs in, not a collaborator of the component; mocking it would leave nothing under test"
 
