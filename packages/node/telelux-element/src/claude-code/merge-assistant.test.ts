@@ -1,6 +1,11 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import { mergeAssistant } from './merge-assistant';
+
+vi.mock('./merged-metadata', async () => {
+  const actual = await vi.importActual<typeof import('./merged-metadata')>('./merged-metadata');
+  return { ...actual, mergedMetadata: vi.fn(actual.mergedMetadata) };
+});
 
 describe('mergeAssistant', () => {
   it('concatenates content and tool calls, keeping the first message metadata', () => {
