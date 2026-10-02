@@ -75,3 +75,23 @@ path = "LocalFile.tsx"
 lines = [26]
 rules = ["mutation"]
 reason = "equivalent mutant: the input ref is attached on the same render that shows the button, so the optional chaining never meets null and dropping it changes nothing a user can reach"
+
+[[typescript.exempt]]
+path = "ThemeSelector.test.tsx"
+rules = ["unmocked-collaborator"]
+reason = "@testing-library/react is the renderer this test runs in, not a collaborator of the component; mocking it would leave nothing under test"
+
+[[typescript.exempt]]
+path = "ThemeShell.test.tsx"
+rules = ["unmocked-collaborator"]
+reason = "@testing-library/react is the renderer this test runs in, not a collaborator of the component; mocking it would leave nothing under test"
+
+[[typescript.exempt]]
+path = "theme-context.test.tsx"
+rules = ["unmocked-collaborator"]
+reason = "@testing-library/react is the renderer the context is read through, not a collaborator of it; mocking it would leave nothing under test"
+
+[[typescript.exempt]]
+path = "use-theme.test.ts"
+rules = ["unmocked-collaborator"]
+reason = "@testing-library/react's renderHook is the React root this hook runs in, not a collaborator of the hook; mocking it would leave nothing under test"

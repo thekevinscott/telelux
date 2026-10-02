@@ -1,10 +1,14 @@
 import { act, render } from '@testing-library/react';
-import { useContext } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { ThemeContext } from './theme-context';
 import { ThemeShell } from './ThemeShell';
 import { useTheme } from './use-theme';
+
+vi.mock('./theme-context', async () => {
+  const actual = await vi.importActual<typeof import('./theme-context')>('./theme-context');
+  return { ...actual };
+});
 
 vi.mock('./use-theme', async () => {
   const actual = await vi.importActual<typeof import('./use-theme')>('./use-theme');
@@ -24,7 +28,7 @@ afterEach(() => {
 });
 
 function ShowTheme() {
-  return <output data-testid="theme">{useContext(ThemeContext)}</output>;
+  return <ThemeContext.Consumer>{(theme) => <output data-testid="theme">{theme}</output>}</ThemeContext.Consumer>;
 }
 
 describe('ThemeShell', () => {
