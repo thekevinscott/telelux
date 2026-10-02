@@ -45,6 +45,6 @@ reason = "equivalent mutant: the effect's dependency array holds no values, and 
 
 [[typescript.exempt]]
 path = "use-fragment-transcript.ts"
-lines = [10]
+lines = [37]
 rules = ["mutation"]
-reason = "equivalent mutant: the ref's initial cancel/retry pair is replaced by the mount effect before anything can call it, so emptying the initial object changes nothing a user can reach"
+reason = "equivalent mutants: the mount effect fills the controls ref before the first render can hand cancel or retry to anything, so the optional chaining never meets null and dropping it changes nothing a user can reach"

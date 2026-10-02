@@ -2,12 +2,14 @@ import { useEffect, useRef, useState } from 'react';
 
 import { type LoadState, loadFragment } from './load-fragment';
 
-export type FragmentTranscript = { state: LoadState; cancel: () => void; retry: () => void };
+type Controls = { cancel: () => void; retry: () => void };
+
+export type FragmentTranscript = { state: LoadState } & Controls;
 
 export function useFragmentTranscript(): FragmentTranscript {
   const [state, setState] = useState<LoadState>({ kind: 'pending' });
   const cache = useRef(new Map<string, string>());
-  const controls = useRef({ cancel: () => {}, retry: () => {} });
+  const controls = useRef<Controls>(null);
   useEffect(() => {
     let latest = {};
     let controller = new AbortController();
@@ -32,5 +34,5 @@ export function useFragmentTranscript(): FragmentTranscript {
       window.removeEventListener('hashchange', load);
     };
   }, []);
-  return { state, cancel: () => controls.current.cancel(), retry: () => controls.current.retry() };
+  return { state, cancel: () => controls.current?.cancel(), retry: () => controls.current?.retry() };
 }
