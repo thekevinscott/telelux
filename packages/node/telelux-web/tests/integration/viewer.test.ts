@@ -109,6 +109,44 @@ test.describe('the built viewer', () => {
     });
   });
 
+  test.describe('with a typed URL', () => {
+    const hosted = 'https://transcripts.example/typed.jsonl';
+    const body = '{"type":"user","message":{"role":"user","content":"Hello from a typed URL"}}';
+
+    test('opens it as a hosted link, with progress and Cancel', async ({ page }) => {
+      await page.route('https://transcripts.example/**', () => {});
+      await page.goto('/viewer.html');
+      await page.getByRole('textbox', { name: 'Transcript URL' }).fill(hosted);
+      await page.getByRole('button', { name: 'Open' }).click();
+      await expect(page).toHaveURL(`/viewer.html#v=1&data=${hosted}`);
+      await expect(page.getByRole('status')).toContainText(`Loading ${hosted}`);
+      await page.getByRole('button', { name: 'Cancel' }).click();
+      await expect(page.getByRole('alert')).toContainText('Loading was cancelled.');
+    });
+
+    test('renders the fetched transcript when submitted with Enter', async ({ page }) => {
+      await page.route('https://transcripts.example/**', (route) =>
+        route.fulfill({ body, headers: { 'access-control-allow-origin': '*' } }),
+      );
+      await page.goto(`/viewer.html${link}`);
+      await expect(page.locator('telelux-transcript')).toContainText('Hello from a link');
+      await page.getByRole('textbox', { name: 'Transcript URL' }).fill(hosted);
+      await page.getByRole('textbox', { name: 'Transcript URL' }).press('Enter');
+      await expect(page.locator('telelux-transcript')).toContainText('Hello from a typed URL');
+    });
+
+    test('flags a non-http(s) URL inline and does not navigate', async ({ page }) => {
+      await page.goto('/viewer.html');
+      const box = page.getByRole('textbox', { name: 'Transcript URL' });
+      await box.fill('ftp://transcripts.example/t.jsonl');
+      await page.getByRole('button', { name: 'Open' }).click();
+      await expect(page.getByRole('alert')).toHaveText('Enter a URL that starts with http:// or https://.');
+      await expect(box).toHaveAttribute('aria-invalid', 'true');
+      await expect(page).toHaveURL('/viewer.html');
+      await expect(page.getByText('No transcript loaded.')).toBeVisible();
+    });
+  });
+
   test('renders a compressed link opened straight from disk with no network', async ({ page }) => {
     const requests: string[] = [];
     await page.route('**/*', (route) => {
