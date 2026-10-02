@@ -4,8 +4,6 @@ import { annotationStatus, sourceName } from './annotation-labels';
 import type { Annotation } from './annotations';
 import { theme } from './theme';
 
-const STATUS_TEXT = { unresolved: 'Unresolved', confirmed: 'Confirmed', rejected: 'Rejected' };
-
 export class TeleluxAnnotation extends LitElement {
   static override properties = {
     annotation: { attribute: false },
@@ -116,12 +114,13 @@ export class TeleluxAnnotation extends LitElement {
     }
     const status = annotationStatus(annotation);
     const by = annotation.resolution?.by;
+    const statusText = { unresolved: 'Unresolved', confirmed: 'Confirmed', rejected: 'Rejected' }[status];
     return html`<article part="annotation" data-status=${status} aria-label="Annotation ${annotation.label}">
       <header>
         <span class="label">${annotation.label}</span>
         ${annotation.confidence === undefined ? nothing : html`<span class="confidence">${Math.round(annotation.confidence * 100)}%</span>`}
         <span class="source">${sourceName(annotation.source)}</span>
-        <span class="status">${STATUS_TEXT[status]}${by === undefined ? '' : ` by ${by}`}</span>
+        <span class="status">${statusText}${by === undefined ? '' : ` by ${by}`}</span>
         ${this.span !== undefined && this.span.end > this.span.start ? html`<span class="span">Blocks ${this.span.start}–${this.span.end}</span>` : nothing}
       </header>
       ${annotation.summary === undefined ? nothing : html`<p class="summary">${annotation.summary}</p>`}

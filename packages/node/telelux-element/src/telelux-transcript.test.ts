@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import type { Annotation, AnnotationSidecar } from './annotations';
 import { downloadJson } from './download-json';
+import { resolveAnnotations } from './resolve-annotations';
 import type { TeleluxAnnotation } from './telelux-annotation';
 import type { TeleluxMessage } from './telelux-message';
 import type { TeleluxMetadata } from './telelux-metadata';
@@ -41,6 +42,11 @@ vi.mock('./parse-raw-transcript', async () => {
 vi.mock('./download-json', async () => {
   const actual = await vi.importActual<typeof import('./download-json')>('./download-json');
   return { ...actual, downloadJson: vi.fn<typeof actual.downloadJson>() };
+});
+
+vi.mock('./resolve-annotations', async () => {
+  const actual = await vi.importActual<typeof import('./resolve-annotations')>('./resolve-annotations');
+  return { ...actual, resolveAnnotations: vi.fn(actual.resolveAnnotations) };
 });
 
 const transcript: Transcript = {
@@ -306,9 +312,11 @@ describe('TeleluxTranscript', () => {
     it('renders no panel without annotations', async () => {
       const el = await annotated(null);
       expect(panel(el)).toBeNull();
+      expect(el.shadowRoot?.querySelector('.annotations-error')).toBeNull();
       el.annotations = undefined;
       await settle(el);
       expect(panel(el)).toBeNull();
+      expect(el.shadowRoot?.querySelector('.annotations-error')).toBeNull();
       expect(cards(el.shadowRoot)).toEqual([]);
     });
 
@@ -354,6 +362,39 @@ describe('TeleluxTranscript', () => {
       el.annotations = sidecar;
       await settle(el);
       expect(unanchored(el)).toHaveLength(4);
+    });
+
+    it('waits for a transcript before anchoring', async () => {
+      const el = await mount();
+      el.annotations = sidecar;
+      await settle(el);
+      expect(text(el, '.empty')).toBe('No transcript.');
+      el.transcript = { messages: 'nope' } as unknown as Transcript;
+      await settle(el);
+      expect(el.shadowRoot?.querySelector('.error')).not.toBeNull();
+      el.transcript = four;
+      await settle(el);
+      expect(inline(el)).toEqual([[], ['a', 'b'], ['c'], []]);
+    });
+
+    it('anchors again only when the transcript or the annotations change', async () => {
+      const el = await annotated();
+      const calls = vi.mocked(resolveAnnotations).mock.calls.length;
+      el.theme = 'dark';
+      await choose(el, 'label', 'honest');
+      expect(vi.mocked(resolveAnnotations).mock.calls.length).toBe(calls);
+      el.transcript = { ...four };
+      await settle(el);
+      expect(vi.mocked(resolveAnnotations).mock.calls.length).toBe(calls + 1);
+    });
+
+    it('ignores attributes named after its annotation state', async () => {
+      const el = await annotated();
+      el.setAttribute('sidecar', 'x');
+      el.setAttribute('annotationfilter', 'x');
+      await settle(el);
+      expect(text(el, '.annotations-count')).toBe('Annotations (4)');
+      expect(inline(el)).toEqual([[], ['a', 'b'], ['c'], []]);
     });
 
     it('counts the annotations', async () => {
@@ -405,6 +446,7 @@ describe('TeleluxTranscript', () => {
         await settle(el);
         expect(inline(el)).toEqual([[], ['a', 'b'], ['c'], []]);
         expect(select(el, 'label').value).toBe('');
+        expect(select(el, 'label').selectedIndex).toBe(0);
       });
     });
 
@@ -431,6 +473,20 @@ describe('TeleluxTranscript', () => {
         expect(cards(blocks(el)[1].parentElement)[0].annotation?.resolution).toEqual(expected);
         expect(el.annotations).toBe(sidecar);
         expect(sidecar.annotations[0].resolution).toBeUndefined();
+      });
+
+      it('announces the change across an enclosing shadow root', async () => {
+        const host = document.createElement('div');
+        document.body.appendChild(host);
+        const el = document.createElement('telelux-transcript') as TeleluxTranscript;
+        host.attachShadow({ mode: 'open' }).appendChild(el);
+        el.transcript = four;
+        el.annotations = sidecar;
+        await settle(el);
+        const outer = vi.fn();
+        host.addEventListener('telelux-annotations-change', outer);
+        resolve(unanchored(el)[0], { id: 'lost', state: 'rejected' });
+        expect(outer).toHaveBeenCalledTimes(1);
       });
 
       it('records a decision from the unanchored list without a reviewer', async () => {

@@ -143,6 +143,19 @@ describe('TeleluxAnnotation', () => {
       expect(outer).toHaveBeenCalledTimes(1);
     });
 
+    it('fires an event that crosses an enclosing shadow root', async () => {
+      const host = document.createElement('div');
+      document.body.appendChild(host);
+      const el = document.createElement('telelux-annotation') as TeleluxAnnotation;
+      el.annotation = annotation;
+      host.attachShadow({ mode: 'open' }).appendChild(el);
+      await el.updateComplete;
+      const outer = vi.fn();
+      host.addEventListener('telelux-resolve', outer);
+      button(el, '.confirm')?.click();
+      expect(outer).toHaveBeenCalledTimes(1);
+    });
+
     it('offers Reopen once resolved, which clears the state', async () => {
       const el = await mount({ annotation: { ...annotation, resolution: { state: 'rejected' } } });
       expect(el.shadowRoot?.querySelector('textarea')).toBeNull();

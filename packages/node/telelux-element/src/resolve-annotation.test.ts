@@ -25,6 +25,11 @@ describe('resolveAnnotation', () => {
     expect(next.annotations[0].resolution).toEqual({ state: 'rejected', at: 'now' });
   });
 
+  it('trims the reviewer and note', () => {
+    const next = resolveAnnotation(sidecar, 'a', { state: 'confirmed', by: ' kevin ', note: ' clear\n', at: 'now' });
+    expect(next.annotations[0].resolution).toEqual({ state: 'confirmed', by: 'kevin', note: 'clear', at: 'now' });
+  });
+
   it('reopens an annotation by removing its resolution', () => {
     const next = resolveAnnotation(sidecar, 'b', { state: undefined, at: 'now' });
     expect(next.annotations[1]).not.toHaveProperty('resolution');

@@ -319,8 +319,8 @@ export class TeleluxTranscript extends LitElement {
       this.#annotationsError = parsed?.ok === false ? parsed.error : undefined;
       this.annotationFilter = {};
     }
-    if (reparse || changed.has('sidecar')) {
-      this.#resolved = this.sidecar === undefined || this.#parsed?.ok !== true ? undefined : resolveAnnotations(this.#parsed.transcript.messages, this.sidecar.annotations);
+    if ((reparse || changed.has('sidecar')) && this.#parsed?.ok === true) {
+      this.#resolved = resolveAnnotations(this.#parsed.transcript.messages, this.sidecar?.annotations ?? []);
     }
   }
 
@@ -347,7 +347,7 @@ export class TeleluxTranscript extends LitElement {
     if (messages.length === 0) {
       return html`${this.#header(transcript)}${this.#annotationsPanel(transcript)}<p class="empty">No messages.</p>`;
     }
-    const anchored = this.#resolved?.anchored.filter(({ annotation }) => matchesFilter(annotation, this.annotationFilter)) ?? [];
+    const anchored = (this.#resolved as ResolvedAnnotations).anchored.filter(({ annotation }) => matchesFilter(annotation, this.annotationFilter));
     return html`${this.#header(transcript)}${this.#annotationsPanel(transcript)}<telelux-minimap part="minimap" theme=${this.theme ?? nothing} .messages=${messages} .current=${this.current} @telelux-jump=${(event: CustomEvent<{ index: number }>) => this.#goTo(event.detail.index)}></telelux-minimap><ol @telelux-resolve=${this.#onResolve}>
       ${messages.map((message, index) => html`<li class=${index === this.highlighted ? 'highlight' : nothing}><telelux-message exportparts="block, block-user, block-assistant, block-system, block-tool, header, content, reasoning, tool-call" theme=${this.theme ?? nothing} .message=${message} .index=${index}></telelux-message>${anchored
         .filter(({ start }) => start === index)
