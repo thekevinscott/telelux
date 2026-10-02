@@ -98,3 +98,31 @@ hand; it is the record of what the parser means.
 **Limits.** 50 MiB of text and 100,000 records. Past either the parser
 returns an error, never a truncated transcript. Malformed lines are kept
 verbatim as `system` messages flagged `raw`.
+
+## Hosting and the canonical URL
+
+Decided in [#23](https://github.com/thekevinscott/telelux/issues/23):
+
+- **The viewer is canonical at `https://telelux.dev/`.** The built
+  `dist/viewer.html` is served at the root, so every generated link has the
+  shortest form, `https://telelux.dev/#v=1&data=<value>`. The 8,000-character
+  link budget is the reason the viewer takes the root and not a subpath.
+- **The docs live at `https://docs.telelux.dev/`.**
+- **Both are Netlify sites built from this repo.** The docs site is configured
+  by the root `netlify.toml`. The viewer site uses the repo root as its base
+  directory and `packages/node/telelux-web` as its package directory, so
+  Netlify reads `packages/node/telelux-web/netlify.toml` while still installing
+  from the root, where pnpm finds the lockfile and workspace. That file builds
+  the viewer and rewrites `/` to `/viewer.html` with a 200, so the published
+  `dist/` is byte-for-byte what the wheel ships. A second site gives every PR
+  its own viewer preview, which GitHub Pages cannot.
+- **Each site builds only when its inputs change.** Each `netlify.toml`
+  carries an `ignore` command. The docs one mirrors the `paths:` filter in
+  `.github/workflows/docs.yml`; the viewer one covers `telelux-web`,
+  `telelux-element`, and the root workspace and lockfile. Keep each in step
+  with its inputs when they move.
+
+The canonical URL is not yet a constant anywhere in the code. The SDK
+([#9](https://github.com/thekevinscott/telelux/issues/9),
+[#13](https://github.com/thekevinscott/telelux/issues/13)) is its first
+consumer and adds the one definition.

@@ -1,0 +1,14 @@
+# Paths resolve against the base directory, which must stay at the repo root:
+# Netlify only detects pnpm beside pnpm-lock.yaml and pnpm-workspace.yaml.
+[build]
+  command = "pnpm --filter telelux-web build"
+  publish = "packages/node/telelux-web/dist"
+  ignore = "git diff --quiet $CACHED_COMMIT_REF $COMMIT_REF -- packages/node/telelux-web packages/node/telelux-element pnpm-workspace.yaml pnpm-lock.yaml package.json"
+
+[build.environment]
+  NODE_VERSION = "24"
+
+[[redirects]]
+  from = "/"
+  to = "/viewer.html"
+  status = 200

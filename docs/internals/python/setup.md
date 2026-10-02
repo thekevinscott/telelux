@@ -138,7 +138,7 @@ telelux = "telelux.cli.main:main"
 
 [project.urls]
 Homepage = "https://github.com/org/telelux"
-Documentation = "https://telelux.dev"
+Documentation = "https://docs.telelux.dev"
 Issues = "https://github.com/org/telelux/issues"
 
 [tool.hatch.version]

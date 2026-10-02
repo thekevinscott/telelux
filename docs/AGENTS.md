@@ -2,9 +2,11 @@
 
 One VitePress site documents all three packages: the web component
 (`packages/node/telelux-element`), the app shell, and the Python CLI/SDK
-(`packages/python/telelux`). Netlify hosts it from `docs/.vitepress/dist`, built by
-the root `netlify.toml`; `.github/workflows/docs.yml` runs the same build as a
-PR check and deploys nothing. GitHub Pages belongs to the app shell alone.
+(`packages/python/telelux`). Netlify hosts it at `https://docs.telelux.dev/` from
+`docs/.vitepress/dist`, built by the root `netlify.toml`;
+`.github/workflows/docs.yml` runs the same build as a PR check and deploys
+nothing. The app shell is a separate Netlify site at `https://telelux.dev/`,
+configured by `packages/node/telelux-web/netlify.toml`.
 
 ## Layout
 
