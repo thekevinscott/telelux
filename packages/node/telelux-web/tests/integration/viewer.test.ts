@@ -117,7 +117,7 @@ test.describe('the built viewer', () => {
       await page.route('https://transcripts.example/**', () => {});
       await page.goto('/viewer.html');
       await page.getByRole('textbox', { name: 'Transcript URL' }).fill(hosted);
-      await page.getByRole('button', { name: 'Open' }).click();
+      await page.getByRole('button', { name: 'Open', exact: true }).click();
       await expect(page).toHaveURL(`/viewer.html#v=1&data=${hosted}`);
       await expect(page.getByRole('status')).toContainText(`Loading ${hosted}`);
       await page.getByRole('button', { name: 'Cancel' }).click();
@@ -139,7 +139,7 @@ test.describe('the built viewer', () => {
       await page.goto('/viewer.html');
       const box = page.getByRole('textbox', { name: 'Transcript URL' });
       await box.fill('ftp://transcripts.example/t.jsonl');
-      await page.getByRole('button', { name: 'Open' }).click();
+      await page.getByRole('button', { name: 'Open', exact: true }).click();
       await expect(page.getByRole('alert')).toHaveText('Enter a URL that starts with http:// or https://.');
       await expect(box).toHaveAttribute('aria-invalid', 'true');
       await expect(page).toHaveURL('/viewer.html');
