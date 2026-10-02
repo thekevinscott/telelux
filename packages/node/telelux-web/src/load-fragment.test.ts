@@ -4,6 +4,7 @@ import { decodePayload } from './decode-payload';
 import { fetchTranscript } from './fetch-transcript';
 import { type LoadContext, loadFragment } from './load-fragment';
 import { parseFragment } from './parse-fragment';
+import { readBakedTranscript } from './read-baked-transcript';
 
 vi.mock('./parse-fragment', async () => {
   const actual = await vi.importActual<typeof import('./parse-fragment')>('./parse-fragment');
@@ -38,12 +39,18 @@ vi.mock('./fetch-transcript', async () => {
   return { ...actual, fetchTranscript: vi.fn(fetchTranscript) };
 });
 
+vi.mock('./read-baked-transcript', async () => {
+  const actual = await vi.importActual<typeof import('./read-baked-transcript')>('./read-baked-transcript');
+  return { ...actual, readBakedTranscript: vi.fn<typeof actual.readBakedTranscript>() };
+});
+
 let context: LoadContext;
 
 beforeEach(() => {
   context = { signal: new AbortController().signal, cache: new Map(), onProgress: vi.fn() };
   vi.mocked(fetchTranscript).mockClear();
   vi.mocked(decodePayload).mockClear();
+  vi.mocked(readBakedTranscript).mockReset();
 });
 
 describe('loadFragment', () => {
@@ -52,8 +59,20 @@ describe('loadFragment', () => {
     expect(parseFragment).toHaveBeenLastCalledWith('#abc');
   });
 
-  it('is empty when there is no fragment', async () => {
+  it('is empty when there is no fragment and no baked-in transcript', async () => {
     expect(await loadFragment('', context)).toStrictEqual({ kind: 'empty' });
+    expect(readBakedTranscript).toHaveBeenCalledWith(document);
+  });
+
+  it('shows the baked-in transcript when there is no fragment', async () => {
+    vi.mocked(readBakedTranscript).mockReturnValue('baked');
+    expect(await loadFragment('', context)).toStrictEqual({ kind: 'transcript', text: 'baked' });
+  });
+
+  it('lets a fragment take precedence over the baked-in transcript', async () => {
+    vi.mocked(readBakedTranscript).mockReturnValue('baked');
+    expect(await loadFragment('#abc', context)).toStrictEqual({ kind: 'transcript', text: 'text:abc' });
+    expect(readBakedTranscript).not.toHaveBeenCalled();
   });
 
   it('turns a payload into transcript text without a loading state', async () => {
