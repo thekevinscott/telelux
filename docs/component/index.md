@@ -32,6 +32,7 @@ pnpm add telelux-element
 ```
 
 The `transcript` property takes a `Transcript` object. The package README
-documents the input in full.
+documents the input in full, including the `annotations` property's sidecar
+format for review marks and timeline events.
 
 See it running on the [demo](./demo) page.

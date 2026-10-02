@@ -24,12 +24,25 @@ describe('mergeAssistant', () => {
         { type: 'reasoning', reasoning: 'plan' },
         { type: 'text', text: 'go' },
       ],
-      metadata: { messageId: 'm', uuid: 'first' },
+      metadata: { messageId: 'm', uuid: 'first', mergedUuids: ['second'] },
       tool_calls: [
         { id: 'a', function: 'Read', type: 'function' },
         { id: 'b', function: 'Bash', type: 'function' },
       ],
     });
+  });
+
+  it('appends each further merged uuid in order', () => {
+    const first = mergeAssistant({ role: 'assistant', content: [], metadata: { uuid: 'a' } }, { role: 'assistant', content: [], metadata: { uuid: 'b' } });
+    const second = mergeAssistant(first, { role: 'assistant', content: [], metadata: { uuid: 'c' } });
+    expect(second.metadata).toEqual({ uuid: 'a', mergedUuids: ['b', 'c'] });
+    expect(first.metadata).toEqual({ uuid: 'a', mergedUuids: ['b'] });
+  });
+
+  it('adds no merged uuids when the next record has none', () => {
+    const merged = mergeAssistant({ role: 'assistant', content: [], metadata: { uuid: 'a' } }, { role: 'assistant', content: [], metadata: {} });
+    expect(merged.metadata).toEqual({ uuid: 'a' });
+    expect(mergeAssistant({ role: 'assistant', content: [] }, { role: 'assistant', content: [] })).not.toHaveProperty('metadata');
   });
 
   it('turns string content into a text item and drops an empty string', () => {

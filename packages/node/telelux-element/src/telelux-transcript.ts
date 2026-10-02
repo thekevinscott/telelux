@@ -3,6 +3,7 @@ import { css, html, LitElement, nothing, type PropertyValues } from 'lit';
 import './telelux-message';
 import './telelux-metadata';
 import './telelux-minimap';
+import type { AnnotationSidecar } from './annotations';
 import { blockNumber } from './block-number';
 import { currentBlock } from './current-block';
 import { definedEntries } from './defined-entries';
@@ -197,7 +198,7 @@ export class TeleluxTranscript extends LitElement {
   `];
 
   declare transcript: Transcript | undefined;
-  declare annotations: unknown;
+  declare annotations: AnnotationSidecar | null | undefined;
   declare format: string | undefined;
   declare theme: string | undefined;
   private declare slotText: string | undefined;
