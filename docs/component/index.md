@@ -62,4 +62,23 @@ answer. Type your name in the Reviewer field, press Confirm on the card, and
 the card reads `Confirmed by` your name. Press Download annotations to save
 the sidecar with your decision in it.
 
+## Follow the timeline
+
+The same sidecar draws a timeline above the minimap. Give an annotation a
+`summary` and an end anchor, and it becomes an event spanning those blocks:
+
+```js
+{
+  id: 'answer',
+  target: { start: { index: 0 }, end: { index: 1 } },
+  label: 'exchange',
+  summary: 'Asks for the time and gets an answer',
+  source: { kind: 'model' },
+}
+```
+
+A bar reading `Asks for the time and gets an answer` covers both blocks.
+Click it and the transcript scrolls to the first block and outlines both.
+Press `+` to zoom the axis in.
+
 See it running on the [demo](./demo) page.

@@ -356,7 +356,14 @@ unavailable and is open to his review.
 - **The timeline is `<telelux-timeline>`**, a second element in
   `telelux-element`, not a new package. It lays the annotations out on a
   zoomable axis of message positions and, when clicked, scrolls the
-  transcript to the cited span. Event extraction, the rubric, and any judge
+  transcript to the cited span. `<telelux-transcript>` embeds one whenever it
+  has a sidecar, fed the filtered annotations, so the panel's filters drive
+  both views. The axis is block positions, not time: a sidecar cites
+  messages, and the timestamps in Claude Code metadata are optional and
+  absent from the generic format. Overlapping events stack in lanes, and
+  zoom doubles the axis width from 1× to 16×. Standalone, the element
+  fires `telelux-jump`, and the transcript's public `goToBlock(start, end?)`
+  takes it. Event extraction, the rubric, and any judge
   or model call are out of scope: they produce sidecars, the viewer reads
   them.
 
