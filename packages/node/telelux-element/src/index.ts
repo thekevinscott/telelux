@@ -8,5 +8,6 @@ export { TeleluxAnnotation } from './telelux-annotation';
 export { TeleluxMessage } from './telelux-message';
 export { TeleluxMetadata } from './telelux-metadata';
 export { TeleluxMinimap } from './telelux-minimap';
+export { TeleluxTimeline } from './telelux-timeline';
 export { TeleluxTranscript } from './telelux-transcript';
 export type { ChatMessage, Content, Metadata, ParseResult, ToolCall, Transcript } from './transcript';
