@@ -12,9 +12,11 @@
   "packageManager": "pnpm@10.33.0",
   "scripts": {
     "dev": "vite",
+    "prebuild": "pnpm --filter telelux-element build",
     "build": "vite build",
     "preview": "vite preview",
     "lint": "eslint src tests",
+    "pretypecheck": "pnpm --filter telelux-element build",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test_unit": "vitest run",
     "test_integration": "playwright test"
@@ -38,10 +40,12 @@
     "jsdom": "^30.0.1",
     "typescript": "^5.6.3",
     "vite": "^8.3.0",
+    "vite-plugin-singlefile": "^2.3.3",
     "vitest": "^4.1.11"
   },
   "dependencies": {
     "react": "^19.3.0",
-    "react-dom": "^19.3.0"
+    "react-dom": "^19.3.0",
+    "telelux-element": "workspace:*"
   }
 }

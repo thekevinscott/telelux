@@ -9,6 +9,8 @@ on:
       - '!packages/node/telelux-web/changelog.d/**'
       - '!packages/node/telelux-web/migrations.d/**'
       - '!packages/node/telelux-web/README.md'
+      - 'packages/node/telelux-element/src/**'
+      - 'packages/node/telelux-element/package.json'
       - '.github/workflows/node-telelux-web.yml'
 
 permissions:

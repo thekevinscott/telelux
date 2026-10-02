@@ -12,7 +12,7 @@ rules = ["colocated-test", "co-change"]
 reason = "composition root: mounts the app into #root and holds no logic; the browser actually doing it is asserted in tests/integration"
 
 [[typescript.exempt]]
-path = "TranscriptBox.test.tsx"
+path = "Viewer.test.tsx"
 rules = ["unmocked-collaborator"]
 reason = "@testing-library/react is the renderer this test runs in, not a collaborator of the component; mocking it would leave nothing under test"
 
@@ -23,12 +23,6 @@ reason = "vitest configuration, not shipped source; it has to live in src/ becau
 
 [[typescript.exempt]]
 path = "main.tsx"
-lines = [6, 8, 9]
+lines = [11]
 rules = ["mutation"]
-reason = "composition root: the placeholder string, the #root id and its missing-element guard are only observable in a real browser, which tests/integration asserts via Playwright"
-
-[[typescript.exempt]]
-path = "TranscriptBox.tsx"
-lines = [7]
-rules = ["mutation"]
-reason = "the empty-body mutant is a static mutant: the component binding is created at module load, before stryker's vitest runner activates per-test mutants, so it records no covering test. Applied by hand the same mutation fails all three tests in TranscriptBox.test.tsx — the suite does kill it, the runner just cannot attribute it"
+reason = "defensive guard: viewer.html always ships #root, so the throw cannot run in the built file; the mount itself is asserted in tests/integration"

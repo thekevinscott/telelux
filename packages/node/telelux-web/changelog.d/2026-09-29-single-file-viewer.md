@@ -1,0 +1,1 @@
+**Changed** — `pnpm build` now emits one self-contained `dist/viewer.html` that renders transcripts through `<telelux-transcript>`, with every script and style inlined so it opens from disk with no network. The placeholder `TranscriptBox` component is gone.
