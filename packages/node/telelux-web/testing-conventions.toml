@@ -23,7 +23,7 @@ reason = "vitest configuration, not shipped source; it has to live in src/ becau
 
 [[typescript.exempt]]
 path = "main.tsx"
-lines = [10]
+lines = [11]
 rules = ["mutation"]
 reason = "defensive guard: viewer.html always ships #root, so the throw cannot run in the built file; the mount itself is asserted in tests/integration"
 
@@ -53,3 +53,13 @@ path = "use-fragment-transcript.ts"
 lines = [37]
 rules = ["mutation"]
 reason = "equivalent mutants: the mount effect fills the controls ref before the first render can hand cancel or retry to anything, so the optional chaining never meets null and dropping it changes nothing a user can reach"
+
+[[typescript.exempt]]
+path = "LocalFile.test.tsx"
+rules = ["unmocked-collaborator"]
+reason = "@testing-library/react is the renderer this test runs in, not a collaborator of the component; mocking it would leave nothing under test"
+
+[[typescript.exempt]]
+path = "use-file-drop.test.ts"
+rules = ["unmocked-collaborator"]
+reason = "@testing-library/react's renderHook is the React root this hook runs in, not a collaborator of the hook; mocking it would leave nothing under test"

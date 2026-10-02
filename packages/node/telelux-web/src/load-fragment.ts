@@ -1,6 +1,7 @@
 import { decodePayload } from './decode-payload';
 import { fetchTranscript } from './fetch-transcript';
 import { parseFragment } from './parse-fragment';
+import { readBakedTranscript } from './read-baked-transcript';
 
 export type LoadState =
   | { kind: 'pending' }
@@ -18,8 +19,10 @@ export type LoadContext = {
 export async function loadFragment(hash: string, { signal, cache, onProgress }: LoadContext): Promise<LoadState> {
   const fragment = parseFragment(hash);
   switch (fragment.kind) {
-    case 'none':
-      return { kind: 'empty' };
+    case 'none': {
+      const baked = readBakedTranscript(document);
+      return baked === undefined ? { kind: 'empty' } : { kind: 'transcript', text: baked };
+    }
     case 'malformed':
       return { kind: 'error', message: 'This link is not a transcript link. Transcript links end in #v=1&data=…', retry: false };
     case 'unsupported-version':

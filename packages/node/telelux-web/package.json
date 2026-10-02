@@ -18,6 +18,7 @@
     "lint": "eslint src tests",
     "pretypecheck": "pnpm --filter telelux-element build",
     "typecheck": "tsc -p tsconfig.json --noEmit",
+    "pretest_unit": "pnpm --filter telelux-element build",
     "test_unit": "vitest run",
     "test_integration": "playwright test"
   },
