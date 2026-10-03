@@ -366,6 +366,15 @@ unavailable and is open to his review.
   takes it. Event extraction, the rubric, and any judge
   or model call are out of scope: they produce sidecars, the viewer reads
   them.
+- **The app shell loads a sidecar beside a transcript.** `viewer.html`
+  offers **Open an annotations file** once a transcript shows, and has a
+  second baked slot, `<script type="application/json" id="annotations">`,
+  escaped like the transcript slot, that applies only to the baked
+  transcript. The `#v=1` link carries no annotations: fitting a second
+  payload under the 8,000-character cap would change the link format, so it
+  is deferred. Annotations belong to the transcript they were opened with
+  and are dropped when another transcript opens. Nothing goes to browser
+  storage.
 
 ## Testing convention: red first
 
