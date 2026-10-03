@@ -53,6 +53,24 @@ To empty the viewer, assign `None`:
 viewer.transcript = None
 ```
 
+## Export a single HTML file
+
+`viewer.html` is the whole viewer with your transcript baked in, as one string.
+Save it and open the file in a browser:
+
+```python
+from pathlib import Path
+
+Path("transcript.html").write_text(viewer.html, encoding="utf-8")
+```
+
+The file needs no network and no server. Every script and style sits inside
+it, so you can email it, attach it to a ticket, or open it on a plane. Click
+**Raw** on any message to see the record the agent wrote.
+
+The transcript inside is plain text, so a message that happens to contain
+`</script>` or other markup shows up as text and can't change the page.
+
 ## Share a link
 
 `viewer.url` packs the whole transcript into a link to the hosted viewer:
