@@ -40,6 +40,11 @@ describe('bakeTranscript', () => {
     expect(bakeTranscript(rendered, 'x')).toContain('<div id="root"></div>');
   });
 
+  it('empties the annotations slot, whose annotations belong to the transcript being replaced', () => {
+    const annotated = page.replace('</body>', '<script type="application/json" id="annotations">{"version":1}</script></body>');
+    expect(bakeTranscript(annotated, 'x')).toContain('<script type="application/json" id="annotations"></script>');
+  });
+
   it('refuses a page with no transcript slot', () => {
     expect(() => bakeTranscript('<!doctype html><div id="root"></div>', 'x')).toThrow('The page has no transcript slot to bake into.');
   });

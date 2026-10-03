@@ -1,13 +1,13 @@
 import { decodePayload } from './decode-payload';
 import { fetchTranscript } from './fetch-transcript';
 import { parseFragment } from './parse-fragment';
-import { readBakedTranscript } from './read-baked-transcript';
+import { readBakedSlot } from './read-baked-slot';
 
 export type LoadState =
   | { kind: 'pending' }
   | { kind: 'empty' }
   | { kind: 'loading'; url: string; received: number; total: number | undefined }
-  | { kind: 'transcript'; text: string }
+  | { kind: 'transcript'; text: string; annotations?: string }
   | { kind: 'error'; message: string; retry: boolean };
 
 export type LoadContext = {
@@ -20,8 +20,8 @@ export async function loadFragment(hash: string, { signal, cache, onProgress }: 
   const fragment = parseFragment(hash);
   switch (fragment.kind) {
     case 'none': {
-      const baked = readBakedTranscript(document);
-      return baked === undefined ? { kind: 'empty' } : { kind: 'transcript', text: baked };
+      const baked = readBakedSlot(document, 'transcript');
+      return baked === undefined ? { kind: 'empty' } : { kind: 'transcript', text: baked, annotations: readBakedSlot(document, 'annotations') };
     }
     case 'malformed':
       return { kind: 'error', message: 'This link is not a transcript link. Transcript links end in #v=1&data=…', retry: false };

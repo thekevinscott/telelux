@@ -1,0 +1,2 @@
+**Added** The annotation sidecar format shared by review marks and timeline events: `parseAnnotations` validates a sidecar, `resolveAnnotations` anchors each annotation to the messages it cites, and both ship from the main and `telelux-element/parse` entries. Merged Claude Code assistant messages list their later record uuids in `metadata.mergedUuids`. (#40, #50)
+**Changed** **BREAKING** `<telelux-transcript>`'s `annotations` property is typed as `AnnotationSidecar` instead of `unknown`. See [the migration](../migrations.d/2026-10-02-annotation-format.md).

@@ -5,7 +5,7 @@ import { Viewer } from './Viewer';
 export function App() {
   const { state, cancel, retry } = useFragmentTranscript();
   if (state.kind === 'transcript') {
-    return <Viewer text={state.text} />;
+    return <Viewer text={state.text} annotations={state.annotations} />;
   }
   if (state.kind === 'loading') {
     return (

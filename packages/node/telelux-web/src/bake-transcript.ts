@@ -5,6 +5,7 @@ export function bakeTranscript(html: string, text: string): string {
     throw new Error('The page has no transcript slot to bake into.');
   }
   page.getElementById('root')?.replaceChildren();
+  page.getElementById('annotations')?.replaceChildren();
   slot.textContent = text.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
   return `<!doctype html>\n${page.documentElement.outerHTML}`;
 }
