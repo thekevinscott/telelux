@@ -1,11 +1,12 @@
 # TypeScript — shipping
 
-> This repo's TypeScript workspace (`packages/node/telelux-web`) is **internal tooling**
-> and is never published to npm — the built viewer ships inside the Python
-> wheel. The sections below cover the conventions that still apply (CI shape,
-> lint, docs, API design). Registry publishing, trusted-publisher setup, and
-> release flow live in [../python/shipping.md](../python/shipping.md) — the
-> Python package is the only published artifact.
+> Two of this repo's Node packages publish to npm through `putitoutthere`:
+> `packages/node/telelux-element` (npm `telelux-element`) and
+> `packages/node/telelux` (npm `telelux`, a placeholder). The app shell,
+> `packages/node/telelux-web`, is private and deployed to GitHub Pages instead.
+> Release flow is described in [ARCHITECTURE.md](../../../ARCHITECTURE.md);
+> PyPI trusted-publisher setup lives in
+> [../python/shipping.md](../python/shipping.md).
 
 ## Github
 

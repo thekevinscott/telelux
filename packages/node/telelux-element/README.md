@@ -508,4 +508,6 @@ Two tiers:
 
 - **Unit** — `pnpm test_unit` (Vitest, jsdom, colocated `src/*.test.ts`).
 - **Integration** — `pnpm test_integration` (Playwright, a built page in a
-  real browser).
+  real browser). One test builds and packs the package, installs the tarball
+  into a bare Vite page, and renders the shared fixture there, so it checks
+  what a consumer installs rather than the source.
