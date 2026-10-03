@@ -126,6 +126,9 @@ Slotted `slot="before"` content is never read as raw transcript text.
   held. Clicking anywhere in the transcript gives it focus.
 - Each step moves from the current block: the one last navigated to while it
   is still on screen, else the first block not yet scrolled past.
+- **`goToBlock(start, end?)`** does the same from script: it scrolls to block
+  `start` and outlines it, or every block from `start` to `end`. A number past
+  the end goes to the last block; a negative or fractional one is ignored.
 
 The outline colour is `--telelux-highlight`.
 
@@ -322,6 +325,38 @@ covers more than one block, the summary, and the note.
 An invalid sidecar shows `Invalid annotations:` with the reasons in place of
 the panel. The transcript still renders.
 
+#### Timeline
+
+With a valid sidecar set, a timeline sits between the annotations panel and
+the minimap. Each anchored annotation is an event: a bar across the blocks it
+spans, named by its `summary` (else its `label`), and coloured by status as
+the cards are. Overlapping events stack in lanes. A tick row numbers the
+blocks.
+
+- **Zoom** with the `+` and `−` buttons, from 1× to 16×. Each step doubles
+  or halves the axis width and the tick density; the axis scrolls sideways.
+- **Clicking an event** scrolls the transcript to the event's first block and
+  outlines its whole span.
+- The timeline shows what the panel's filters let through.
+- Events that could not be placed are listed under `Not placed (n)` with
+  their reasons.
+
+The axis counts blocks, not wall-clock time; a sidecar cites messages, and
+time comes from them.
+
+`<telelux-timeline>` also works on its own. Set `.messages` (the
+`ChatMessage[]` the anchors resolve against) and `.annotations` (a sidecar).
+It fires `telelux-jump` with `{ index, end }` when an event is clicked;
+pass those to a transcript's `goToBlock`:
+
+```ts
+timeline.messages = transcript.messages;
+timeline.annotations = sidecar;
+timeline.addEventListener('telelux-jump', ({ detail }) => viewer.goToBlock(detail.index, detail.end));
+```
+
+It takes the `theme` attribute and exposes the region as `::part(timeline)`.
+
 `<telelux-annotation>` is the card on its own. Set `.annotation` (an
 `Annotation`), and optionally `.span` (`{ start, end }` block numbers) and
 `.reason` (text shown for an unanchored annotation). It fires
@@ -387,6 +422,7 @@ For structure the properties do not reach, the transcript exposes
 | `minimap` | The minimap strip and its legend |
 | `annotations` | The annotations panel: count, filters, reviewer, download, unanchored list |
 | `annotation` | Each annotation card |
+| `timeline` | The timeline: heading, zoom controls, axis, and not-placed list |
 | `block` | Each block, plus `block-user`, `block-assistant`, `block-system`, or `block-tool` |
 | `header` | A block's header row |
 | `content` | A block's text content |

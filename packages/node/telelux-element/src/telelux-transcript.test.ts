@@ -7,6 +7,7 @@ import type { TeleluxAnnotation } from './telelux-annotation';
 import type { TeleluxMessage } from './telelux-message';
 import type { TeleluxMetadata } from './telelux-metadata';
 import type { TeleluxMinimap } from './telelux-minimap';
+import type { TeleluxTimeline } from './telelux-timeline';
 import { TeleluxTranscript } from './telelux-transcript';
 import type { Transcript } from './transcript';
 
@@ -379,13 +380,14 @@ describe('TeleluxTranscript', () => {
 
     it('anchors again only when the transcript or the annotations change', async () => {
       const el = await annotated();
-      const calls = vi.mocked(resolveAnnotations).mock.calls.length;
+      const ownCalls = () => vi.mocked(resolveAnnotations).mock.calls.filter(([, annotations]) => annotations === sidecar.annotations).length;
+      const calls = ownCalls();
       el.theme = 'dark';
       await choose(el, 'label', 'honest');
-      expect(vi.mocked(resolveAnnotations).mock.calls.length).toBe(calls);
+      expect(ownCalls()).toBe(calls);
       el.transcript = { ...four };
       await settle(el);
-      expect(vi.mocked(resolveAnnotations).mock.calls.length).toBe(calls + 1);
+      expect(ownCalls()).toBe(calls + 1);
     });
 
     it('ignores attributes named after its annotation state', async () => {
@@ -495,6 +497,14 @@ describe('TeleluxTranscript', () => {
         await settle(el);
         expect(seen[0].annotations[3].resolution).toEqual({ state: 'rejected', at: expect.any(String) });
         expect(unanchored(el)[0].annotation?.resolution?.state).toBe('rejected');
+      });
+
+      it('hands each decision to the timeline', async () => {
+        const el = await annotated();
+        resolve(cards(blocks(el)[1].parentElement)[0], { id: 'a', state: 'confirmed' });
+        await settle(el);
+        const line = el.shadowRoot?.querySelector<TeleluxTimeline>('telelux-timeline');
+        expect(line?.annotations?.annotations[0].resolution?.state).toBe('confirmed');
       });
 
       it('keeps the decisions in the filter it applies', async () => {
@@ -772,6 +782,8 @@ describe('TeleluxTranscript', () => {
         return scrolled;
       }
 
+      const minimap = (el: TeleluxTranscript) => el.shadowRoot?.querySelector<TeleluxMinimap>('telelux-minimap') ?? null;
+
       const highlighted = (el: TeleluxTranscript) =>
         [...(el.shadowRoot?.querySelectorAll('ol > li') ?? [])].flatMap((item, index) => {
           if (item.hasAttribute('class')) {
@@ -922,8 +934,98 @@ describe('TeleluxTranscript', () => {
         expect(scrolled).toEqual([0]);
       });
 
+      describe('timeline', () => {
+        const timeline = (el: TeleluxTranscript) => el.shadowRoot?.querySelector<TeleluxTimeline>('telelux-timeline') ?? null;
+        const sidecar: AnnotationSidecar = {
+          version: 1,
+          annotations: [
+            { id: 'a', target: { start: { index: 1 }, end: { index: 2 } }, label: 'x', source: { kind: 'judge' } },
+            { id: 'b', target: { start: { index: 3 } }, label: 'y', source: { kind: 'human' } },
+          ],
+        };
+
+        async function withTimeline(): Promise<TeleluxTranscript> {
+          const el = await header();
+          el.annotations = sidecar;
+          await el.updateComplete;
+          return el;
+        }
+
+        it('appears only with annotations, after the panel and before the minimap', async () => {
+          expect(timeline(await header())).toBeNull();
+          const el = await withTimeline();
+          const line = timeline(el) as TeleluxTimeline;
+          expect(line.previousElementSibling?.className).toBe('annotations');
+          expect(line.nextElementSibling?.tagName).toBe('TELELUX-MINIMAP');
+          expect(line.getAttribute('exportparts')).toBe('timeline');
+          expect(line.messages).toBe(full.messages);
+          expect(line.annotations?.annotations).toEqual(sidecar.annotations);
+        });
+
+        it('stays out of a transcript with no messages', async () => {
+          const el = await header({ ...full, messages: [] });
+          el.annotations = sidecar;
+          await el.updateComplete;
+          expect(timeline(el)).toBeNull();
+        });
+
+        it('shows only the annotations the filters let through', async () => {
+          const el = await withTimeline();
+          const control = $(el, 'select.label') as HTMLSelectElement;
+          control.value = 'y';
+          control.dispatchEvent(new Event('change'));
+          await el.updateComplete;
+          expect(timeline(el)?.annotations?.annotations.map(({ id }) => id)).toEqual(['b']);
+        });
+
+        it('hands the timeline the same sidecar until the annotations or filters change', async () => {
+          const el = await withTimeline();
+          const first = timeline(el)?.annotations;
+          el.theme = 'dark';
+          await el.updateComplete;
+          expect(timeline(el)?.annotations).toBe(first);
+          expect(timeline(el)?.getAttribute('theme')).toBe('dark');
+        });
+
+        it('scrolls to a clicked event and highlights its whole span', async () => {
+          const el = await withTimeline();
+          vi.useFakeTimers();
+          const scrolled = stubItems(el, [0, 100, 200, 300]);
+          timeline(el)?.dispatchEvent(new CustomEvent('telelux-jump', { detail: { index: 1, end: 2 } }));
+          await el.updateComplete;
+          expect(scrolled).toEqual([1]);
+          expect(highlighted(el)).toEqual([1, 2]);
+          expect(minimap(el)?.current).toBe(1);
+          vi.advanceTimersByTime(1500);
+          await el.updateComplete;
+          expect(highlighted(el)).toEqual([]);
+        });
+      });
+
+      describe('goToBlock', () => {
+        it('scrolls to a block and highlights it, or a span of blocks', async () => {
+          const el = await header();
+          const scrolled = stubItems(el, [0, 100, 200, 300]);
+          el.goToBlock(2);
+          await el.updateComplete;
+          expect(highlighted(el)).toEqual([2]);
+          el.goToBlock(0, 3);
+          await el.updateComplete;
+          expect(scrolled).toEqual([2, 0]);
+          expect(highlighted(el)).toEqual([0, 1, 2, 3]);
+        });
+
+        it('clamps a block past the end and ignores one that is not a block number', async () => {
+          const el = await header();
+          const scrolled = stubItems(el, [0, 100, 200, 300]);
+          el.goToBlock(99);
+          el.goToBlock(-1);
+          el.goToBlock(1.5);
+          expect(scrolled).toEqual([3]);
+        });
+      });
+
       describe('minimap', () => {
-        const minimap = (el: TeleluxTranscript) => el.shadowRoot?.querySelector<TeleluxMinimap>('telelux-minimap') ?? null;
 
         async function scroll(el: TeleluxTranscript, target: EventTarget = document) {
           target.dispatchEvent(new Event('scroll'));

@@ -4,6 +4,7 @@ import './telelux-annotation';
 import './telelux-message';
 import './telelux-metadata';
 import './telelux-minimap';
+import './telelux-timeline';
 import { type AnnotationFilter, matchesFilter } from './annotation-filter';
 import { sourceName } from './annotation-labels';
 import { type AnnotationSidecar, parseAnnotations } from './annotations';
@@ -264,7 +265,7 @@ export class TeleluxTranscript extends LitElement {
   private declare slotText: string | undefined;
   private declare metadataOpen: boolean;
   private declare copyStatus: string | undefined;
-  private declare highlighted: number | undefined;
+  private declare highlighted: { start: number; end: number } | undefined;
   private declare current: number | undefined;
   private declare sidecar: AnnotationSidecar | undefined;
   private declare annotationFilter: AnnotationFilter;
@@ -272,6 +273,7 @@ export class TeleluxTranscript extends LitElement {
   #parsed: ParseResult | undefined;
   #annotationsError: string | undefined;
   #resolved: ResolvedAnnotations | undefined;
+  #visible: AnnotationSidecar | undefined;
   #reviewer = '';
   #tracked: number | undefined;
   #highlightTimer: ReturnType<typeof setTimeout> | undefined;
@@ -319,6 +321,9 @@ export class TeleluxTranscript extends LitElement {
       this.#annotationsError = parsed?.ok === false ? parsed.error : undefined;
       this.annotationFilter = {};
     }
+    if (changed.has('sidecar') || changed.has('annotationFilter')) {
+      this.#visible = this.sidecar && { ...this.sidecar, annotations: this.sidecar.annotations.filter((annotation) => matchesFilter(annotation, this.annotationFilter)) };
+    }
     if ((reparse || changed.has('sidecar')) && this.#parsed?.ok === true) {
       this.#resolved = resolveAnnotations(this.#parsed.transcript.messages, this.sidecar?.annotations ?? []);
     }
@@ -348,8 +353,10 @@ export class TeleluxTranscript extends LitElement {
       return html`${this.#header(transcript)}${this.#annotationsPanel(transcript)}<p class="empty">No messages.</p>`;
     }
     const anchored = (this.#resolved as ResolvedAnnotations).anchored.filter(({ annotation }) => matchesFilter(annotation, this.annotationFilter));
-    return html`${this.#header(transcript)}${this.#annotationsPanel(transcript)}<telelux-minimap part="minimap" theme=${this.theme ?? nothing} .messages=${messages} .current=${this.current} @telelux-jump=${(event: CustomEvent<{ index: number }>) => this.#goTo(event.detail.index)}></telelux-minimap><ol @telelux-resolve=${this.#onResolve}>
-      ${messages.map((message, index) => html`<li class=${index === this.highlighted ? 'highlight' : nothing}><telelux-message exportparts="block, block-user, block-assistant, block-system, block-tool, header, content, reasoning, tool-call" theme=${this.theme ?? nothing} .message=${message} .index=${index}></telelux-message>${anchored
+    return html`${this.#header(transcript)}${this.#annotationsPanel(transcript)}${this.sidecar === undefined
+      ? nothing
+      : html`<telelux-timeline exportparts="timeline" theme=${this.theme ?? nothing} .messages=${messages} .annotations=${this.#visible} @telelux-jump=${(event: CustomEvent<{ index: number; end: number }>) => this.#goTo(event.detail.index, event.detail.end)}></telelux-timeline>`}<telelux-minimap part="minimap" theme=${this.theme ?? nothing} .messages=${messages} .current=${this.current} @telelux-jump=${(event: CustomEvent<{ index: number }>) => this.#goTo(event.detail.index)}></telelux-minimap><ol @telelux-resolve=${this.#onResolve}>
+      ${messages.map((message, index) => html`<li class=${this.highlighted !== undefined && index >= this.highlighted.start && index <= this.highlighted.end ? 'highlight' : nothing}><telelux-message exportparts="block, block-user, block-assistant, block-system, block-tool, header, content, reasoning, tool-call" theme=${this.theme ?? nothing} .message=${message} .index=${index}></telelux-message>${anchored
         .filter(({ start }) => start === index)
         .map(({ annotation, start, end }) => html`<telelux-annotation exportparts="annotation" theme=${this.theme ?? nothing} .annotation=${annotation} .span=${{ start, end }}></telelux-annotation>`)}</li>`)}
     </ol>
@@ -479,11 +486,18 @@ export class TeleluxTranscript extends LitElement {
     }
   }
 
-  #goTo(index: number) {
+  goToBlock(start: number, end = start) {
+    const index = blockNumber(String(start), this.#items().length);
+    if (index !== undefined) {
+      this.#goTo(index, end);
+    }
+  }
+
+  #goTo(index: number, end = index) {
     this.#tracked = index;
     this.current = index;
     this.#items()[index].scrollIntoView({ block: 'start', behavior: 'smooth' });
-    this.highlighted = index;
+    this.highlighted = { start: index, end };
     clearTimeout(this.#highlightTimer);
     this.#highlightTimer = setTimeout(() => (this.highlighted = undefined), FLASH_MS);
   }
