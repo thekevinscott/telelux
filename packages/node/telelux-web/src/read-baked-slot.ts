@@ -1,5 +1,5 @@
-export function readBakedTranscript(page: Document): string | undefined {
-  const escaped = page.getElementById('transcript')?.textContent ?? '';
+export function readBakedSlot(page: Document, id: string): string | undefined {
+  const escaped = page.getElementById(id)?.textContent ?? '';
   if (escaped === '') {
     return undefined;
   }

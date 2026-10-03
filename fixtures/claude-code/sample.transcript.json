@@ -240,7 +240,10 @@
           "cache_creation_input_tokens": 50,
           "cache_read_input_tokens": 14300,
           "output_tokens": 90
-        }
+        },
+        "mergedUuids": [
+          "c0ffee02"
+        ]
       },
       "tool_calls": [
         {
