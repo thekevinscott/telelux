@@ -23,5 +23,12 @@ def describe_telelux():
     def test_it_never_parses_transcripts_itself():
         for path in MODULES:
             tree = ast.parse(path.read_text(encoding="utf-8"))
-            assert "json" not in imported_names(tree), path.name
             assert "splitlines" not in called_attributes(tree), path.name
+
+    def test_only_the_annotations_check_imports_json():
+        importers = {
+            path.name
+            for path in MODULES
+            if "json" in imported_names(ast.parse(path.read_text(encoding="utf-8")))
+        }
+        assert importers == {"load_annotations.py"}

@@ -6,7 +6,7 @@ reason = "equivalent mutants: hatch only ever passes the build version \"standar
 
 [[python.exempt]]
 path = "src/telelux/load_data.py"
-lines = [14]
+lines = [16]
 rules = ["mutation"]
 reason = "the read bound is defensive: `| 1` and `^ 1` equal `+ 1` on the even limit, and `+ 2` or `<< 1` only read more of an over-limit file before the same rejection, so no behavior distinguishes them"
 

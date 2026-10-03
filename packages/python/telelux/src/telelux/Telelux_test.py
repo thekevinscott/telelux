@@ -14,6 +14,13 @@ def load_data():
         yield load_data
 
 
+@pytest.fixture(autouse=True)
+def load_annotations():
+    with patch("telelux.Telelux.load_annotations") as load_annotations:
+        load_annotations.side_effect = lambda annotations: f"notes in {annotations}"
+        yield load_annotations
+
+
 @pytest.fixture
 def build_link():
     with patch("telelux.Telelux.build_link") as build_link:
@@ -24,7 +31,11 @@ def build_link():
 @pytest.fixture
 def bake_viewer():
     with patch("telelux.Telelux.bake_viewer") as bake_viewer:
-        bake_viewer.side_effect = lambda contents: f"<html>{contents}</html>"
+        bake_viewer.side_effect = lambda contents, annotations: (
+            f"<html>{contents}</html>"
+            if annotations is None
+            else f"<html>{contents}<notes>{annotations}</notes></html>"
+        )
         yield bake_viewer
 
 
@@ -119,6 +130,67 @@ def describe_Telelux():
             assert viewer.transcript == "foo.jsonl"
             assert viewer._contents == "contents of foo.jsonl"
 
+    def describe_annotations():
+        def test_they_start_unset(load_annotations):
+            viewer = Telelux("foo.jsonl")
+            assert viewer.annotations is None
+            assert viewer._annotations is None
+            load_annotations.assert_not_called()
+
+        def test_they_are_snapshotted_immediately(load_annotations):
+            viewer = Telelux("foo.jsonl", "notes.json")
+            assert viewer.annotations == "notes.json"
+            assert viewer._annotations == "notes in notes.json"
+            load_annotations.assert_called_once_with("notes.json")
+
+        def test_they_accept_a_path_by_keyword(load_annotations):
+            viewer = Telelux(annotations=Path("notes.json"))
+            assert viewer.annotations == Path("notes.json")
+            assert viewer.transcript is None
+            load_annotations.assert_called_once_with(Path("notes.json"))
+
+        def test_the_constructor_raises_what_reading_raises(load_annotations):
+            load_annotations.side_effect = ValueError("notes.json is not valid JSON")
+            with pytest.raises(ValueError, match="^notes.json is not valid JSON$"):
+                Telelux("foo.jsonl", "notes.json")
+
+        def test_assigning_replaces_the_path_and_the_snapshot(load_annotations):
+            viewer = Telelux("foo.jsonl", "a.json")
+            viewer.annotations = "b.json"
+            assert viewer.annotations == "b.json"
+            assert viewer._annotations == "notes in b.json"
+            assert load_annotations.call_args_list == [call("a.json"), call("b.json")]
+
+        def test_assigning_rereads_the_same_path(load_annotations):
+            viewer = Telelux("foo.jsonl", "a.json")
+            load_annotations.side_effect = ["edited"]
+            viewer.annotations = "a.json"
+            assert viewer._annotations == "edited"
+
+        def test_none_clears_the_path_and_the_snapshot(load_annotations):
+            viewer = Telelux("foo.jsonl", "a.json")
+            viewer.annotations = None
+            assert viewer.annotations is None
+            assert viewer._annotations is None
+            load_annotations.assert_called_once_with("a.json")
+
+        @pytest.mark.parametrize(
+            "error", [ValueError("not valid JSON"), FileNotFoundError("missing")]
+        )
+        def test_a_failed_assignment_keeps_the_previous_state(load_annotations, error):
+            viewer = Telelux("foo.jsonl", "a.json")
+            load_annotations.side_effect = error
+            with pytest.raises(type(error)):
+                viewer.annotations = "b.json"
+            assert viewer.annotations == "a.json"
+            assert viewer._annotations == "notes in a.json"
+
+        def test_they_survive_a_new_transcript():
+            viewer = Telelux("foo.jsonl", "a.json")
+            viewer.transcript = "bar.jsonl"
+            assert viewer.annotations == "a.json"
+            assert viewer._annotations == "notes in a.json"
+
     def describe_url():
         def test_it_links_to_the_snapshot(build_link):
             assert Telelux("foo.jsonl").url == "link to contents of foo.jsonl"
@@ -140,10 +212,28 @@ def describe_Telelux():
             with pytest.raises(ValueError, match="^No transcript set$"):
                 _ = viewer.url
 
+        def test_it_refuses_to_drop_the_annotations(build_link):
+            with pytest.raises(ValueError) as error:
+                _ = Telelux("foo.jsonl", "notes.json").url
+            assert str(error.value) == (
+                "A telelux.dev link can't carry annotations; bake them into the "
+                "HTML instead (html, write or serve), or set annotations to None"
+            )
+            build_link.assert_not_called()
+
+        def test_a_missing_transcript_is_reported_first(build_link):
+            with pytest.raises(ValueError, match="^No transcript set$"):
+                _ = Telelux(annotations="notes.json").url
+
+        def test_it_links_again_once_the_annotations_are_cleared(build_link):
+            viewer = Telelux("foo.jsonl", "notes.json")
+            viewer.annotations = None
+            assert viewer.url == "link to contents of foo.jsonl"
+
     def describe_html():
         def test_it_bakes_the_snapshot_into_the_viewer(bake_viewer):
             assert Telelux("foo.jsonl").html == "<html>contents of foo.jsonl</html>"
-            bake_viewer.assert_called_once_with("contents of foo.jsonl")
+            bake_viewer.assert_called_once_with("contents of foo.jsonl", None)
 
         def test_it_follows_a_new_assignment(bake_viewer):
             viewer = Telelux("foo.jsonl")
@@ -161,11 +251,37 @@ def describe_Telelux():
             with pytest.raises(ValueError, match="^No transcript set$"):
                 _ = viewer.html
 
+        def test_it_bakes_the_annotations_snapshot_in(bake_viewer):
+            assert Telelux("foo.jsonl", "a.json").html == (
+                "<html>contents of foo.jsonl<notes>notes in a.json</notes></html>"
+            )
+            bake_viewer.assert_called_once_with(
+                "contents of foo.jsonl", "notes in a.json"
+            )
+
+        def test_it_follows_new_annotations(bake_viewer):
+            viewer = Telelux("foo.jsonl", "a.json")
+            viewer.annotations = "b.json"
+            assert viewer.html == (
+                "<html>contents of foo.jsonl<notes>notes in b.json</notes></html>"
+            )
+
+        def test_annotations_alone_are_not_enough(bake_viewer):
+            with pytest.raises(ValueError, match="^No transcript set$"):
+                _ = Telelux(annotations="a.json").html
+
     def describe_write():
         def test_it_writes_the_html_to_the_path(bake_viewer, write_exclusive):
             assert Telelux("foo.jsonl").write("out.html") is None
             write_exclusive.assert_called_once_with(
                 "out.html", "<html>contents of foo.jsonl</html>"
+            )
+
+        def test_it_writes_the_annotations_in(bake_viewer, write_exclusive):
+            Telelux("foo.jsonl", "a.json").write("out.html")
+            write_exclusive.assert_called_once_with(
+                "out.html",
+                "<html>contents of foo.jsonl<notes>notes in a.json</notes></html>",
             )
 
         def test_it_raises_without_a_transcript_and_writes_nothing(
@@ -229,3 +345,22 @@ def describe_Telelux():
                 assert page() == "<html>contents of bar.jsonl</html>"
                 viewer.transcript = None
                 assert page() == "<html>empty viewer</html>"
+
+            def test_it_follows_the_annotations_at_request_time(
+                ViewerApp, read_viewer_html, bake_viewer
+            ):
+                viewer = Telelux("foo.jsonl")
+                page = page_of(ViewerApp)
+                viewer.annotations = "a.json"
+                assert page() == (
+                    "<html>contents of foo.jsonl<notes>notes in a.json</notes></html>"
+                )
+                viewer.annotations = None
+                assert page() == "<html>contents of foo.jsonl</html>"
+
+            def test_annotations_without_a_transcript_serve_the_empty_viewer(
+                ViewerApp, read_viewer_html, bake_viewer
+            ):
+                Telelux(annotations="a.json")
+                assert page_of(ViewerApp)() == "<html>empty viewer</html>"
+                bake_viewer.assert_not_called()
