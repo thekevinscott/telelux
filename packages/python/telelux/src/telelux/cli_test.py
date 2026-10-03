@@ -109,6 +109,46 @@ def describe_cli():
             open_browser_when_ready.assert_not_called()
             Telelux.return_value.serve.assert_called_once()
 
+    def describe_out():
+        def test_it_writes_the_baked_html_and_prints_the_path(
+            run, Telelux, open_browser_when_ready
+        ):
+            result = run("session.jsonl", "--out", "session.html")
+            assert result.exit_code == 0
+            Telelux.assert_called_once_with(Path("session.jsonl"))
+            Telelux.return_value.write.assert_called_once_with(Path("session.html"))
+            assert result.stdout == "session.html\n"
+            assert result.stderr == ""
+
+        def test_it_does_not_serve_or_open_a_browser(
+            run, Telelux, open_browser_when_ready
+        ):
+            run("session.jsonl", "--out", "session.html", "--port", "9000")
+            Telelux.return_value.serve.assert_not_called()
+            open_browser_when_ready.assert_not_called()
+
+        def test_it_needs_a_transcript(run, Telelux):
+            result = run("--out", "session.html")
+            assert result.exit_code == 2
+            assert "--out needs a TRANSCRIPT" in result.stderr
+            assert result.stdout == ""
+            Telelux.assert_not_called()
+
+        @pytest.mark.parametrize(
+            "error",
+            [
+                FileExistsError(17, "File exists", "session.html"),
+                FileNotFoundError(2, "No such file or directory", "a/b.html"),
+            ],
+        )
+        def test_a_failed_write_exits_1_on_stderr(run, Telelux, describe_error, error):
+            Telelux.return_value.write.side_effect = error
+            result = run("session.jsonl", "--out", "session.html")
+            assert result.exit_code == 1
+            assert result.stdout == ""
+            assert result.stderr == f"Error: described {error}\n"
+            describe_error.assert_called_once_with(error, Path("session.jsonl"))
+
     def describe_failures():
         @pytest.mark.parametrize(
             "error",
@@ -148,5 +188,5 @@ def describe_cli():
         def test_it_documents_every_option(run):
             result = run("--help")
             assert result.exit_code == 0
-            for option in ("TRANSCRIPT", "--no-browser", "--host", "--port"):
+            for option in ("TRANSCRIPT", "--out", "--no-browser", "--host", "--port"):
                 assert option in result.stdout
