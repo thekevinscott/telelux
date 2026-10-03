@@ -97,6 +97,16 @@ rules = ["unmocked-collaborator"]
 reason = "@testing-library/react's renderHook is the React root this hook runs in, not a collaborator of the hook; mocking it would leave nothing under test"
 
 [[typescript.exempt]]
+path = "decode-base64url.test.ts"
+rules = ["unmocked-collaborator"]
+reason = "the import is fixtures/link/v1.json, the known vector shared with the Python package's encoder; it is data with no behavior, and mocking it would replace the very bytes the test pins"
+
+[[typescript.exempt]]
+path = "gunzip-capped.test.ts"
+rules = ["unmocked-collaborator"]
+reason = "the import is fixtures/link/v1.json, the known vector shared with the Python package's encoder; it is data with no behavior, and mocking it would replace the very bytes the test pins"
+
+[[typescript.exempt]]
 path = "AnnotationsFile.test.tsx"
 rules = ["unmocked-collaborator"]
 reason = "@testing-library/react is the renderer this test runs in, not a collaborator of the component; mocking it would leave nothing under test"

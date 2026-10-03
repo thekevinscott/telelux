@@ -52,3 +52,27 @@ To empty the viewer, assign `None`:
 ```python
 viewer.transcript = None
 ```
+
+## Share a link
+
+`viewer.url` packs the whole transcript into a link to the hosted viewer:
+
+```python
+viewer = Telelux("path/to/transcript.jsonl")
+print(viewer.url)
+```
+
+It prints something like `https://telelux.dev/#v=1&data=H4sIAAAA…`. Paste that
+anywhere, and whoever opens it sees the transcript. The transcript travels in
+the part after `#`, which browsers never send to the server, so telelux.dev
+never receives it.
+
+A link holds a short session. Past 8,000 characters, or 10 MiB of
+transcript, `viewer.url` raises a `ValueError` that gives the size, the limit,
+and the two ways to share a long transcript instead:
+
+- Export it as a single HTML file.
+- Host the `.jsonl` file yourself and share
+  `https://telelux.dev/#v=1&data=<transcript-url>`.
+
+With no transcript loaded, `viewer.url` raises `ValueError("No transcript set")`.

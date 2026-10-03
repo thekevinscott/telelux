@@ -9,3 +9,9 @@ path = "src/telelux/load_data.py"
 lines = [14]
 rules = ["mutation"]
 reason = "the read bound is defensive: `| 1` and `^ 1` equal `+ 1` on the even limit, and `+ 2` or `<< 1` only read more of an over-limit file before the same rejection, so no behavior distinguishes them"
+
+[[python.exempt]]
+path = "src/telelux/encode_payload.py"
+lines = [10]
+rules = ["mutation"]
+reason = "levels 8 and 9 differ only in how far zlib searches for matches, and emit identical bytes for the shared link vector and the shared corpus; the vector test catches any level change that alters the wire bytes"

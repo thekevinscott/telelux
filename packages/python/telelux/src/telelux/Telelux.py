@@ -1,5 +1,6 @@
 from pathlib import Path
 
+from .build_link import build_link
 from .load_data import load_data
 
 
@@ -19,3 +20,12 @@ class Telelux:
         contents = None if transcript is None else load_data(transcript)
         self._transcript_path = transcript
         self._contents = contents
+
+    @property
+    def url(self) -> str:
+        return build_link(self._snapshot())
+
+    def _snapshot(self) -> str:
+        if self._contents is None:
+            raise ValueError("No transcript set")
+        return self._contents

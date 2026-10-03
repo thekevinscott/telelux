@@ -12,6 +12,7 @@ on:
       - 'packages/node/telelux-element/src/**'
       - 'packages/node/telelux-element/package.json'
       - '.github/workflows/node-telelux-web.yml'
+      - 'fixtures/link/**'
 
 permissions:
   contents: read
