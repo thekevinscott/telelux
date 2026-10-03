@@ -27,6 +27,12 @@ def bake_viewer():
         yield bake_viewer
 
 
+@pytest.fixture
+def write_exclusive():
+    with patch("telelux.Telelux.write_exclusive") as write_exclusive:
+        yield write_exclusive
+
+
 def describe_Telelux():
     def describe_constructor():
         def test_it_starts_empty_without_a_transcript(load_data):
@@ -129,3 +135,22 @@ def describe_Telelux():
             viewer.transcript = None
             with pytest.raises(ValueError, match="^No transcript set$"):
                 _ = viewer.html
+
+    def describe_write():
+        def test_it_writes_the_html_to_the_path(bake_viewer, write_exclusive):
+            assert Telelux("foo.jsonl").write("out.html") is None
+            write_exclusive.assert_called_once_with(
+                "out.html", "<html>contents of foo.jsonl</html>"
+            )
+
+        def test_it_raises_without_a_transcript_and_writes_nothing(
+            bake_viewer, write_exclusive
+        ):
+            with pytest.raises(ValueError, match="^No transcript set$"):
+                Telelux().write("out.html")
+            write_exclusive.assert_not_called()
+
+        def test_it_lets_filesystem_errors_through(bake_viewer, write_exclusive):
+            write_exclusive.side_effect = FileExistsError("out.html")
+            with pytest.raises(FileExistsError):
+                Telelux("foo.jsonl").write("out.html")

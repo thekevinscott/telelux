@@ -3,6 +3,7 @@ from pathlib import Path
 from .bake_viewer import bake_viewer
 from .build_link import build_link
 from .load_data import load_data
+from .write_exclusive import write_exclusive
 
 
 class Telelux:
@@ -29,6 +30,9 @@ class Telelux:
     @property
     def url(self) -> str:
         return build_link(self._snapshot())
+
+    def write(self, output_path: str | Path) -> None:
+        write_exclusive(output_path, self.html)
 
     def _snapshot(self) -> str:
         if self._contents is None:
