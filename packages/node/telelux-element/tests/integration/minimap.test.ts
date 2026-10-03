@@ -33,6 +33,11 @@ test.describe('the minimap in a real browser', () => {
     await page.getByRole('spinbutton', { name: 'Jump to block' }).press('Enter');
     const current = strip.getByRole('button', { name: 'Block 450 tool', exact: true });
     await expect(current).toHaveAttribute('aria-current', 'true');
+    await expect(page.locator('telelux-transcript ol > li').nth(450)).toBeInViewport();
+    await expect.poll(() => page.evaluate(() => new Promise((settled) => {
+      const before = window.scrollY;
+      setTimeout(() => settled(window.scrollY === before), 100);
+    }))).toBe(true);
     await page.mouse.wheel(0, 2000);
     await expect(current).not.toHaveAttribute('aria-current', 'true');
     const outlined = strip.locator('[aria-current="true"]');

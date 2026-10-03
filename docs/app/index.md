@@ -63,6 +63,28 @@ still accepts a `#v=1&data=` link, which replaces its baked-in transcript.
 
 Files over 50 MiB or 100,000 records are refused outright.
 
+## Annotations
+
+Once a transcript is showing, choose **Open an annotations file** above it and
+pick an annotations sidecar, the JSON file a judge or a reviewer writes for that
+transcript. The [web component](/component/) page describes its format. Each
+annotation appears as a card under the block it points at, with the panel of
+filters and the timeline above the transcript. The file never leaves your
+browser, and nothing about it is stored.
+
+Open another annotations file and it replaces the first. Open another
+transcript and the annotations go with the old one. If the file is not JSON,
+or its JSON is not an annotations sidecar, the viewer says so, lists what does
+not match, and keeps showing whatever annotations it showed before.
+
+Your Confirm and Reject decisions live only in the page. Press **Download
+annotations** to save the sidecar with them in it.
+
+A link carries only a transcript, never its annotations. A page with a
+transcript baked in can carry annotations too, and shows them with that
+transcript. A link opened on such a page shows its own transcript without
+them.
+
 ## Theme
 
 Open the viewer and pick a theme from the **Theme** menu at the top right:
