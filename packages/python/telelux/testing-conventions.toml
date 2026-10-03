@@ -1,5 +1,5 @@
-[python]
-# The package is a version stub — no conditionals anywhere in it — and the
-# branch gate hard-fails when a report measures zero branches. Restore the
-# default (`branch = true`) as soon as real code lands.
-coverage = { branch = false }
+[[python.exempt]]
+path = "hatch_build.py"
+lines = [26]
+rules = ["mutation"]
+reason = "equivalent mutants: hatch only ever passes the build version \"standard\" or \"editable\", so `>` and `is not` decide those two exactly as `!=` does"

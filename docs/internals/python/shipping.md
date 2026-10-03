@@ -263,6 +263,32 @@ concurrency:
 
 ---
 
+## The packaged viewer
+
+The wheel and sdist ship telelux-web's single-file `dist/viewer.html` as
+`telelux/_assets/viewer.html`, so an installed package renders, exports and
+serves transcripts with no Node, browser, or network. The SDK reads it with
+`importlib.resources`, never through a path relative to the working directory.
+
+`hatch_build.py` at the package root is a hatch build hook that puts it there:
+
+- **Workspace build** (`uv build`, `python -m build`): copies
+  `packages/node/telelux-web/dist/viewer.html` into `src/telelux/_assets/`,
+  which is gitignored and shipped through `[tool.hatch.build] artifacts`. If
+  the viewer is not built yet, the hook builds it first with the workspace's
+  pinned pnpm (`npx --yes pnpm@<packageManager> install --frozen-lockfile`,
+  then `--filter telelux-web build`). The release build runs inside
+  putitoutthere's reusable workflow, which has no pre-build step, so this is
+  how the release wheel gets a fresh viewer.
+- **Build from the sdist**: there is no workspace, so the hook keeps the copy
+  the sdist carries, and fails naming the fix if it is missing.
+- **Editable install** (`uv sync`): copies the built viewer if there is one and
+  never builds or fails, so the unit tier needs no Node.
+
+Locally, rebuild the viewer (`pnpm --filter telelux-web build` from the repo
+root) before building the wheel or running the integration tier; the hook
+copies whatever `dist/viewer.html` holds and does not check it is current.
+
 ## Release flow
 
 **Use `putitoutthere`.** Single reusable workflow, single config file, OIDC trusted publishing to PyPI. Versions derive from git tags via `hatch-vcs`. Provenance, retry-with-backoff, tag rollback, registry idempotency are all inside the workflow. Cross-cutting CHANGELOG / MIGRATIONS rules live in [../repo.md](../repo.md).

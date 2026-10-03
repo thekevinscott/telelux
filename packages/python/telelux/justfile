@@ -10,13 +10,13 @@ format:
     uv run ruff check --fix . && uv run ruff format .
 
 typecheck:
-    uv run mypy src
+    uv run mypy src hatch_build.py
 
 test_unit:
-    uv run pytest src
+    uv run pytest
 
 test_unit_watch:
-    uv run ptw --now . src
+    uv run ptw --now .
 
 test_integration:
     uv run pytest tests/integration

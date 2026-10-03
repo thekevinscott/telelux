@@ -15,9 +15,14 @@ build = "hatch"
 # package files, while the subtree pattern excludes fragment and attestation
 # directories. A leading `!` is not a substitute: minimatch makes it match
 # everything outside the subtree, so it would cascade LICENSE on every commit.
+# The wheel ships telelux-web's viewer.html, which bundles telelux-element, so
+# changes to either viewer source cascade a Python release.
 globs = [
   "packages/python/telelux/!(testing-conventions.toml)",
   "packages/python/telelux/!(changelog.d|migrations.d|e2e-attestations)/**",
+  "packages/node/telelux-web/!(testing-conventions.toml)",
+  "packages/node/telelux-web/!(changelog.d|migrations.d|e2e-attestations)/**",
+  "packages/node/telelux-element/src/**",
   "LICENSE",
 ]
 
