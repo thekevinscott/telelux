@@ -18,9 +18,9 @@ reason = "vitest configuration, not shipped source; it has to live in src/ becau
 
 [[typescript.exempt]]
 path = "telelux-transcript.ts"
-lines = [23, 24, 25, 26, 27, 28, 29, 30, 31]
+lines = [30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42]
 rules = ["mutation"]
-reason = "static mutants: the reactive property table is read once when Lit registers the class at module load, before stryker's per-test instrumentation activates, so no test is recorded as covering it. Applied by hand, emptying the table fails every property-driven test in telelux-transcript.test.ts, flipping attribute to true fails 'ignores a transcript attribute', emptying the theme entry or flipping reflect to false fails 'reflects the theme property to its attribute', and emptying the slotText, metadataOpen, copyStatus, or current entry, or flipping its state to false, fails 'ignores attributes named after its internal state'. Emptying the highlighted entry is equivalent: an attribute value is a string and never equals a numeric block index, so no block is highlighted either way"
+reason = "static mutants: the reactive property table is read once when Lit registers the class at module load, before stryker's per-test instrumentation activates, so no test is recorded as covering it. Applied by hand, emptying the table fails every property-driven test in telelux-transcript.test.ts, flipping attribute to true fails 'ignores a transcript attribute', emptying the theme entry or flipping reflect to false fails 'reflects the theme property to its attribute', and emptying the slotText, metadataOpen, copyStatus, or current entry, or flipping its state to false, fails 'ignores attributes named after its internal state', emptying the sidecar entry or flipping its state to false fails 'ignores attributes named after its annotation state', and emptying the annotationFilter entry fails the filtering tests because a changed filter no longer re-renders. Flipping annotationFilter's state to false is equivalent: an attribute string destructures to no label, source, or status, which filters nothing. Emptying the highlighted entry is equivalent: an attribute value is a string with no start or end block, so no block is highlighted either way"
 
 [[typescript.exempt]]
 path = "transcript.ts"
@@ -42,7 +42,7 @@ reason = "static mutants: the document icon, the reactive property table, the st
 
 [[typescript.exempt]]
 path = "telelux-transcript.ts"
-lines = [34]
+lines = [44]
 rules = ["mutation"]
 reason = "static mutant: the styles sheet is read once when Lit registers the class at module load, before stryker's per-test instrumentation activates, and jsdom applies no layout to observe it. Emptying it unpins the Previous / Next controls, which fails 'keeps the Previous and Next controls on screen while scrolling' in tests/integration/transcript-header.test.ts"
 
@@ -81,3 +81,15 @@ path = "telelux-minimap.ts"
 lines = [8, 9, 10, 11, 12, 15, 182]
 rules = ["mutation"]
 reason = "static mutants: the reactive property table, the styles sheet, and the customElements.define call run once at module load, before stryker's per-test instrumentation activates. Applied by hand, emptying the table fails five tests including 'follows the current property'; emptying the messages, current, or active entry, flipping attribute to true, or flipping state to false fails 'ignores messages and current attributes'; emptying the theme entry or flipping reflect to false fails 'reflects the theme property to its attribute'; emptying the tag name throws at import. Emptying the stylesheet is invisible to jsdom and fails 'fills each chip with its role colour' in tests/integration/minimap.test.ts"
+
+[[typescript.exempt]]
+path = "telelux-annotation.ts"
+lines = [8, 9, 10, 11, 12, 13, 15, 144]
+rules = ["mutation"]
+reason = "static mutants: the reactive property table, the styles sheet, and the customElements.define call run once at module load, before stryker's per-test instrumentation activates. Applied by hand, emptying the table fails 'shows confidence as a whole percentage' and every test that sets a property after mounting; emptying the annotation, span, or reason entry or flipping attribute to true fails 'ignores annotation, span, and reason attributes'; emptying the theme entry or flipping reflect to false fails 'reflects the theme property to its attribute'; emptying the tag name throws at import. The stylesheet is presentation only and jsdom applies none of it"
+
+[[typescript.exempt]]
+path = "telelux-timeline.ts"
+lines = [15, 16, 17, 18, 19, 22, 204]
+rules = ["mutation"]
+reason = "static mutants: the reactive property table, the styles sheet, and the customElements.define call run once at module load, before stryker's per-test instrumentation activates. Applied by hand, emptying the table fails every test that sets a property after mounting; flipping the messages or annotations attribute to true, or the zoom state to false, fails 'ignores attributes named after its properties and state'; emptying the theme entry or flipping reflect to false fails 'reflects the theme property to its attribute'; emptying the tag name throws at import. Emptying the stylesheet is invisible to jsdom and fails 'stacks overlapping events and widens the axis on zoom' in tests/integration/timeline.test.ts"

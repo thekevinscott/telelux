@@ -4,7 +4,7 @@ import { decodePayload } from './decode-payload';
 import { fetchTranscript } from './fetch-transcript';
 import { type LoadContext, loadFragment } from './load-fragment';
 import { parseFragment } from './parse-fragment';
-import { readBakedTranscript } from './read-baked-transcript';
+import { readBakedSlot } from './read-baked-slot';
 
 vi.mock('./parse-fragment', async () => {
   const actual = await vi.importActual<typeof import('./parse-fragment')>('./parse-fragment');
@@ -39,10 +39,14 @@ vi.mock('./fetch-transcript', async () => {
   return { ...actual, fetchTranscript: vi.fn(fetchTranscript) };
 });
 
-vi.mock('./read-baked-transcript', async () => {
-  const actual = await vi.importActual<typeof import('./read-baked-transcript')>('./read-baked-transcript');
-  return { ...actual, readBakedTranscript: vi.fn<typeof actual.readBakedTranscript>() };
+vi.mock('./read-baked-slot', async () => {
+  const actual = await vi.importActual<typeof import('./read-baked-slot')>('./read-baked-slot');
+  return { ...actual, readBakedSlot: vi.fn<typeof actual.readBakedSlot>() };
 });
+
+function bake(slots: Record<string, string>) {
+  vi.mocked(readBakedSlot).mockImplementation((_page, id) => slots[id]);
+}
 
 let context: LoadContext;
 
@@ -50,7 +54,7 @@ beforeEach(() => {
   context = { signal: new AbortController().signal, cache: new Map(), onProgress: vi.fn() };
   vi.mocked(fetchTranscript).mockClear();
   vi.mocked(decodePayload).mockClear();
-  vi.mocked(readBakedTranscript).mockReset();
+  vi.mocked(readBakedSlot).mockReset();
 });
 
 describe('loadFragment', () => {
@@ -60,19 +64,26 @@ describe('loadFragment', () => {
   });
 
   it('is empty when there is no fragment and no baked-in transcript', async () => {
+    bake({ annotations: '{}' });
     expect(await loadFragment('', context)).toStrictEqual({ kind: 'empty' });
-    expect(readBakedTranscript).toHaveBeenCalledWith(document);
+    expect(readBakedSlot).toHaveBeenCalledWith(document, 'transcript');
   });
 
   it('shows the baked-in transcript when there is no fragment', async () => {
-    vi.mocked(readBakedTranscript).mockReturnValue('baked');
-    expect(await loadFragment('', context)).toStrictEqual({ kind: 'transcript', text: 'baked' });
+    bake({ transcript: 'baked' });
+    expect(await loadFragment('', context)).toStrictEqual({ kind: 'transcript', text: 'baked', annotations: undefined });
   });
 
-  it('lets a fragment take precedence over the baked-in transcript', async () => {
-    vi.mocked(readBakedTranscript).mockReturnValue('baked');
+  it('carries the baked-in annotations along with the baked-in transcript', async () => {
+    bake({ transcript: 'baked', annotations: '{"version":1}' });
+    expect(await loadFragment('', context)).toStrictEqual({ kind: 'transcript', text: 'baked', annotations: '{"version":1}' });
+    expect(readBakedSlot).toHaveBeenCalledWith(document, 'annotations');
+  });
+
+  it('lets a fragment take precedence over the baked-in transcript and its annotations', async () => {
+    bake({ transcript: 'baked', annotations: '{"version":1}' });
     expect(await loadFragment('#abc', context)).toStrictEqual({ kind: 'transcript', text: 'text:abc' });
-    expect(readBakedTranscript).not.toHaveBeenCalled();
+    expect(readBakedSlot).not.toHaveBeenCalled();
   });
 
   it('turns a payload into transcript text without a loading state', async () => {

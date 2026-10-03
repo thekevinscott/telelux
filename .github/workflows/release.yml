@@ -30,6 +30,8 @@ jobs:
     permissions:
       contents: write
       id-token: write
+    secrets:
+      NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
   # PyPI upload runs in the caller's workflow context. Required because
   # PyPI Trusted Publishers can't validate OIDC tokens minted from a
