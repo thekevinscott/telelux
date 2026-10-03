@@ -31,3 +31,23 @@ transcript text from closing the element or opening a comment inside it. On
 load, a page whose fragment is empty unescapes the slot's text in one pass and
 renders it; any `#v=1&data=` fragment takes precedence. The viewer's
 **Download standalone HTML** button bakes the same way.
+
+## Baked-in annotations slot
+
+Next to it, `dist/viewer.html` ships an empty annotations slot:
+
+```html
+<script type="application/json" id="annotations"></script>
+```
+
+To bake an annotations sidecar (the `parseAnnotations` format from
+`telelux-element`) into a page that also has a baked transcript, put its JSON
+text in this slot, escaped exactly like the transcript slot. The viewer reads
+it only when it renders the baked transcript: a page with a `#v=1&data=`
+fragment ignores it, and so does a page whose transcript slot is empty. JSON
+the viewer cannot read, or that does not match the format, is reported above
+the transcript, which still renders. **Download standalone HTML** empties this
+slot, since its annotations belong to the transcript being replaced.
+
+Annotations a user opens with **Open an annotations file** replace the baked
+ones for as long as the same transcript is shown.

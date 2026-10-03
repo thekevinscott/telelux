@@ -26,7 +26,7 @@ If the agent didn't run these, ask. If they fail, the agent should fix before yo
 7. **Reuse over reinvention** — date math, deep clone, schema validation, retry-with-backoff all come from the ecosystem table.
 8. **Public API surface** — `default` vs named consistent; `@hidden` / `@internal` on the rest.
 9. **Changelog fragment** — a package-local `changelog.d/` fragment added (plus `migrations.d/` when breaking) for any consumer-observable change, or a `skip-changelog:` trailer present. See [../repo.md](../repo.md).
-10. **`putitoutthere.toml`** — the Python package's `globs` still cover this workspace's build inputs where the built artifact feeds the wheel.
+10. **`putitoutthere.toml`** — a published package's `globs` still cover its build inputs, and a new published package has its own `[[package]]` entry.
 
 ---
 
