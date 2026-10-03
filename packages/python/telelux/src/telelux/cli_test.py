@@ -1,6 +1,6 @@
 from pathlib import Path
 from types import SimpleNamespace
-from unittest.mock import patch
+from unittest.mock import PropertyMock, patch
 
 import pytest
 
@@ -149,6 +149,49 @@ def describe_cli():
             assert result.stderr == f"Error: described {error}\n"
             describe_error.assert_called_once_with(error, Path("session.jsonl"))
 
+    def describe_url():
+        def test_it_prints_the_link_and_nothing_else(
+            run, Telelux, open_browser_when_ready
+        ):
+            Telelux.return_value.url = "https://telelux.dev/#v=1&data=abc"
+            result = run("session.jsonl", "--url")
+            assert result.exit_code == 0
+            Telelux.assert_called_once_with(Path("session.jsonl"))
+            assert result.stdout == "https://telelux.dev/#v=1&data=abc\n"
+            assert result.stderr == ""
+            Telelux.return_value.serve.assert_not_called()
+            Telelux.return_value.write.assert_not_called()
+            open_browser_when_ready.assert_not_called()
+
+        def test_it_needs_a_transcript(run, Telelux):
+            result = run("--url")
+            assert result.exit_code == 2
+            assert "--url needs a TRANSCRIPT" in result.stderr
+            assert result.stdout == ""
+            Telelux.assert_not_called()
+
+        def test_a_link_too_long_exits_1_on_stderr(run, Telelux, describe_error):
+            error = ValueError("The link would be 9000 characters")
+            type(Telelux.return_value).url = PropertyMock(side_effect=error)
+            result = run("session.jsonl", "--url")
+            assert result.exit_code == 1
+            assert result.stdout == ""
+            assert result.stderr == f"Error: described {error}\n"
+            describe_error.assert_called_once_with(error, Path("session.jsonl"))
+
+    def describe_out_and_url_together():
+        def test_they_are_a_usage_error(run, Telelux):
+            result = run("session.jsonl", "--out", "session.html", "--url")
+            assert result.exit_code == 2
+            assert "--out and --url can't be used together" in result.stderr
+            assert result.stdout == ""
+            Telelux.assert_not_called()
+
+        def test_without_a_transcript_the_clash_is_reported_first(run, Telelux):
+            result = run("--url", "--out", "session.html")
+            assert result.exit_code == 2
+            assert "--out and --url can't be used together" in result.stderr
+
     def describe_failures():
         @pytest.mark.parametrize(
             "error",
@@ -188,5 +231,12 @@ def describe_cli():
         def test_it_documents_every_option(run):
             result = run("--help")
             assert result.exit_code == 0
-            for option in ("TRANSCRIPT", "--out", "--no-browser", "--host", "--port"):
+            for option in (
+                "TRANSCRIPT",
+                "--out",
+                "--url",
+                "--no-browser",
+                "--host",
+                "--port",
+            ):
                 assert option in result.stdout

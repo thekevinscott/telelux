@@ -15,30 +15,40 @@ from .Telelux import Telelux
     type=click.Path(path_type=Path),
     help="Write the viewer, with TRANSCRIPT baked in, to a new HTML file.",
 )
+@click.option(
+    "--url",
+    is_flag=True,
+    help="Print a telelux.dev link that carries TRANSCRIPT, compressed.",
+)
 @click.option("--no-browser", is_flag=True, help="Don't open the viewer in a browser.")
 @click.option("--host", help="Interface to serve on, passed to Uvicorn.")
 @click.option("--port", type=int, help="Port to serve on, passed to Uvicorn.")
 def cli(
     transcript: Path | None,
     out: Path | None,
+    url: bool,
     no_browser: bool,
     host: str | None,
     port: int | None,
 ) -> None:
-    """Serve TRANSCRIPT in the viewer, or export it with --out.
+    """Serve TRANSCRIPT in the viewer, or export it with --out or --url.
 
     Without TRANSCRIPT, serve the empty viewer.
     """
-    if out is not None and transcript is None:
-        raise click.UsageError("--out needs a TRANSCRIPT to export")
+    if out is not None and url:
+        raise click.UsageError("--out and --url can't be used together")
+    export = "--url" if url else "--out" if out is not None else None
+    if export is not None and transcript is None:
+        raise click.UsageError(f"{export} needs a TRANSCRIPT to export")
     try:
         viewer = Telelux(transcript)
         if out is not None:
             viewer.write(out)
+        link = viewer.url if url else None
     except (OSError, ValueError) as error:
         raise click.ClickException(describe_error(error, transcript)) from error
-    if out is not None:
-        click.echo(out)
+    if export is not None:
+        click.echo(out if link is None else link)
         return
     options = {"host": host, "port": port}
     if not no_browser:

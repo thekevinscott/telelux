@@ -75,7 +75,7 @@ pre-release concern, not a per-PR gate.
 | Tier | Location | Command | Mocking |
 | --- | --- | --- | --- |
 | Unit | Colocated (`foo_test.py`) | `just py-test` | Isolate dependencies as needed |
-| Integration | `tests/integration/` | `just py-test-integration` | Targets the SDK exclusively; mock LLM calls once those exist |
+| Integration | `tests/integration/` | `just py-test-integration` | Targets the SDK, plus the installed `telelux` command in `cli_test.py`; mock LLM calls once those exist |
 
 `testpaths` in `pyproject.toml` is scoped to `src` and the build hook's
 colocated `hatch_build_test.py`, so a bare `pytest` (the unit tier) never picks up

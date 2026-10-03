@@ -185,6 +185,27 @@ Error: transcript.html: File exists
 `--out` needs a transcript. Without one, it's a usage error and exits with
 status `2`.
 
+### Share a link
+
+Add `--url` to print a link instead:
+
+```sh
+telelux path/to/transcript.jsonl --url
+```
+
+It prints one line, the same link as `viewer.url`, and nothing else. That makes
+it easy to pipe, for example to your clipboard:
+
+```sh
+telelux path/to/transcript.jsonl --url | pbcopy
+```
+
+The limits are the same as for `viewer.url`. A transcript too long for a link
+exits with status `1`, and the message gives the size, the limit, and the two
+alternatives: `--out`, or hosting the `.jsonl` file yourself. `--url` needs a
+transcript, and it can't be combined with `--out`. Either mistake is a usage
+error and exits with status `2`.
+
 ### When something goes wrong
 
 `telelux` prints problems to stderr, prefixed with `Error:`, and nothing to
