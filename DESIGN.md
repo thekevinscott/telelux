@@ -346,6 +346,13 @@ unavailable and is open to his review.
   Resolving or editing an annotation changes the element's copy, fires an
   event with the updated sidecar, and offers the sidecar as a JSON download.
   A server write endpoint for the Uvicorn viewer is deferred.
+- **Review happens in the transcript.** Each annotation renders as a card
+  under the block its start anchor lands on; a span shows its block range on
+  that card rather than repeating across every covered block. A panel above
+  the minimap holds the filters (label, source, status), a Reviewer field
+  whose value becomes `resolution.by`, the download, and the unanchored
+  list. Filters reset when a new sidecar arrives, because its labels and
+  sources may differ.
 - **The timeline is `<telelux-timeline>`**, a second element in
   `telelux-element`, not a new package. It lays the annotations out on a
   zoomable axis of message positions and, when clicked, scrolls the

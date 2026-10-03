@@ -1,0 +1,1 @@
+**Added** Annotation review in `<telelux-transcript>`: a card under each anchored block, a panel listing unanchored annotations with their reasons, filters by label, source, and status, confirm / reject / reopen with a reviewer and note, a `telelux-annotations-change` event, and a sidecar download. The card ships alone as `<telelux-annotation>`. (#40)

@@ -225,7 +225,8 @@ parsing. Bare text works too, but the HTML parser gets to it first, so
 
 `annotations` is a second property. It takes an `AnnotationSidecar`, the one
 format for review marks (a judge's or a human's) and timeline events. The
-element stores it but does not render it yet.
+element renders each annotation under the block it anchors to and lets a
+reviewer confirm or reject it.
 
 ```ts
 interface AnnotationSidecar {
@@ -284,6 +285,50 @@ Both functions and the `Anchor`, `Annotation`, `AnnotationSidecar`,
 `ResolvedAnnotations` types ship from the main entry and from
 `telelux-element/parse`.
 
+#### Reviewing annotations
+
+```ts
+const el = document.querySelector('telelux-transcript');
+el.transcript = transcript;
+el.annotations = await (await fetch('/run-42.annotations.json')).json();
+el.addEventListener('telelux-annotations-change', (event) => save(event.detail.annotations));
+```
+
+With a valid sidecar set, the element shows an annotations panel between the
+header and the minimap, and a card under the block where each annotation's
+start anchor lands. A card shows the label, the confidence as a percentage,
+the source (`judge: rubric-v2`), the status, the span (`Blocks 2–5`) when it
+covers more than one block, the summary, and the note.
+
+- **Unanchored annotations** are listed in the panel under
+  `Unanchored (n)`, each with the reason it did not anchor. None are dropped.
+- **Filters** narrow the cards and the unanchored list by label, by source,
+  and by status (unresolved, confirmed, rejected). The panel counts what is
+  shown against the total. A new `annotations` value resets them.
+- **Resolving**: an unresolved card has a note field and Confirm and Reject
+  buttons; a resolved card has Reopen. A decision records
+  `resolution: { state, by, note, at }`, where `by` is the panel's Reviewer
+  field (left out when blank) and `at` is the current ISO time. Reopen
+  removes the `resolution`.
+- **Change event**: each decision fires `telelux-annotations-change`
+  (bubbling, composed) with the whole updated sidecar as
+  `event.detail.annotations`. The element never changes the object you set;
+  it works on its own copy.
+- **Download annotations** saves the working sidecar as
+  `<transcript id>.annotations.json`. Nothing is written to a server.
+- When the sidecar's `transcript_id` names a different transcript, the panel
+  says so. The annotations still render.
+
+An invalid sidecar shows `Invalid annotations:` with the reasons in place of
+the panel. The transcript still renders.
+
+`<telelux-annotation>` is the card on its own. Set `.annotation` (an
+`Annotation`), and optionally `.span` (`{ start, end }` block numbers) and
+`.reason` (text shown for an unanchored annotation). It fires
+`telelux-resolve` (bubbling, composed) with `{ id, state, note }`, where
+`state` is `'confirmed'`, `'rejected'`, or `undefined` for Reopen. It takes
+the `theme` attribute and exposes its card as `::part(annotation)`.
+
 ## Theming
 
 Set `theme="dark"` on `<telelux-transcript>` for the dark defaults, or
@@ -315,11 +360,11 @@ properties.
 | `--telelux-background` | Element and popover background | `#ffffff` | `#111827` |
 | `--telelux-foreground` | Text | `#111827` | `#f3f4f6` |
 | `--telelux-muted` | Reasoning inset | `#f3f4f6` | `#1f2937` |
-| `--telelux-muted-foreground` | Labels, secondary text | `#6b7280` | `#9ca3af` |
+| `--telelux-muted-foreground` | Labels, secondary text, rejected annotations | `#6b7280` | `#9ca3af` |
 | `--telelux-secondary` | Tool call and code insets, pills | `#f1f5f9` | `#1e293b` |
 | `--telelux-border` | Borders and dividers | `#e5e7eb` | `#374151` |
-| `--telelux-destructive` | Tool errors | `#dc2626` | `#f87171` |
-| `--telelux-highlight` | Outline on a block reached by navigation | `#f59e0b` | `#fbbf24` |
+| `--telelux-destructive` | Tool errors, confirmed annotations, annotation warnings | `#dc2626` | `#f87171` |
+| `--telelux-highlight` | Outline on a block reached by navigation, unresolved annotations | `#f59e0b` | `#fbbf24` |
 | `--telelux-shadow` | Popover and floating button shadow | `rgb(0 0 0 / 12%)` | `rgb(0 0 0 / 50%)` |
 | `--telelux-user-border` | `user` block border | `#d1d5db` | `#4b5563` |
 | `--telelux-user-background` | `user` block background | `#f9fafb` | `#1f2937` |
@@ -340,6 +385,8 @@ For structure the properties do not reach, the transcript exposes
 | `transcript-header` | The header above the blocks |
 | `block-nav` | The floating Previous / Next controls |
 | `minimap` | The minimap strip and its legend |
+| `annotations` | The annotations panel: count, filters, reviewer, download, unanchored list |
+| `annotation` | Each annotation card |
 | `block` | Each block, plus `block-user`, `block-assistant`, `block-system`, or `block-tool` |
 | `header` | A block's header row |
 | `content` | A block's text content |
