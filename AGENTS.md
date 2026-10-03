@@ -169,7 +169,8 @@ Before the first `Release` run on a fresh scaffold:
    `https://pypi.org/manage/account/publishing/`, register the repo,
    the `release.yml` workflow filename, and the project name
    (`telelux`) before the first release. No long-lived
-   tokens are needed at any point — PyPI is the only registry.
+   tokens are needed for PyPI. The npm packages (`telelux-element`,
+   `telelux`) release through the same `Release` workflow.
 
 ## Session handoff doc
 
