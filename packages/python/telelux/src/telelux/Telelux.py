@@ -4,18 +4,18 @@ from .load_data import load_data
 
 
 class Telelux:
-    __transcript__: str | Path | None = None
-    __data__: str | None = None
+    _transcript_path: str | Path | None = None
+    _contents: str | None = None
 
     def __init__(self, transcript: str | Path | None = None):
         self.transcript = transcript
 
     @property
     def transcript(self) -> str | Path | None:
-        return self.__transcript__
+        return self._transcript_path
 
     @transcript.setter
     def transcript(self, transcript: str | Path | None = None) -> None:
-        self.__transcript__ = transcript
-        if transcript:
-            self.__data__ = load_data(transcript)
+        contents = None if transcript is None else load_data(transcript)
+        self._transcript_path = transcript
+        self._contents = contents

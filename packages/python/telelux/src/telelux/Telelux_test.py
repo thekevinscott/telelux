@@ -1,5 +1,5 @@
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import call, patch
 
 import pytest
 
@@ -7,47 +7,69 @@ from .Telelux import Telelux
 
 
 @pytest.fixture(autouse=True)
-def mock_load_data():
+def load_data():
     with patch("telelux.Telelux.load_data") as load_data:
+        load_data.side_effect = lambda transcript: f"contents of {transcript}"
         yield load_data
 
 
 def describe_Telelux():
-    def test_it_instantiates():
-        assert Telelux() is not None
-
-    def describe_transcript_arg():
-        def test_it_accepts_a_transcript():
-            transcript = "foo.jsonl"
-            viewer = Telelux(transcript)
-            assert viewer.transcript == transcript
-
-        def test_it_accepts_a_transcript_path():
-            transcript = Path("foo.jsonl")
-            viewer = Telelux(transcript)
-            assert viewer.transcript == transcript
-
-        def test_it_accepts_no_transcript():
+    def describe_constructor():
+        def test_it_starts_empty_without_a_transcript(load_data):
             viewer = Telelux()
             assert viewer.transcript is None
+            assert viewer._contents is None
+            load_data.assert_not_called()
 
-    def describe_loading_transcripts():
-        def test_it_calls_load_data_if_transcript_is_provided(mock_load_data):
-            mock_load_data.side_effect = ["foo", "bar"]
-            assert mock_load_data.call_count == 0
-            transcript = "foo.jsonl"
-            viewer = Telelux(transcript)
-            assert viewer.transcript == transcript
-            assert mock_load_data.call_count == 1
-            assert viewer.__data__ == "foo"
+        def test_it_snapshots_the_transcript_immediately(load_data):
+            viewer = Telelux("foo.jsonl")
+            assert viewer.transcript == "foo.jsonl"
+            assert viewer._contents == "contents of foo.jsonl"
+            load_data.assert_called_once_with("foo.jsonl")
 
+        def test_it_accepts_a_path(load_data):
+            viewer = Telelux(Path("foo.jsonl"))
+            assert viewer.transcript == Path("foo.jsonl")
+            load_data.assert_called_once_with(Path("foo.jsonl"))
+
+        def test_it_raises_what_reading_raises(load_data):
+            load_data.side_effect = FileNotFoundError("foo.jsonl")
+            with pytest.raises(FileNotFoundError):
+                Telelux("foo.jsonl")
+
+    def describe_assigning_a_transcript():
+        def test_it_replaces_the_path_and_the_snapshot(load_data):
+            viewer = Telelux("foo.jsonl")
             viewer.transcript = "bar.jsonl"
-            assert mock_load_data.call_count == 2
-            assert viewer.__data__ == "bar"
+            assert viewer.transcript == "bar.jsonl"
+            assert viewer._contents == "contents of bar.jsonl"
+            assert load_data.call_args_list == [call("foo.jsonl"), call("bar.jsonl")]
 
-        def test_it_does_not_call_load_data_if_transcript_is_not_provided(
-            mock_load_data,
-        ):
-            assert mock_load_data.call_count == 0
-            Telelux()
-            assert mock_load_data.call_count == 0
+        def test_it_rereads_the_same_path(load_data):
+            viewer = Telelux("foo.jsonl")
+            load_data.side_effect = ["edited"]
+            viewer.transcript = "foo.jsonl"
+            assert viewer._contents == "edited"
+
+        def test_none_clears_the_path_and_the_snapshot(load_data):
+            viewer = Telelux("foo.jsonl")
+            viewer.transcript = None
+            assert viewer.transcript is None
+            assert viewer._contents is None
+            load_data.assert_called_once_with("foo.jsonl")
+
+        @pytest.mark.parametrize(
+            "error",
+            [
+                ValueError("a directory"),
+                FileNotFoundError("missing"),
+                UnicodeDecodeError("utf-8", b"\xff", 0, 1, "invalid start byte"),
+            ],
+        )
+        def test_a_failed_assignment_keeps_the_previous_state(load_data, error):
+            viewer = Telelux("foo.jsonl")
+            load_data.side_effect = error
+            with pytest.raises(type(error)):
+                viewer.transcript = "bar.jsonl"
+            assert viewer.transcript == "foo.jsonl"
+            assert viewer._contents == "contents of foo.jsonl"

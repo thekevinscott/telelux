@@ -101,7 +101,9 @@ hand; it is the record of what the parser means.
 
 **Limits.** 50 MiB of text and 100,000 records. Past either the parser
 returns an error, never a truncated transcript. Malformed lines are kept
-verbatim as `system` messages flagged `raw`.
+verbatim as `system` messages flagged `raw`. The Python package never parses,
+so it enforces only the byte limit: `load_data` reads at most 50 MiB plus one
+byte and raises `ValueError` past it.
 
 ## Hosting and the canonical URL
 
