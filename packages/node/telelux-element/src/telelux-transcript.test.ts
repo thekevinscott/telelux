@@ -1,8 +1,13 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+import type { Annotation, AnnotationSidecar } from './annotations';
+import { downloadJson } from './download-json';
+import { resolveAnnotations } from './resolve-annotations';
+import type { TeleluxAnnotation } from './telelux-annotation';
 import type { TeleluxMessage } from './telelux-message';
 import type { TeleluxMetadata } from './telelux-metadata';
 import type { TeleluxMinimap } from './telelux-minimap';
+import type { TeleluxTimeline } from './telelux-timeline';
 import { TeleluxTranscript } from './telelux-transcript';
 import type { Transcript } from './transcript';
 
@@ -35,6 +40,16 @@ vi.mock('./parse-raw-transcript', async () => {
   return { ...actual, parseRawTranscript };
 });
 
+vi.mock('./download-json', async () => {
+  const actual = await vi.importActual<typeof import('./download-json')>('./download-json');
+  return { ...actual, downloadJson: vi.fn<typeof actual.downloadJson>() };
+});
+
+vi.mock('./resolve-annotations', async () => {
+  const actual = await vi.importActual<typeof import('./resolve-annotations')>('./resolve-annotations');
+  return { ...actual, resolveAnnotations: vi.fn(actual.resolveAnnotations) };
+});
+
 const transcript: Transcript = {
   id: 't1',
   metadata: {},
@@ -56,6 +71,8 @@ async function settle(el: TeleluxTranscript): Promise<void> {
   await new Promise((resolve) => setTimeout(resolve, 0));
   await el.updateComplete;
 }
+
+const text = (el: TeleluxTranscript, selector: string) => el.shadowRoot?.querySelector(selector)?.textContent?.trim();
 
 const plain = (jsonl: string) => `<script type="text/plain">${jsonl}</script>`;
 
@@ -201,7 +218,7 @@ describe('TeleluxTranscript', () => {
       const el = await mount(plain('{"a":1}'));
       const { parseRawTranscript } = await import('./parse-raw-transcript');
       const calls = vi.mocked(parseRawTranscript).mock.calls.length;
-      el.annotations = [];
+      el.annotations = { version: 1, annotations: [] };
       await settle(el);
       expect(vi.mocked(parseRawTranscript).mock.calls.length).toBe(calls);
     });
@@ -241,13 +258,277 @@ describe('TeleluxTranscript', () => {
   });
 
   describe('annotations', () => {
-    it('stores the property without rendering it', async () => {
+    const four: Transcript = {
+      id: 't1',
+      metadata: {},
+      messages: ['zero', 'one', 'two', 'three'].map((content) => ({ role: 'user' as const, content })),
+    };
+    const note = (id: string, start: number, extra: Partial<Annotation> = {}): Annotation => ({
+      id,
+      target: { start: { index: start } },
+      label: 'cheating',
+      source: { kind: 'judge' },
+      ...extra,
+    });
+    const sidecar: AnnotationSidecar = {
+      version: 1,
+      transcript_id: 't1',
+      annotations: [
+        note('a', 1, { target: { start: { index: 1 }, end: { index: 3 } } }),
+        note('b', 1, { label: 'honest', source: { kind: 'human', name: 'kevin' } }),
+        note('c', 2, { resolution: { state: 'confirmed' } }),
+        note('lost', 9),
+      ],
+    };
+
+    async function annotated(annotations: unknown = sidecar): Promise<TeleluxTranscript> {
       const el = await mount();
-      el.transcript = transcript;
-      el.annotations = [{ label: 'cheating', note: 'suspicious' }];
-      await el.updateComplete;
-      expect(el.annotations).toEqual([{ label: 'cheating', note: 'suspicious' }]);
-      expect(el.shadowRoot?.textContent).not.toContain('suspicious');
+      el.transcript = four;
+      el.annotations = annotations as AnnotationSidecar;
+      await settle(el);
+      return el;
+    }
+
+    const cards = (root: ParentNode | null | undefined) => [...(root?.querySelectorAll<TeleluxAnnotation>('telelux-annotation') ?? [])];
+    const inline = (el: TeleluxTranscript) => blocks(el).map((block) => cards(block.parentElement).map(({ annotation }) => annotation?.id));
+    const unanchored = (el: TeleluxTranscript) => cards(el.shadowRoot?.querySelector('.unanchored'));
+    const panel = (el: TeleluxTranscript) => el.shadowRoot?.querySelector<HTMLElement>('.annotations');
+    const select = (el: TeleluxTranscript, name: string) => el.shadowRoot?.querySelector<HTMLSelectElement>(`select.${name}`) as HTMLSelectElement;
+
+    async function choose(el: TeleluxTranscript, name: string, value: string) {
+      const control = select(el, name);
+      control.value = value;
+      control.dispatchEvent(new Event('change'));
+      await settle(el);
+    }
+
+    function resolve(card: TeleluxAnnotation, detail: { id: string; state: 'confirmed' | 'rejected' | undefined; note?: string }) {
+      card.dispatchEvent(new CustomEvent('telelux-resolve', { bubbles: true, composed: true, detail }));
+    }
+
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    it('renders no panel without annotations', async () => {
+      const el = await annotated(null);
+      expect(panel(el)).toBeNull();
+      expect(el.shadowRoot?.querySelector('.annotations-error')).toBeNull();
+      el.annotations = undefined;
+      await settle(el);
+      expect(panel(el)).toBeNull();
+      expect(el.shadowRoot?.querySelector('.annotations-error')).toBeNull();
+      expect(cards(el.shadowRoot)).toEqual([]);
+    });
+
+    it('shows the parse error and still renders the transcript', async () => {
+      const el = await annotated({ version: 2, annotations: [] });
+      const error = el.shadowRoot?.querySelector('.annotations-error');
+      expect(error?.getAttribute('role')).toBe('alert');
+      expect(error?.textContent).toMatch(/^Invalid annotations:\n✖ /);
+      expect(panel(el)).toBeNull();
+      expect(blocks(el)).toHaveLength(4);
+    });
+
+    it('clears the parse error when valid annotations arrive', async () => {
+      const el = await annotated({ version: 2, annotations: [] });
+      el.annotations = sidecar;
+      await settle(el);
+      expect(el.shadowRoot?.querySelector('.annotations-error')).toBeNull();
+      expect(panel(el)?.getAttribute('part')).toBe('annotations');
+    });
+
+    it('renders each annotation under the block its start anchor resolves to', async () => {
+      const el = await annotated();
+      expect(inline(el)).toEqual([[], ['a', 'b'], ['c'], []]);
+      const [first] = cards(blocks(el)[1].parentElement);
+      expect(first.span).toEqual({ start: 1, end: 3 });
+      expect(first.annotation).toBe(sidecar.annotations[0]);
+    });
+
+    it('lists the annotations that anchor nowhere with their reason', async () => {
+      const el = await annotated();
+      expect(el.shadowRoot?.querySelector('.unanchored summary')?.textContent).toBe('Unanchored (1)');
+      expect(unanchored(el).map(({ annotation, reason }) => [annotation?.id, reason])).toEqual([['lost', 'The start anchor matches no message.']]);
+    });
+
+    it('omits the unanchored list when every annotation anchors', async () => {
+      const el = await annotated({ ...sidecar, annotations: sidecar.annotations.slice(0, 3) });
+      expect(el.shadowRoot?.querySelector('.unanchored')).toBeNull();
+    });
+
+    it('keeps the panel for a transcript with no messages', async () => {
+      const el = await mount();
+      el.transcript = { ...four, messages: [] };
+      el.annotations = sidecar;
+      await settle(el);
+      expect(unanchored(el)).toHaveLength(4);
+    });
+
+    it('waits for a transcript before anchoring', async () => {
+      const el = await mount();
+      el.annotations = sidecar;
+      await settle(el);
+      expect(text(el, '.empty')).toBe('No transcript.');
+      el.transcript = { messages: 'nope' } as unknown as Transcript;
+      await settle(el);
+      expect(el.shadowRoot?.querySelector('.error')).not.toBeNull();
+      el.transcript = four;
+      await settle(el);
+      expect(inline(el)).toEqual([[], ['a', 'b'], ['c'], []]);
+    });
+
+    it('anchors again only when the transcript or the annotations change', async () => {
+      const el = await annotated();
+      const ownCalls = () => vi.mocked(resolveAnnotations).mock.calls.filter(([, annotations]) => annotations === sidecar.annotations).length;
+      const calls = ownCalls();
+      el.theme = 'dark';
+      await choose(el, 'label', 'honest');
+      expect(ownCalls()).toBe(calls);
+      el.transcript = { ...four };
+      await settle(el);
+      expect(ownCalls()).toBe(calls + 1);
+    });
+
+    it('ignores attributes named after its annotation state', async () => {
+      const el = await annotated();
+      el.setAttribute('sidecar', 'x');
+      el.setAttribute('annotationfilter', 'x');
+      await settle(el);
+      expect(text(el, '.annotations-count')).toBe('Annotations (4)');
+      expect(inline(el)).toEqual([[], ['a', 'b'], ['c'], []]);
+    });
+
+    it('counts the annotations', async () => {
+      expect(text(await annotated(), '.annotations-count')).toBe('Annotations (4)');
+    });
+
+    it('warns when the sidecar names another transcript', async () => {
+      expect((await annotated()).shadowRoot?.querySelector('.annotations-mismatch')).toBeNull();
+      expect((await annotated({ ...sidecar, transcript_id: undefined })).shadowRoot?.querySelector('.annotations-mismatch')).toBeNull();
+      const el = await annotated({ ...sidecar, transcript_id: 'other' });
+      expect(text(el, '.annotations-mismatch')).toBe('These annotations name transcript "other", not "t1".');
+    });
+
+    describe('filtering', () => {
+      it('offers every label, source, and status', async () => {
+        const el = await annotated();
+        const options = (name: string) => [...select(el, name).options].map(({ value, textContent }) => [value, textContent]);
+        expect(options('label')).toEqual([['', 'All labels'], ['cheating', 'cheating'], ['honest', 'honest']]);
+        expect(options('source')).toEqual([['', 'All sources'], ['human: kevin', 'human: kevin'], ['judge', 'judge']]);
+        expect(options('status')).toEqual([['', 'All statuses'], ['unresolved', 'Unresolved'], ['confirmed', 'Confirmed'], ['rejected', 'Rejected']]);
+        expect(['label', 'source', 'status'].map((name) => select(el, name).getAttribute('aria-label'))).toEqual(['Filter by label', 'Filter by source', 'Filter by status']);
+      });
+
+      it('narrows the inline cards, the unanchored list, and the count', async () => {
+        const el = await annotated();
+        await choose(el, 'label', 'cheating');
+        expect(inline(el)).toEqual([[], ['a'], ['c'], []]);
+        expect(unanchored(el)).toHaveLength(1);
+        expect(text(el, '.annotations-count')).toBe('Annotations (3 of 4)');
+        await choose(el, 'status', 'unresolved');
+        expect(inline(el)).toEqual([[], ['a'], [], []]);
+        await choose(el, 'source', 'human: kevin');
+        expect(inline(el)).toEqual([[], [], [], []]);
+        expect(el.shadowRoot?.querySelector('.unanchored')).toBeNull();
+        expect(select(el, 'source').value).toBe('human: kevin');
+      });
+
+      it('restores everything when a filter goes back to all', async () => {
+        const el = await annotated();
+        await choose(el, 'label', 'honest');
+        await choose(el, 'label', '');
+        expect(inline(el)).toEqual([[], ['a', 'b'], ['c'], []]);
+      });
+
+      it('resets the filters when new annotations arrive', async () => {
+        const el = await annotated();
+        await choose(el, 'label', 'honest');
+        el.annotations = { ...sidecar };
+        await settle(el);
+        expect(inline(el)).toEqual([[], ['a', 'b'], ['c'], []]);
+        expect(select(el, 'label').value).toBe('');
+        expect(select(el, 'label').selectedIndex).toBe(0);
+      });
+    });
+
+    describe('resolving', () => {
+      function changes(el: TeleluxTranscript) {
+        const seen: AnnotationSidecar[] = [];
+        document.body.addEventListener('telelux-annotations-change', (event) => seen.push((event as CustomEvent).detail.annotations));
+        return { seen, el };
+      }
+
+      it('records a decision with the reviewer and time, and announces the new sidecar', async () => {
+        vi.useFakeTimers({ toFake: ['Date'] });
+        vi.setSystemTime(new Date('2026-10-02T12:00:00Z'));
+        const { el, seen } = changes(await annotated());
+        const reviewer = el.shadowRoot?.querySelector<HTMLInputElement>('input.reviewer') as HTMLInputElement;
+        expect(reviewer.getAttribute('aria-label')).toBe('Reviewer');
+        reviewer.value = 'kevin';
+        reviewer.dispatchEvent(new Event('input'));
+        resolve(cards(blocks(el)[1].parentElement)[0], { id: 'a', state: 'confirmed', note: 'clear' });
+        await settle(el);
+        const expected = { state: 'confirmed', by: 'kevin', note: 'clear', at: '2026-10-02T12:00:00.000Z' };
+        expect(seen).toHaveLength(1);
+        expect(seen[0].annotations[0].resolution).toEqual(expected);
+        expect(cards(blocks(el)[1].parentElement)[0].annotation?.resolution).toEqual(expected);
+        expect(el.annotations).toBe(sidecar);
+        expect(sidecar.annotations[0].resolution).toBeUndefined();
+      });
+
+      it('announces the change across an enclosing shadow root', async () => {
+        const host = document.createElement('div');
+        document.body.appendChild(host);
+        const el = document.createElement('telelux-transcript') as TeleluxTranscript;
+        host.attachShadow({ mode: 'open' }).appendChild(el);
+        el.transcript = four;
+        el.annotations = sidecar;
+        await settle(el);
+        const outer = vi.fn();
+        host.addEventListener('telelux-annotations-change', outer);
+        resolve(unanchored(el)[0], { id: 'lost', state: 'rejected' });
+        expect(outer).toHaveBeenCalledTimes(1);
+      });
+
+      it('records a decision from the unanchored list without a reviewer', async () => {
+        const { el, seen } = changes(await annotated());
+        resolve(unanchored(el)[0], { id: 'lost', state: 'rejected' });
+        await settle(el);
+        expect(seen[0].annotations[3].resolution).toEqual({ state: 'rejected', at: expect.any(String) });
+        expect(unanchored(el)[0].annotation?.resolution?.state).toBe('rejected');
+      });
+
+      it('hands each decision to the timeline', async () => {
+        const el = await annotated();
+        resolve(cards(blocks(el)[1].parentElement)[0], { id: 'a', state: 'confirmed' });
+        await settle(el);
+        const line = el.shadowRoot?.querySelector<TeleluxTimeline>('telelux-timeline');
+        expect(line?.annotations?.annotations[0].resolution?.state).toBe('confirmed');
+      });
+
+      it('keeps the decisions in the filter it applies', async () => {
+        const el = await annotated();
+        await choose(el, 'status', 'unresolved');
+        resolve(cards(blocks(el)[1].parentElement)[0], { id: 'a', state: 'rejected' });
+        await settle(el);
+        expect(inline(el)).toEqual([[], ['b'], [], []]);
+      });
+
+      it('downloads the working sidecar under the transcript id', async () => {
+        const el = await annotated();
+        resolve(cards(blocks(el)[2].parentElement)[0], { id: 'c', state: undefined });
+        await settle(el);
+        const download = el.shadowRoot?.querySelector<HTMLButtonElement>('button.download');
+        expect(download?.textContent).toBe('Download annotations');
+        expect(download?.type).toBe('button');
+        vi.mocked(downloadJson).mockClear();
+        download?.click();
+        expect(downloadJson).toHaveBeenCalledTimes(1);
+        const [filename, value] = vi.mocked(downloadJson).mock.calls[0];
+        expect(filename).toBe('t1.annotations.json');
+        expect((value as AnnotationSidecar).annotations[2]).not.toHaveProperty('resolution');
+      });
     });
   });
 
@@ -501,6 +782,8 @@ describe('TeleluxTranscript', () => {
         return scrolled;
       }
 
+      const minimap = (el: TeleluxTranscript) => el.shadowRoot?.querySelector<TeleluxMinimap>('telelux-minimap') ?? null;
+
       const highlighted = (el: TeleluxTranscript) =>
         [...(el.shadowRoot?.querySelectorAll('ol > li') ?? [])].flatMap((item, index) => {
           if (item.hasAttribute('class')) {
@@ -651,8 +934,98 @@ describe('TeleluxTranscript', () => {
         expect(scrolled).toEqual([0]);
       });
 
+      describe('timeline', () => {
+        const timeline = (el: TeleluxTranscript) => el.shadowRoot?.querySelector<TeleluxTimeline>('telelux-timeline') ?? null;
+        const sidecar: AnnotationSidecar = {
+          version: 1,
+          annotations: [
+            { id: 'a', target: { start: { index: 1 }, end: { index: 2 } }, label: 'x', source: { kind: 'judge' } },
+            { id: 'b', target: { start: { index: 3 } }, label: 'y', source: { kind: 'human' } },
+          ],
+        };
+
+        async function withTimeline(): Promise<TeleluxTranscript> {
+          const el = await header();
+          el.annotations = sidecar;
+          await el.updateComplete;
+          return el;
+        }
+
+        it('appears only with annotations, after the panel and before the minimap', async () => {
+          expect(timeline(await header())).toBeNull();
+          const el = await withTimeline();
+          const line = timeline(el) as TeleluxTimeline;
+          expect(line.previousElementSibling?.className).toBe('annotations');
+          expect(line.nextElementSibling?.tagName).toBe('TELELUX-MINIMAP');
+          expect(line.getAttribute('exportparts')).toBe('timeline');
+          expect(line.messages).toBe(full.messages);
+          expect(line.annotations?.annotations).toEqual(sidecar.annotations);
+        });
+
+        it('stays out of a transcript with no messages', async () => {
+          const el = await header({ ...full, messages: [] });
+          el.annotations = sidecar;
+          await el.updateComplete;
+          expect(timeline(el)).toBeNull();
+        });
+
+        it('shows only the annotations the filters let through', async () => {
+          const el = await withTimeline();
+          const control = $(el, 'select.label') as HTMLSelectElement;
+          control.value = 'y';
+          control.dispatchEvent(new Event('change'));
+          await el.updateComplete;
+          expect(timeline(el)?.annotations?.annotations.map(({ id }) => id)).toEqual(['b']);
+        });
+
+        it('hands the timeline the same sidecar until the annotations or filters change', async () => {
+          const el = await withTimeline();
+          const first = timeline(el)?.annotations;
+          el.theme = 'dark';
+          await el.updateComplete;
+          expect(timeline(el)?.annotations).toBe(first);
+          expect(timeline(el)?.getAttribute('theme')).toBe('dark');
+        });
+
+        it('scrolls to a clicked event and highlights its whole span', async () => {
+          const el = await withTimeline();
+          vi.useFakeTimers();
+          const scrolled = stubItems(el, [0, 100, 200, 300]);
+          timeline(el)?.dispatchEvent(new CustomEvent('telelux-jump', { detail: { index: 1, end: 2 } }));
+          await el.updateComplete;
+          expect(scrolled).toEqual([1]);
+          expect(highlighted(el)).toEqual([1, 2]);
+          expect(minimap(el)?.current).toBe(1);
+          vi.advanceTimersByTime(1500);
+          await el.updateComplete;
+          expect(highlighted(el)).toEqual([]);
+        });
+      });
+
+      describe('goToBlock', () => {
+        it('scrolls to a block and highlights it, or a span of blocks', async () => {
+          const el = await header();
+          const scrolled = stubItems(el, [0, 100, 200, 300]);
+          el.goToBlock(2);
+          await el.updateComplete;
+          expect(highlighted(el)).toEqual([2]);
+          el.goToBlock(0, 3);
+          await el.updateComplete;
+          expect(scrolled).toEqual([2, 0]);
+          expect(highlighted(el)).toEqual([0, 1, 2, 3]);
+        });
+
+        it('clamps a block past the end and ignores one that is not a block number', async () => {
+          const el = await header();
+          const scrolled = stubItems(el, [0, 100, 200, 300]);
+          el.goToBlock(99);
+          el.goToBlock(-1);
+          el.goToBlock(1.5);
+          expect(scrolled).toEqual([3]);
+        });
+      });
+
       describe('minimap', () => {
-        const minimap = (el: TeleluxTranscript) => el.shadowRoot?.querySelector<TeleluxMinimap>('telelux-minimap') ?? null;
 
         async function scroll(el: TeleluxTranscript, target: EventTarget = document) {
           target.dispatchEvent(new Event('scroll'));
@@ -774,6 +1147,24 @@ describe('TeleluxTranscript', () => {
       await el.updateComplete;
       expect(blocks(el).map((block) => block.hasAttribute('theme'))).toEqual([false, false]);
       expect(el.shadowRoot?.querySelector('.popover telelux-metadata')?.hasAttribute('theme')).toBe(false);
+    });
+
+    it('passes its theme and the annotation part through every annotation card', async () => {
+      const el = await mount();
+      el.transcript = transcript;
+      el.annotations = {
+        version: 1,
+        annotations: [
+          { id: 'a', target: { start: { index: 0 } }, label: 'x', source: { kind: 'judge' } },
+          { id: 'b', target: { start: { index: 7 } }, label: 'x', source: { kind: 'judge' } },
+        ],
+      };
+      await settle(el);
+      const annotationCards = [...(el.shadowRoot?.querySelectorAll('telelux-annotation') ?? [])];
+      expect(annotationCards.map((card) => [card.hasAttribute('theme'), card.getAttribute('exportparts')])).toEqual([[false, 'annotation'], [false, 'annotation']]);
+      el.theme = 'dark';
+      await settle(el);
+      expect(annotationCards.map((card) => card.getAttribute('theme'))).toEqual(['dark', 'dark']);
     });
 
     it('names its own regions as parts and re-exports the block parts', async () => {

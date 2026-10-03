@@ -309,6 +309,73 @@ static application; the CLI is also one way to produce compressed links.
 These are implementation requirements, not integrations already completed by
 this brief.
 
+## Annotations and timeline events
+
+Decided for [#40](https://github.com/thekevinscott/telelux/issues/40) and
+[#50](https://github.com/thekevinscott/telelux/issues/50), before either
+renderer was built. Each point below is a default chosen while Kevin was
+unavailable and is open to his review.
+
+- **One format.** A timeline event is an annotation with a span and a
+  summary. Review marks and timeline events share one sidecar file and one
+  zod schema in `telelux-element` (`parseAnnotations`). The element knows no
+  label vocabulary; a label is an opaque string.
+- **The sidecar** is one JSON document per transcript:
+  `{ version: 1, transcript_id?, annotations: Annotation[] }`. Each
+  annotation has `id` (unique in the file), `target: { start, end? }`,
+  `label`, and `source: { kind: 'human' | 'judge' | 'model', name? }`, plus
+  optional `summary` (the timeline's one-liner), `note`, `confidence`
+  (0 to 1), `resolution: { state: 'confirmed' | 'rejected', by?, note?, at? }`
+  (absent means unresolved), `created_at`, and `metadata`. Keys the schema
+  does not know pass through untouched, so a judge can carry its own fields.
+- **Anchoring.** An anchor names a message by stable record identity first:
+  `uuid` (a Claude Code record uuid, kept in message `metadata`) and then
+  `tool_call_id` (the assistant message that made the call, else the tool
+  result carrying it). `index`, a position in the element's normalised
+  message list (the block number the viewer shows), is the fallback. The
+  first identity that resolves wins, in that order. Identity comes first
+  because indices shift under normalisation: the parser splits one user
+  record into a message per tool result and merges consecutive assistant
+  records that share a `message.id`. A merged message keeps the first
+  record's `uuid` and lists the rest in `metadata.mergedUuids`, so every
+  record uuid in the file still resolves.
+- **Unanchored annotations are never dropped.** An annotation whose start or
+  end matches no message, or whose end comes before its start, is listed as
+  unanchored with the reason.
+- **Write-back is a download.** The viewer is static and has no backend.
+  Resolving or editing an annotation changes the element's copy, fires an
+  event with the updated sidecar, and offers the sidecar as a JSON download.
+  A server write endpoint for the Uvicorn viewer is deferred.
+- **Review happens in the transcript.** Each annotation renders as a card
+  under the block its start anchor lands on; a span shows its block range on
+  that card rather than repeating across every covered block. A panel above
+  the minimap holds the filters (label, source, status), a Reviewer field
+  whose value becomes `resolution.by`, the download, and the unanchored
+  list. Filters reset when a new sidecar arrives, because its labels and
+  sources may differ.
+- **The timeline is `<telelux-timeline>`**, a second element in
+  `telelux-element`, not a new package. It lays the annotations out on a
+  zoomable axis of message positions and, when clicked, scrolls the
+  transcript to the cited span. `<telelux-transcript>` embeds one whenever it
+  has a sidecar, fed the filtered annotations, so the panel's filters drive
+  both views. The axis is block positions, not time: a sidecar cites
+  messages, and the timestamps in Claude Code metadata are optional and
+  absent from the generic format. Overlapping events stack in lanes, and
+  zoom doubles the axis width from 1× to 16×. Standalone, the element
+  fires `telelux-jump`, and the transcript's public `goToBlock(start, end?)`
+  takes it. Event extraction, the rubric, and any judge
+  or model call are out of scope: they produce sidecars, the viewer reads
+  them.
+- **The app shell loads a sidecar beside a transcript.** `viewer.html`
+  offers **Open an annotations file** once a transcript shows, and has a
+  second baked slot, `<script type="application/json" id="annotations">`,
+  escaped like the transcript slot, that applies only to the baked
+  transcript. The `#v=1` link carries no annotations: fitting a second
+  payload under the 8,000-character cap would change the link format, so it
+  is deferred. Annotations belong to the transcript they were opened with
+  and are dropped when another transcript opens. Nothing goes to browser
+  storage.
+
 ## Testing convention: red first
 
 For each new behavior or defect fix, write a named test that expresses the
