@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+import type { AnnotationSidecar } from './annotations';
 import type { TeleluxMessage } from './telelux-message';
 import type { TeleluxMetadata } from './telelux-metadata';
 import type { TeleluxMinimap } from './telelux-minimap';
@@ -201,7 +202,7 @@ describe('TeleluxTranscript', () => {
       const el = await mount(plain('{"a":1}'));
       const { parseRawTranscript } = await import('./parse-raw-transcript');
       const calls = vi.mocked(parseRawTranscript).mock.calls.length;
-      el.annotations = [];
+      el.annotations = { version: 1, annotations: [] };
       await settle(el);
       expect(vi.mocked(parseRawTranscript).mock.calls.length).toBe(calls);
     });
@@ -244,9 +245,13 @@ describe('TeleluxTranscript', () => {
     it('stores the property without rendering it', async () => {
       const el = await mount();
       el.transcript = transcript;
-      el.annotations = [{ label: 'cheating', note: 'suspicious' }];
+      const sidecar: AnnotationSidecar = {
+        version: 1,
+        annotations: [{ id: 'a1', target: { start: { index: 0 } }, label: 'cheating', note: 'suspicious', source: { kind: 'judge' } }],
+      };
+      el.annotations = sidecar;
       await el.updateComplete;
-      expect(el.annotations).toEqual([{ label: 'cheating', note: 'suspicious' }]);
+      expect(el.annotations).toBe(sidecar);
       expect(el.shadowRoot?.textContent).not.toContain('suspicious');
     });
   });

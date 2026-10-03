@@ -223,9 +223,66 @@ parsing. Bare text works too, but the HTML parser gets to it first, so
 
 ### Annotations
 
-`annotations` is a second property, accepted and stored but not rendered yet.
-It reserves room for the annotation sidecar in
-[#40](https://github.com/thekevinscott/telelux/issues/40).
+`annotations` is a second property. It takes an `AnnotationSidecar`, the one
+format for review marks (a judge's or a human's) and timeline events. The
+element stores it but does not render it yet.
+
+```ts
+interface AnnotationSidecar {
+  version: 1;
+  transcript_id?: string;
+  annotations: Annotation[];
+}
+
+interface Annotation {
+  id: string;                       // unique within the sidecar
+  target: { start: Anchor; end?: Anchor };
+  label: string;                    // any vocabulary; the element attaches no meaning
+  summary?: string;                 // one line, for the timeline
+  note?: string;
+  confidence?: number;              // 0 to 1
+  source: { kind: 'human' | 'judge' | 'model'; name?: string };
+  resolution?: { state: 'confirmed' | 'rejected'; by?: string; note?: string; at?: string };
+  created_at?: string;
+  metadata?: Record<string, unknown>;
+}
+
+interface Anchor {
+  uuid?: string;          // a record uuid from message metadata
+  tool_call_id?: string;  // a tool call, or the result that answers it
+  index?: number;         // a block number, counted from 0
+}
+```
+
+An absent `resolution` means unresolved. Keys the schema does not name pass
+through untouched.
+
+An anchor needs at least one of its three keys, and the first that resolves
+wins, in the order listed:
+
+- `uuid` matches a message's `metadata.uuid`, or one of its
+  `metadata.mergedUuids` when the parser merged several assistant records
+  into it.
+- `tool_call_id` matches the assistant message that made the call, else the
+  tool message that carries the id.
+- `index` is a position in the element's message list, which is the block
+  number the viewer shows. The parser splits and merges records, so a block
+  number is not a line number in the file. Prefer `uuid` or `tool_call_id`.
+
+`parseAnnotations(value)` validates a sidecar and returns
+`{ ok: true, annotations }` (the same object) or `{ ok: false, error }`. It
+rejects duplicate ids and never throws.
+
+`resolveAnnotations(messages, annotations)` returns
+`{ anchored, unanchored }`. Each anchored entry carries the `start` and `end`
+block numbers (`end` equals `start` without a `target.end`). An annotation
+whose start or end matches nothing, or whose end comes before its start, is
+unanchored with a `reason` rather than dropped.
+
+Both functions and the `Anchor`, `Annotation`, `AnnotationSidecar`,
+`AnnotationsResult`, `AnchoredAnnotation`, `UnanchoredAnnotation`, and
+`ResolvedAnnotations` types ship from the main entry and from
+`telelux-element/parse`.
 
 ## Theming
 
@@ -329,7 +386,8 @@ What the parser does with a Claude Code session:
   merge into one `assistant` message: `thinking` blocks become `reasoning`
   items, `tool_use` blocks become `tool_calls`, and the usage counts once.
 - Every record's `type`, `uuid`, and `timestamp` land in the message
-  `metadata`; the transcript `metadata` carries `format`, `sessionId`,
+  `metadata`, and a merged assistant message lists its later records' uuids
+  in `metadata.mergedUuids`; the transcript `metadata` carries `format`, `sessionId`,
   `cwd`, `version`, `gitBranch`, the record count, and the summed usage.
 - A line that is not a JSON object is kept verbatim as a `system` message
   with `metadata.raw: true`. Blank lines are skipped. Nothing is dropped.

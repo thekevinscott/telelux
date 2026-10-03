@@ -309,6 +309,50 @@ static application; the CLI is also one way to produce compressed links.
 These are implementation requirements, not integrations already completed by
 this brief.
 
+## Annotations and timeline events
+
+Decided for [#40](https://github.com/thekevinscott/telelux/issues/40) and
+[#50](https://github.com/thekevinscott/telelux/issues/50), before either
+renderer was built. Each point below is a default chosen while Kevin was
+unavailable and is open to his review.
+
+- **One format.** A timeline event is an annotation with a span and a
+  summary. Review marks and timeline events share one sidecar file and one
+  zod schema in `telelux-element` (`parseAnnotations`). The element knows no
+  label vocabulary; a label is an opaque string.
+- **The sidecar** is one JSON document per transcript:
+  `{ version: 1, transcript_id?, annotations: Annotation[] }`. Each
+  annotation has `id` (unique in the file), `target: { start, end? }`,
+  `label`, and `source: { kind: 'human' | 'judge' | 'model', name? }`, plus
+  optional `summary` (the timeline's one-liner), `note`, `confidence`
+  (0 to 1), `resolution: { state: 'confirmed' | 'rejected', by?, note?, at? }`
+  (absent means unresolved), `created_at`, and `metadata`. Keys the schema
+  does not know pass through untouched, so a judge can carry its own fields.
+- **Anchoring.** An anchor names a message by stable record identity first:
+  `uuid` (a Claude Code record uuid, kept in message `metadata`) and then
+  `tool_call_id` (the assistant message that made the call, else the tool
+  result carrying it). `index`, a position in the element's normalised
+  message list (the block number the viewer shows), is the fallback. The
+  first identity that resolves wins, in that order. Identity comes first
+  because indices shift under normalisation: the parser splits one user
+  record into a message per tool result and merges consecutive assistant
+  records that share a `message.id`. A merged message keeps the first
+  record's `uuid` and lists the rest in `metadata.mergedUuids`, so every
+  record uuid in the file still resolves.
+- **Unanchored annotations are never dropped.** An annotation whose start or
+  end matches no message, or whose end comes before its start, is listed as
+  unanchored with the reason.
+- **Write-back is a download.** The viewer is static and has no backend.
+  Resolving or editing an annotation changes the element's copy, fires an
+  event with the updated sidecar, and offers the sidecar as a JSON download.
+  A server write endpoint for the Uvicorn viewer is deferred.
+- **The timeline is `<telelux-timeline>`**, a second element in
+  `telelux-element`, not a new package. It lays the annotations out on a
+  zoomable axis of message positions and, when clicked, scrolls the
+  transcript to the cited span. Event extraction, the rubric, and any judge
+  or model call are out of scope: they produce sidecars, the viewer reads
+  them.
+
 ## Testing convention: red first
 
 For each new behavior or defect fix, write a named test that expresses the
