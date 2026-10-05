@@ -1,9 +1,13 @@
 import { writeFileSync } from 'node:fs';
+import type { Server } from 'node:http';
 
 import { bakeViewer } from './bake-viewer';
 import { buildLink } from './build-link';
 import { loadAnnotations } from './load-annotations';
 import { loadFile } from './load-file';
+import { readViewer } from './read-viewer';
+import { serveViewer } from './serve-viewer';
+import type { ServeOptions } from './serve-viewer';
 
 export class Telelux {
   #transcript: string | null = null;
@@ -41,6 +45,10 @@ export class Telelux {
   }
 
   write(path: string): void { writeFileSync(path, this.html, { encoding: 'utf8', flag: 'wx' }); }
+
+  async serve(options: ServeOptions = {}): Promise<Server> {
+    return serveViewer(() => this.#contents === null ? readViewer() : this.html, options);
+  }
 
   #snapshot(): string {
     if (this.#contents === null) { throw new Error('No transcript set'); }
