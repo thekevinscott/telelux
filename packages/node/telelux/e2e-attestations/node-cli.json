@@ -1,0 +1,7 @@
+{
+  "command": "pnpm test_integration",
+  "ran_at": 1791226905,
+  "exit_code": 0,
+  "commit": "75481deb1b6b31e847437a964eb24ccefa0b332b",
+  "branch": "node-cli"
+}
