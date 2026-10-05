@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useData } from 'vitepress'
 import type { EditorView } from 'codemirror'
 import type { Compartment } from '@codemirror/state'
@@ -30,6 +30,7 @@ const { isDark } = useData()
 const editor = ref<HTMLElement>()
 const preview = ref<HTMLIFrameElement>()
 const source = ref(initial)
+const frame = computed(() => `<style>html,body{margin:0}</style>${source.value}`)
 let view: EditorView | undefined
 let theme: Compartment | undefined
 let pending: ReturnType<typeof setTimeout> | undefined
@@ -85,7 +86,7 @@ onBeforeUnmount(() => {
 <template>
   <div class="html-playground">
     <div ref="editor" class="editor"></div>
-    <iframe ref="preview" :srcdoc="source" @load="syncPreviewTheme" sandbox="allow-scripts allow-same-origin" title="Preview"></iframe>
+    <iframe ref="preview" :srcdoc="frame" @load="syncPreviewTheme" sandbox="allow-scripts allow-same-origin" title="Preview"></iframe>
   </div>
 </template>
 
@@ -110,6 +111,6 @@ iframe {
 iframe {
   width: 100%;
   height: max(30rem, 75vh);
-  background: white;
+  background: var(--vp-c-bg);
 }
 </style>
