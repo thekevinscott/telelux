@@ -1,0 +1,7 @@
+{
+  "command": "pnpm test_integration",
+  "ran_at": 1791226766,
+  "exit_code": 0,
+  "commit": "fa2a903926fe1459368bf97f4f8b6fa5aec88e6c",
+  "branch": "node-sdk-serve"
+}
