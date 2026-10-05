@@ -58,3 +58,20 @@ path = "telelux.ts"
 rules = ["mutation"]
 lines = [43]
 reason = "Node treats an empty writeFileSync encoding as UTF-8, so this mutation preserves the output bytes."
+
+[[typescript.exempt]]
+path = "serve-viewer.test.ts"
+rules = ["unmocked-collaborator"]
+reason = "The actual HTTP server and client are the contract under test, including method and header handling."
+
+[[typescript.exempt]]
+path = "serve-viewer.ts"
+rules = ["mutation"]
+lines = [23]
+reason = "Node treats an empty Buffer.from encoding as UTF-8, so this mutation preserves the response bytes."
+
+[[typescript.exempt]]
+path = "serve-viewer.ts"
+rules = ["mutation"]
+lines = [25]
+reason = "Node HTTP suppresses the body of HEAD responses even when end() receives bytes, so these mutations have the same wire behavior."

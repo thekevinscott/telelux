@@ -47,6 +47,21 @@ describe('Telelux', () => {
       expect(viewer.url).toContain('#v=1&data=');
     } finally { rmSync(dir, {recursive: true, force: true}); }
   });
+  it('serves the empty viewer and picks up a reassigned transcript', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'telelux-serve-'));
+    const viewer = new Telelux();
+    const server = await viewer.serve({ port: 0 });
+    try {
+      const address = server.address();
+      if (typeof address === 'string' || address === null) { throw new Error('No TCP address'); }
+      const url = `http://127.0.0.1:${address.port}/`;
+      expect(await (await fetch(url)).text()).toContain('id=\"transcript\"></script>');
+      const path = join(dir, 'transcript.jsonl');
+      writeFileSync(path, 'served transcript');
+      viewer.transcript = path;
+      expect(await (await fetch(url)).text()).toContain('served transcript');
+    } finally { server.closeAllConnections(); server.close(); rmSync(dir, { recursive: true, force: true }); }
+  });
   it('refuses exports without a transcript', () => {
     const viewer = new Telelux();
     expect(() => viewer.url).toThrow('No transcript set');
