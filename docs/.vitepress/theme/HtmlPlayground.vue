@@ -109,7 +109,7 @@ iframe {
 
 iframe {
   width: 100%;
-  min-height: 12rem;
+  height: max(30rem, 75vh);
   background: white;
 }
 </style>
