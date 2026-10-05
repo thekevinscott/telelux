@@ -1,0 +1,7 @@
+{
+  "command": "pnpm test_unit",
+  "ran_at": 1791226526,
+  "exit_code": 0,
+  "commit": "fe82e4545a8f6e34699697a91ed27902bf3bfabf",
+  "branch": "node-sdk-core"
+}

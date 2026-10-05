@@ -1,6 +1,6 @@
 # telelux
 
-Agent transcript tooling for Node. npm `telelux`.
+Node SDK for viewing agent transcripts. Requires Node 22 or later.
 
 ## Install
 
@@ -9,18 +9,17 @@ pnpm add telelux
 ```
 
 ```ts
-import { render } from 'telelux';
+import { Telelux } from 'telelux';
+
+const viewer = new Telelux('session.jsonl');
+viewer.write('session.html');
+console.log(viewer.url);
 ```
 
-## Status
+`transcript` and `annotations` accept file paths and snapshot their UTF-8 contents when assigned. Both are limited to 50 MiB. `html` embeds the transcript and optional annotations into the single-file viewer; `write()` creates an HTML file and refuses to overwrite. `url` creates a shareable compressed link and rejects annotations or oversized links. Without a transcript, `html`, `url`, and `write()` throw.
 
-A scaffold that reserves the name and the folder. `render()` throws
-"not implemented" and the API is a placeholder.
-
-`telelux` on npm and `telelux` on PyPI (`packages/python/telelux`) will expose
-the same tooling. One will wrap the other; which direction is not yet decided.
-Until it is, this package carries no behavior of its own.
+The single-file viewer is available as `telelux/viewer.html` for self-hosting.
 
 ## Testing
 
-One tier: **unit**, `pnpm test_unit` (Vitest, colocated `src/*.test.ts`).
+Run `pnpm test_unit` for the colocated Vitest suite.

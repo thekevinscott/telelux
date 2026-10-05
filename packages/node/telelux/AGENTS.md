@@ -5,10 +5,10 @@ wins for anything under `packages/node/telelux/`.
 
 ## Test tiers
 
-**One tier for now.**
-
 - **Unit** — colocated with their subject as `src/foo.ts` ↔ `src/foo.test.ts`.
   Run by Vitest in Node (`pnpm test_unit`), configured by `vitest.config.ts`.
+- **Integration** — process and packed-tarball tests in `tests/integration/`.
+  Run with `pnpm test_integration` using `vitest.integration.config.ts`.
 
 Vitest is pinned to 3.x, not the 5.x its siblings use: under vitest 5 the
 testing-conventions mutation gate reports every mutant as survived even when the
@@ -23,8 +23,8 @@ reason `packages/node/telelux-element` does: the coverage gate runs vitest with
 `src/` as its cwd, the mutation gate runs it from the package root, and vitest
 only reads the config sitting in its own cwd.
 
-Integration and e2e tiers arrive with the first real behavior, once the wrap
-direction between this package and `packages/python/telelux` is decided.
+The package is a native Node implementation. The integration tier covers its
+published artifact; the e2e tier has no dedicated suite yet.
 
 ## Build
 

@@ -1,1 +1,1 @@
-export { render } from './render';
+export { Telelux } from './telelux';
