@@ -11,7 +11,6 @@ describe('packed telelux consumer', () => {
   it('ships the built viewer and reads it through the export', () => {
     const scratch = mkdtempSync(join(tmpdir(), 'telelux-consumer-'));
     try {
-      execFileSync('pnpm', ['build'], { cwd: packageRoot });
       execFileSync('pnpm', ['pack', '--pack-destination', scratch], { cwd: packageRoot });
       const tarball = readdirSync(scratch).find((name) => name.endsWith('.tgz'));
       expect(tarball).toBeDefined();
