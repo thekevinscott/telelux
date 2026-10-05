@@ -9,9 +9,33 @@ from pathlib import Path
 import pytest
 
 PACKAGE = Path(__file__).parents[2]
-FIXTURES = PACKAGE / "tests/__fixtures__"
-TRANSCRIPT = FIXTURES / "three-lines.jsonl"
+TRANSCRIPT = PACKAGE / "tests/__fixtures__/three-lines.jsonl"
 SLOT = '<script type="application/x-ndjson" id="transcript">'
+
+# unshare -rn is denied on GitHub runners and dev machines, so the network is cut
+# inside the interpreter: the installed venv runs this as its sitecustomize.
+NETWORK_GUARD = """
+import socket
+
+
+def refuse(*args, **kwargs):
+    raise OSError("networking is disabled in this environment")
+
+
+def local_only(connect):
+    def guarded(self, address):
+        if self.family != socket.AF_UNIX:
+            refuse()
+        return connect(self, address)
+
+    return guarded
+
+
+socket.socket.connect = local_only(socket.socket.connect)
+socket.socket.connect_ex = local_only(socket.socket.connect_ex)
+socket.create_connection = refuse
+socket.getaddrinfo = refuse
+"""
 
 
 @pytest.fixture(scope="session")
@@ -42,8 +66,8 @@ def offline(tmp_path_factory):
         capture_output=True,
         encoding="utf-8",
     ).stdout.strip()
-    shutil.copyfile(
-        FIXTURES / "sitecustomize.py", Path(site_packages) / "sitecustomize.py"
+    (Path(site_packages) / "sitecustomize.py").write_text(
+        NETWORK_GUARD, encoding="utf-8"
     )
     dirs = [str(venv / "bin")] + [
         d for d in ("/usr/bin", "/bin") if shutil.which("node", path=d) is None

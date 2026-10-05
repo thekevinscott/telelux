@@ -81,8 +81,8 @@ attestation receipt instead (see the E2E section of `AGENTS.md`).
 The e2e tier installs the built wheel into a fresh venv and runs its `telelux`
 command with a `PATH` holding only that venv and `/usr/bin:/bin`, and a
 throwaway `HOME`. `unshare -rn` is denied on GitHub runners and dev machines,
-so networking is cut inside the interpreter instead: the venv gets
-`tests/__fixtures__/sitecustomize.py`, which makes every non-`AF_UNIX`
+so networking is cut inside the interpreter instead: the suite writes a
+`sitecustomize.py` into the venv that makes every non-`AF_UNIX`
 connect and every DNS lookup raise `OSError`. The tier's first tests prove
 the guard blocks a real connection, so the offline claim is not vacuous.
 
