@@ -15,6 +15,7 @@ describe('loadAnnotations', () => {
       expect(() => loadAnnotations(path)).toThrow('not valid JSON');
       writeFileSync(path, Buffer.from([0xff]));
       expect(() => loadAnnotations(path)).toThrow('not UTF-8');
+      expect(() => loadAnnotations(join(dir, 'missing.json'))).toThrow();
     } finally { rmSync(dir, {recursive: true, force: true}); }
   });
 });
