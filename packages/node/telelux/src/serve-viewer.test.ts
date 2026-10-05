@@ -60,4 +60,13 @@ describe('serveViewer', () => {
       expect(address.address).toBe('127.0.0.2');
     } finally { server.close(); }
   });
+  it('defaults to the loopback host and port 8000', async () => {
+    const server = await serveViewer(() => 'default');
+    try {
+      const address = server.address();
+      if (typeof address === 'string' || address === null) { throw new Error('No TCP address'); }
+      expect(address.address).toBe('127.0.0.1');
+      expect(address.port).toBe(8000);
+    } finally { server.close(); }
+  });
 });
