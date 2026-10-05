@@ -66,20 +66,29 @@ For mocking a streaming external service (LLM client, network stream), build a f
 
 ## Test tiers
 
-Two tiers today, each independently runnable and each its own named CI step,
-per DESIGN's testing convention (issue #5). DESIGN's third tier, e2e, has
-nothing to drive until the CLI and the viewer build land, and it will not run
-in CI when it arrives — browser and process-boundary suites are a local and
-pre-release concern, not a per-PR gate.
+Three tiers, each independently runnable with its own recipe, per DESIGN's
+testing convention (issue #5). Unit and integration are named CI steps. E2e
+never runs in CI: it builds and installs the wheel, which is a local and
+pre-release concern, and each branch that changes the package records an
+attestation receipt instead (see the E2E section of `AGENTS.md`).
 
 | Tier | Location | Command | Mocking |
 | --- | --- | --- | --- |
-| Unit | Colocated (`foo_test.py`) | `just py-test` | Isolate dependencies as needed |
-| Integration | `tests/integration/` | `just py-test-integration` | Targets the SDK, plus the installed `telelux` command in `cli_test.py`; mock LLM calls once those exist |
+| Unit | Colocated (`foo_test.py`) | `just test_unit` | Isolate dependencies as needed |
+| Integration | `tests/integration/` | `just test_integration` | Targets the SDK, plus the installed `telelux` command in `cli_test.py`; mock LLM calls once those exist |
+| E2e | `tests/e2e/` | `just test_e2e` | None: the installed wheel, offline, with no Node on `PATH` |
+
+The e2e tier installs the built wheel into a fresh venv and runs its `telelux`
+command with a `PATH` holding only that venv and `/usr/bin:/bin`, and a
+throwaway `HOME`. `unshare -rn` is denied on GitHub runners and dev machines,
+so networking is cut inside the interpreter instead: the suite writes a
+`sitecustomize.py` into the venv that makes every non-`AF_UNIX`
+connect and every DNS lookup raise `OSError`. The tier's first tests prove
+the guard blocks a real connection, so the offline claim is not vacuous.
 
 `testpaths` in `pyproject.toml` is scoped to `src` and the build hook's
 colocated `hatch_build_test.py`, so a bare `pytest` (the unit tier) never picks up
-`tests/integration`. That tier runs by passing the directory explicitly, which
+`tests/integration` or `tests/e2e`. Those tiers run by passing the directory explicitly, which
 overrides `testpaths`.
 
 The integration tier exercises the packaged viewer, so it needs telelux-web

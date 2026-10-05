@@ -296,6 +296,10 @@ Locally, rebuild the viewer (`pnpm --filter telelux-web build` from the repo
 root) before building the wheel or running the integration tier; the hook
 copies whatever `dist/viewer.html` holds and does not check it is current.
 
+`just test_e2e` checks the result end to end: it installs the built wheel
+into a clean venv and runs `telelux --out` and `telelux --url` with
+networking disabled and no Node on `PATH`.
+
 ## Release flow
 
 **Use `putitoutthere`.** Single reusable workflow, single config file, OIDC trusted publishing to PyPI. Versions derive from git tags via `hatch-vcs`. Provenance, retry-with-backoff, tag rollback, registry idempotency are all inside the workflow. Cross-cutting CHANGELOG / MIGRATIONS rules live in [../repo.md](../repo.md).
