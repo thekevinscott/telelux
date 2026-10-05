@@ -33,4 +33,12 @@ describe('serveViewer', () => {
       expect(response.status).toBe(500);
     } finally { server.closeAllConnections(); server.close(); }
   });
+  it('rejects when the port is already in use', async () => {
+    const server = await serveViewer(() => 'first', { port: 0 });
+    try {
+      const address = server.address();
+      if (typeof address === 'string' || address === null) { throw new Error('No TCP address'); }
+      await expect(serveViewer(() => 'second', { port: address.port })).rejects.toThrow();
+    } finally { server.close(); }
+  });
 });
