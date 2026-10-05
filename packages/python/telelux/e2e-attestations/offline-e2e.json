@@ -1,0 +1,7 @@
+{
+  "command": "just test_e2e",
+  "ran_at": 1791226380,
+  "exit_code": 0,
+  "commit": "286850e7db68798b05af5de886027cd88579a52f",
+  "branch": "offline-e2e"
+}
