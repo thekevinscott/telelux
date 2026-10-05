@@ -13,9 +13,12 @@ describe('loadAnnotations', () => {
       expect(loadAnnotations(path)).toBe('{"version":1}');
       writeFileSync(path, '{');
       expect(() => loadAnnotations(path)).toThrow('not valid JSON');
+      try { loadAnnotations(path); } catch (error) { expect((error as Error).cause).toBeInstanceOf(SyntaxError); }
       writeFileSync(path, Buffer.from([0xff]));
       expect(() => loadAnnotations(path)).toThrow('not UTF-8');
-      expect(() => loadAnnotations(join(dir, 'missing.json'))).toThrow();
+      try { loadAnnotations(path); } catch (error) { expect((error as Error).cause).toBeInstanceOf(TypeError); }
+      expect(() => loadAnnotations(join(dir, 'missing.json'))).toThrow('ENOENT');
+      expect(() => loadAnnotations(dir)).toThrow('pass one .json annotations file');
     } finally { rmSync(dir, {recursive: true, force: true}); }
   });
 });

@@ -21,7 +21,7 @@ describe('Telelux', () => {
       expect(viewer.html).toContain('first');
       viewer.transcript = path;
       expect(viewer.html).toContain('second');
-      expect(() => { viewer.transcript = dir; }).toThrow('is a directory');
+      expect(() => { viewer.transcript = dir; }).toThrow('pass one .jsonl transcript file');
       expect(viewer.transcript).toBe(path);
       expect(viewer.html).toContain('second');
       viewer.transcript = null;

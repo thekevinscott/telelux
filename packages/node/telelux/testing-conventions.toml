@@ -40,3 +40,21 @@ reason = "Actual filesystem operations are the annotation loader contract, inclu
 path = "telelux.test.ts"
 rules = ["unmocked-collaborator"]
 reason = "Real files are needed to verify snapshot and exclusive-write behavior at the public API."
+
+[[typescript.exempt]]
+path = "build-link.ts"
+rules = ["mutation"]
+lines = [6]
+reason = "Node treats an empty Buffer.byteLength encoding as UTF-8, so this string mutation preserves behavior."
+
+[[typescript.exempt]]
+path = "encode-payload.ts"
+rules = ["mutation"]
+lines = [4]
+reason = "Node treats an empty Buffer.from encoding as UTF-8, so this string mutation preserves the payload bytes."
+
+[[typescript.exempt]]
+path = "telelux.ts"
+rules = ["mutation"]
+lines = [43]
+reason = "Node treats an empty writeFileSync encoding as UTF-8, so this mutation preserves the output bytes."

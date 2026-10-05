@@ -1,8 +1,7 @@
 import { openSync, readSync, closeSync, fstatSync, statSync } from 'node:fs';
 
-const MAX_BYTES = 50 * 1024 * 1024;
-
 export function loadFile(path: string, kind: string, extension: string): string {
+  const MAX_BYTES = 50 * 1024 * 1024;
   if (statSync(path).isDirectory()) {
     throw new Error(`${path} is a directory; pass one ${extension} ${kind} file inside it`);
   }

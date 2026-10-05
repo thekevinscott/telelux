@@ -1,9 +1,8 @@
 import { encodePayload } from './encode-payload';
 
-const PREFIX = 'https://telelux.dev/#v=1&data=';
-const ALTERNATIVES = `Export the transcript as baked HTML instead, or host the .jsonl file and share ${PREFIX}<transcript-url>.`;
-
 export function buildLink(text: string): string {
+  const PREFIX = 'https://telelux.dev/#v=1&data=';
+  const ALTERNATIVES = `Export the transcript as baked HTML instead, or host the .jsonl file and share ${PREFIX}<transcript-url>.`;
   const size = Buffer.byteLength(text, 'utf8');
   const limit = 10 * 1024 * 1024;
   if (size > limit) {
