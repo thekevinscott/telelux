@@ -28,12 +28,26 @@ const initial = [
 
 const { isDark } = useData()
 const editor = ref<HTMLElement>()
+const preview = ref<HTMLIFrameElement>()
 const source = ref(initial)
 let view: EditorView | undefined
 let theme: Compartment | undefined
 let pending: ReturnType<typeof setTimeout> | undefined
 
+function syncPreviewTheme() {
+  const doc = preview.value?.contentDocument
+  if (!doc?.documentElement) return
+  const scheme = isDark.value ? 'dark' : 'light'
+  doc.documentElement.style.colorScheme = scheme
+  for (const element of doc.querySelectorAll('*')) {
+    if (element.localName.startsWith('telelux-')) element.setAttribute('theme', scheme)
+  }
+}
+
+watch(isDark, syncPreviewTheme)
+
 onMounted(async () => {
+  syncPreviewTheme()
   const [{ EditorView, basicSetup }, { Compartment }, { html }, { oneDark }] = await Promise.all([
     import('codemirror'),
     import('@codemirror/state'),
@@ -71,7 +85,7 @@ onBeforeUnmount(() => {
 <template>
   <div class="html-playground">
     <div ref="editor" class="editor"></div>
-    <iframe :srcdoc="source" sandbox="allow-scripts allow-same-origin" title="Preview"></iframe>
+    <iframe ref="preview" :srcdoc="source" @load="syncPreviewTheme" sandbox="allow-scripts allow-same-origin" title="Preview"></iframe>
   </div>
 </template>
 
