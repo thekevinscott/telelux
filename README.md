@@ -2,13 +2,18 @@
 
 Generate and share self-contained, interactive HTML views of agent transcripts.
 
-```bash
-pip install telelux
-```
+Open a transcript at [telelux.dev](https://telelux.dev/), or read the
+[docs](https://docs.telelux.dev/).
 
-The Python SDK is the product: point it at a transcript, get back a single
-static HTML file you can save, share, or serve — no server required to view
-it.
+| Package | Install | What it does |
+|---|---|---|
+| [`telelux`](packages/python/telelux) (PyPI) | `pip install telelux` | Python SDK and CLI. Turns a transcript into a single HTML file, a telelux.dev link, or a local server. |
+| [`telelux-element`](packages/node/telelux-element) (npm) | `npm install telelux-element` | The `<telelux-transcript>` web component, plus a parser for raw transcripts. |
+| [`telelux`](packages/node/telelux) (npm) | | Node SDK and CLI mirroring the Python package. Not built yet ([#112](https://github.com/thekevinscott/telelux/issues/112)). |
+
+The viewer app itself lives in [`packages/node/telelux-web`](packages/node/telelux-web).
+It is never published: it deploys to telelux.dev, and each SDK ships its built
+`viewer.html`.
 
 ## Development
 
