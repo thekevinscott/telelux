@@ -15,3 +15,28 @@ reason = "barrel: re-exports only; its test exists to load it for the coverage g
 path = "vitest.config.ts"
 rules = ["colocated-test", "co-change"]
 reason = "vitest configuration, not shipped source; it has to live in src/ because the coverage and mutation gates run vitest from there"
+
+[[typescript.exempt]]
+path = "build-link.test.ts"
+rules = ["unmocked-collaborator"]
+reason = "The shared fixture and entropy source are test inputs; mocking them would remove the byte compatibility and link budget checks."
+
+[[typescript.exempt]]
+path = "encode-payload.test.ts"
+rules = ["unmocked-collaborator"]
+reason = "The shared fixture is the cross-language byte vector; mocking file access would replace the actual fixture."
+
+[[typescript.exempt]]
+path = "load-file.test.ts"
+rules = ["unmocked-collaborator"]
+reason = "Actual filesystem operations are the file reader contract, including the 50 MiB and UTF-8 checks."
+
+[[typescript.exempt]]
+path = "load-annotations.test.ts"
+rules = ["unmocked-collaborator"]
+reason = "Actual filesystem operations are the annotation loader contract, including JSON and UTF-8 errors."
+
+[[typescript.exempt]]
+path = "telelux.test.ts"
+rules = ["unmocked-collaborator"]
+reason = "Real files are needed to verify snapshot and exclusive-write behavior at the public API."

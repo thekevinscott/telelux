@@ -53,5 +53,8 @@ globs = [
   "packages/node/telelux/!(testing-conventions.toml)",
   "packages/node/telelux/!(changelog.d|migrations.d|e2e-attestations)/**",
   "packages/node/telelux/pnpm-lock.yaml",
+  "packages/node/telelux-web/!(testing-conventions.toml)",
+  "packages/node/telelux-web/!(changelog.d|migrations.d|e2e-attestations)/**",
+  "packages/node/telelux-element/src/**",
   "LICENSE",
 ]

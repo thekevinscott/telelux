@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
-import { render } from './index';
+import { Telelux } from './index';
 
 describe('index', () => {
-  it('exposes render as the package entry', () => {
-    expect(render).toBeTypeOf('function');
+  it('exposes Telelux as the package entry', () => {
+    expect(Telelux).toBeTypeOf('function');
   });
 });
